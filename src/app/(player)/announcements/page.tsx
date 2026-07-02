@@ -1,0 +1,20 @@
+import { createClient } from "@/lib/supabase/server";
+import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
+
+export default async function PlayerAnnouncementsPage() {
+  const supabase = createClient();
+  const { data: announcements } = await supabase
+    .from("announcements")
+    .select("id, admin_id, title, content, created_at, admin:profiles(display_name, admin_role)")
+    .order("created_at", { ascending: false });
+
+  return (
+    <main className="p-8 max-w-3xl mx-auto">
+      <header className="mb-6">
+        <p className="text-ink-muted font-mono text-xs mb-1">TỪ BAN QUẢN TRỊ</p>
+        <h1 className="font-display font-bold text-3xl">Thông báo</h1>
+      </header>
+      <AnnouncementsFeed initial={(announcements as any) ?? []} />
+    </main>
+  );
+}
