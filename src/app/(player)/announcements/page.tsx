@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
+import { getServerTranslator } from "@/lib/i18n-server";
 
 export default async function PlayerAnnouncementsPage() {
+  const { t } = getServerTranslator();
   const supabase = createClient();
   const { data: announcements } = await supabase
     .from("announcements")
@@ -11,8 +13,8 @@ export default async function PlayerAnnouncementsPage() {
   return (
     <main className="p-8 max-w-3xl mx-auto">
       <header className="mb-6">
-        <p className="text-ink-muted font-mono text-xs mb-1">TỪ BAN QUẢN TRỊ</p>
-        <h1 className="font-display font-bold text-3xl">Thông báo</h1>
+        <p className="text-ink-muted font-mono text-xs mb-1">{t("announcements.playerKicker")}</p>
+        <h1 className="font-display font-bold text-3xl">{t("announcements.title")}</h1>
       </header>
       <AnnouncementsFeed initial={(announcements as any) ?? []} />
     </main>

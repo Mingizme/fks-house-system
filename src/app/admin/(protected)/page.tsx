@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { HousePointsBoard } from "@/components/HousePointsBoard";
 import Link from "next/link";
+import { getServerTranslator } from "@/lib/i18n-server";
 
 export default async function AdminDashboardPage() {
+  const { t } = getServerTranslator();
   const supabase = createClient();
 
   const [{ data: houses }, { count: unassignedCount }, { count: playerCount }, { count: adminCount }] =
@@ -14,16 +16,16 @@ export default async function AdminDashboardPage() {
     ]);
 
   const stats = [
-    { label: "Tổng player", value: playerCount ?? 0 },
-    { label: "Chưa xếp house", value: unassignedCount ?? 0, warn: (unassignedCount ?? 0) > 0 },
-    { label: "Admin đang hoạt động", value: adminCount ?? 0 },
+    { label: t("admin.totalPlayers"), value: playerCount ?? 0 },
+    { label: t("admin.unassignedHouse"), value: unassignedCount ?? 0, warn: (unassignedCount ?? 0) > 0 },
+    { label: t("admin.activeAdmins"), value: adminCount ?? 0 },
   ];
 
   return (
     <main className="p-8 max-w-6xl mx-auto">
       <header className="mb-8">
-        <p className="text-ink-muted font-mono text-xs mb-1">TỔNG QUAN HỆ THỐNG</p>
-        <h1 className="font-display font-bold text-3xl">Trung tâm chỉ huy</h1>
+        <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.dashboardKicker")}</p>
+        <h1 className="font-display font-bold text-3xl">{t("admin.commandCenter")}</h1>
       </header>
 
       <div className="grid sm:grid-cols-3 gap-4 mb-10">
@@ -40,12 +42,13 @@ export default async function AdminDashboardPage() {
           href="/admin/players"
           className="block mb-8 rounded-xl2 border border-command/40 bg-command/10 px-5 py-3 text-sm hover:bg-command/15 transition-colors"
         >
-          ⚡ {unassignedCount} player mới chưa được xếp vào house — <span className="text-command font-semibold">phân bổ ngay →</span>
+          {t("admin.unassignedCta", { count: unassignedCount ?? 0 })}{" "}
+          <span className="text-command font-semibold">{t("admin.assignNow")}</span>
         </Link>
       )}
 
       <section>
-        <h2 className="font-display font-bold text-lg mb-4">Bảng xếp hạng House</h2>
+        <h2 className="font-display font-bold text-lg mb-4">{t("dashboard.leaderboard")}</h2>
         <HousePointsBoard initial={houses ?? []} linkPrefix="/admin/houses" />
       </section>
     </main>

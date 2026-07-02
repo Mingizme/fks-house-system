@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/components/I18nProvider";
 
 export function NewAnnouncementForm({ adminId }: { adminId: string }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
@@ -15,7 +17,7 @@ export function NewAnnouncementForm({ adminId }: { adminId: string }) {
   async function submit() {
     setError(null);
     if (!title.trim() || !content.trim()) {
-      setError("Cần nhập đầy đủ tiêu đề và nội dung.");
+      setError(t("announcements.missingFields"));
       return;
     }
     setSaving(true);
@@ -24,7 +26,7 @@ export function NewAnnouncementForm({ adminId }: { adminId: string }) {
       .insert({ admin_id: adminId, title: title.trim(), content: content.trim() });
     setSaving(false);
     if (insertError) {
-      setError("Không thể đăng, vui lòng thử lại.");
+      setError(t("announcements.saveFailed"));
       return;
     }
     setTitle("");
@@ -34,17 +36,17 @@ export function NewAnnouncementForm({ adminId }: { adminId: string }) {
 
   return (
     <div className="rounded-xl2 border border-ink-border bg-ink-surface p-5 mb-8">
-      <p className="font-display font-bold mb-4">Đăng thông báo mới</p>
+      <p className="font-display font-bold mb-4">{t("announcements.newTitle")}</p>
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Tiêu đề"
+        placeholder={t("announcements.titlePlaceholder")}
         className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command mb-3"
       />
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Nội dung thông báo..."
+        placeholder={t("announcements.contentPlaceholder")}
         rows={4}
         className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command mb-3 resize-none"
       />
@@ -54,7 +56,7 @@ export function NewAnnouncementForm({ adminId }: { adminId: string }) {
         disabled={saving}
         className="rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold px-5 py-2.5 text-sm"
       >
-        {saving ? "Đang đăng..." : "Đăng thông báo"}
+        {saving ? t("announcements.posting") : t("announcements.post")}
       </button>
     </div>
   );

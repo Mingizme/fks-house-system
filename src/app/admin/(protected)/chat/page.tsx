@@ -2,8 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { NewConversationSearch } from "@/components/NewConversationSearch";
 import { format } from "date-fns";
+import { getServerTranslator } from "@/lib/i18n-server";
 
 export default async function AdminChatListPage() {
+  const { t } = getServerTranslator();
   const supabase = createClient();
   const {
     data: { user },
@@ -35,7 +37,7 @@ export default async function AdminChatListPage() {
   return (
     <main className="p-8 max-w-2xl mx-auto">
       <header className="mb-6">
-        <p className="text-ink-muted font-mono text-xs mb-1">RIÊNG TƯ GIỮA CÁC ADMIN</p>
+        <p className="text-ink-muted font-mono text-xs mb-1">{t("messages.adminKicker")}</p>
         <h1 className="font-display font-bold text-3xl">Chat Admin</h1>
       </header>
 
@@ -43,7 +45,7 @@ export default async function AdminChatListPage() {
 
       <div className="mt-6 space-y-1">
         {conversations.length === 0 && (
-          <p className="text-sm text-ink-muted">Chưa có cuộc trò chuyện nào với admin khác.</p>
+          <p className="text-sm text-ink-muted">{t("messages.adminEmpty")}</p>
         )}
         {conversations.map((c) => (
           <Link

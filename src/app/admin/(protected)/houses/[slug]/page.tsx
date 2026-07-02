@@ -4,8 +4,10 @@ import { HouseCrest } from "@/components/HouseCrest";
 import { HouseChatBox } from "@/components/HouseChatBox";
 import { AddPointsForm } from "@/components/AddPointsForm";
 import { formatPoints } from "@/lib/utils";
+import { getServerTranslator } from "@/lib/i18n-server";
 
 export default async function AdminHousePage({ params }: { params: { slug: string } }) {
+  const { t } = getServerTranslator();
   const supabase = createClient();
   const {
     data: { user },
@@ -38,10 +40,10 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
         <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
         <div>
           <h1 className="font-display font-extrabold text-3xl">{house.name}</h1>
-          <p className="text-ink-muted text-sm">{roster?.length ?? 0} thành viên</p>
+          <p className="text-ink-muted text-sm">{t("house.memberCount", { count: roster?.length ?? 0 })}</p>
         </div>
         <div className="ml-auto text-right">
-          <p className="text-xs text-ink-muted font-mono">TỔNG ĐIỂM</p>
+          <p className="text-xs text-ink-muted font-mono">{t("house.totalPoints")}</p>
           <p className="font-mono text-4xl font-bold">{(points?.total_points ?? 0).toLocaleString()}</p>
         </div>
       </div>
@@ -50,14 +52,17 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
         <div className="lg:col-span-2 space-y-6">
           <AddPointsForm houseId={house.id} adminId={user.id} />
           <div>
-            <h2 className="font-display font-bold text-lg mb-3">Nhóm chat house <span className="text-xs text-ink-muted font-mono">(admin có thể tham gia bất kỳ lúc nào)</span></h2>
+            <h2 className="font-display font-bold text-lg mb-3">
+              {t("house.groupChat")}{" "}
+              <span className="text-xs text-ink-muted font-mono">{t("house.adminChatNote")}</span>
+            </h2>
             <HouseChatBox houseId={house.id} currentUserId={user.id} initialMessages={(messages as any) ?? []} />
           </div>
         </div>
 
         <div className="space-y-6">
           <div>
-            <h2 className="font-display font-bold text-lg mb-3">Thành viên</h2>
+            <h2 className="font-display font-bold text-lg mb-3">{t("house.members")}</h2>
             <div className="rounded-xl2 border border-ink-border bg-ink-surface p-2 max-h-56 overflow-y-auto">
               {(roster ?? []).map((p) => (
                 <div key={p.id} className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-ink-surface2">
@@ -65,25 +70,27 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
                   <span className="text-sm truncate">{p.display_name}</span>
                 </div>
               ))}
-              {(roster ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">Chưa có thành viên.</p>}
+              {(roster ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">{t("house.noMembers")}</p>}
             </div>
           </div>
 
           <div>
-            <h2 className="font-display font-bold text-lg mb-3">Lịch sử điểm</h2>
+            <h2 className="font-display font-bold text-lg mb-3">{t("house.pointHistory")}</h2>
             <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border max-h-96 overflow-y-auto">
-              {(history ?? []).map((t: any) => (
-                <div key={t.id} className="p-3 flex items-start justify-between gap-2">
+              {(history ?? []).map((tx: any) => (
+                <div key={tx.id} className="p-3 flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm truncate">{t.reason}</p>
-                    <p className="text-xs text-ink-faint font-mono">bởi {t.admin?.display_name} · {t.admin?.admin_role}</p>
+                    <p className="text-sm truncate">{tx.reason}</p>
+                    <p className="text-xs text-ink-faint font-mono">
+                      {t("common.byWithRole", { name: tx.admin?.display_name ?? "", role: tx.admin?.admin_role ?? "" })}
+                    </p>
                   </div>
-                  <span className={`font-mono text-sm font-bold shrink-0 ${t.points >= 0 ? "text-success" : "text-danger"}`}>
-                    {formatPoints(t.points)}
+                  <span className={`font-mono text-sm font-bold shrink-0 ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
+                    {formatPoints(tx.points)}
                   </span>
                 </div>
               ))}
-              {(history ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">Chưa có giao dịch nào.</p>}
+              {(history ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">{t("house.noTransactions")}</p>}
             </div>
           </div>
         </div>

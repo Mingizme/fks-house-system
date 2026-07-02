@@ -4,10 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useI18n } from "@/components/I18nProvider";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +23,7 @@ export default function AdminLoginPage() {
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError) {
-      setError("Email hoặc mật khẩu không đúng.");
+      setError(t("auth.invalidCredentials"));
       setLoading(false);
       return;
     }
@@ -33,7 +36,7 @@ export default function AdminLoginPage() {
 
     if (profile?.user_type !== "admin") {
       await supabase.auth.signOut();
-      setError("Tài khoản này không có quyền Admin.");
+      setError(t("auth.noAdminPermission"));
       setLoading(false);
       return;
     }
@@ -48,23 +51,24 @@ export default function AdminLoginPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-command/20 to-transparent" />
       </div>
       <div className="w-full max-w-sm relative z-10">
-        <Link href="/" className="text-ink-muted text-sm font-mono hover:text-ink-text">← Trang chủ</Link>
+        <LanguageSwitcher className="mb-5" />
+        <Link href="/" className="text-ink-muted text-sm font-mono hover:text-ink-text">← {t("common.home")}</Link>
         <div className="mt-4 mb-1 inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-command/40 bg-command/10 text-command text-xs font-mono">
-          CỔNG QUẢN TRỊ
+          {t("common.adminPortal")}
         </div>
-        <h1 className="font-display font-bold text-3xl mb-1">Đăng nhập Admin</h1>
-        <p className="text-ink-muted text-sm mb-8">Director · Admin · Judge · Security · Linguistic</p>
+        <h1 className="font-display font-bold text-3xl mb-1">{t("auth.loginAdminTitle")}</h1>
+        <p className="text-ink-muted text-sm mb-8">{t("auth.loginAdminSubtitle")}</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-1.5">EMAIL</label>
+            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.email")}</label>
             <input
               type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg bg-ink-surface border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
             />
           </div>
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-1.5">MẬT KHẨU</label>
+            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.password")}</label>
             <input
               type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg bg-ink-surface border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
@@ -79,12 +83,12 @@ export default function AdminLoginPage() {
             type="submit" disabled={loading}
             className="w-full rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold py-2.5"
           >
-            {loading ? "Đang xác thực..." : "Vào hệ thống"}
+            {loading ? t("auth.verifying") : t("auth.enterSystem")}
           </button>
         </form>
 
         <p className="text-xs text-ink-faint mt-8 text-center font-mono">
-          Tài khoản Admin được tạo thủ công bởi quản trị hệ thống.
+          {t("auth.adminManual")}
         </p>
       </div>
     </main>

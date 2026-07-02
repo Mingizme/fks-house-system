@@ -4,10 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useI18n } from "@/components/I18nProvider";
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +23,7 @@ export default function LoginPage() {
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError) {
-      setError("Email hoặc mật khẩu không đúng.");
+      setError(t("auth.invalidCredentials"));
       setLoading(false);
       return;
     }
@@ -33,7 +36,7 @@ export default function LoginPage() {
 
     if (profile?.user_type === "admin") {
       await supabase.auth.signOut();
-      setError("Tài khoản này là tài khoản Admin. Vui lòng đăng nhập tại Cổng Admin.");
+      setError(t("auth.accountIsAdmin"));
       setLoading(false);
       return;
     }
@@ -45,13 +48,14 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6 bg-grain">
       <div className="w-full max-w-sm">
-        <Link href="/" className="text-ink-muted text-sm font-mono hover:text-ink-text">← Trang chủ</Link>
-        <h1 className="font-display font-bold text-3xl mt-4 mb-1">Đăng nhập Player</h1>
-        <p className="text-ink-muted text-sm mb-8">Vào lãnh địa của house bạn.</p>
+        <LanguageSwitcher className="mb-5" />
+        <Link href="/" className="text-ink-muted text-sm font-mono hover:text-ink-text">← {t("common.home")}</Link>
+        <h1 className="font-display font-bold text-3xl mt-4 mb-1">{t("auth.loginPlayerTitle")}</h1>
+        <p className="text-ink-muted text-sm mb-8">{t("auth.loginPlayerSubtitle")}</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-1.5">EMAIL</label>
+            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.email")}</label>
             <input
               type="email"
               required
@@ -62,7 +66,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-1.5">MẬT KHẨU</label>
+            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.password")}</label>
             <input
               type="password"
               required
@@ -82,14 +86,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold py-2.5"
           >
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            {loading ? t("auth.loggingIn") : t("auth.login")}
           </button>
         </form>
 
         <p className="text-sm text-ink-muted mt-6 text-center">
-          Chưa có tài khoản?{" "}
+          {t("auth.noAccount")}{" "}
           <Link href="/signup" className="text-command hover:underline">
-            Tạo tài khoản
+            {t("auth.createAccount")}
           </Link>
         </p>
       </div>

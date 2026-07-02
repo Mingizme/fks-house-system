@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { HouseMessage } from "@/lib/types";
 import { format } from "date-fns";
+import { useI18n } from "@/components/I18nProvider";
 
 interface Props {
   houseId: string;
@@ -13,6 +14,7 @@ interface Props {
 
 export function HouseChatBox({ houseId, currentUserId, initialMessages }: Props) {
   const supabase = createClient();
+  const { t } = useI18n();
   const [messages, setMessages] = useState<HouseMessage[]>(initialMessages);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -74,7 +76,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages }: Props)
     <div className="flex flex-col h-[560px] rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
-          <p className="text-sm text-ink-muted text-center mt-8">Chưa có tin nhắn nào. Hãy mở đầu cuộc trò chuyện!</p>
+          <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noHouseMessages")}</p>
         )}
         {messages.map((m) => {
           const mine = m.sender_id === currentUserId;
@@ -107,7 +109,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages }: Props)
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Nhắn gì đó cho house của bạn..."
+          placeholder={t("messages.housePlaceholder")}
           className="flex-1 rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command transition-colors"
         />
         <button
@@ -115,7 +117,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages }: Props)
           disabled={!text.trim() || sending}
           className="px-4 rounded-lg bg-command hover:bg-command/85 disabled:opacity-40 transition-colors font-semibold text-sm"
         >
-          Gửi
+          {t("common.send")}
         </button>
       </div>
     </div>

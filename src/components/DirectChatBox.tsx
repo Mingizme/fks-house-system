@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DirectMessage } from "@/lib/types";
 import { format } from "date-fns";
+import { useI18n } from "@/components/I18nProvider";
 
 interface Props {
   currentUserId: string;
@@ -15,6 +16,7 @@ interface Props {
 
 export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdminChat = false, initiallyBlocked = false }: Props) {
   const supabase = createClient();
+  const { t } = useI18n();
   const [messages, setMessages] = useState<DirectMessage[]>(initialMessages);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -86,13 +88,13 @@ export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdm
               : "border-ink-border text-ink-muted hover:text-danger hover:border-danger/40"
           }`}
         >
-          {blocked ? "Bỏ chặn" : "Chặn"}
+          {blocked ? t("messages.unblock") : t("messages.block")}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
-          <p className="text-sm text-ink-muted text-center mt-8">Chưa có tin nhắn. Gửi lời chào đầu tiên nhé!</p>
+          <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noDirectMessages")}</p>
         )}
         {messages.map((m) => {
           const mine = m.sender_id === currentUserId;
@@ -122,7 +124,7 @@ export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdm
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
           disabled={blocked}
-          placeholder={blocked ? "Bạn đã chặn người này" : "Nhắn tin..."}
+          placeholder={blocked ? t("messages.blockedPlaceholder") : t("messages.placeholder")}
           className="flex-1 rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command transition-colors disabled:opacity-50"
         />
         <button
@@ -130,7 +132,7 @@ export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdm
           disabled={!text.trim() || sending || blocked}
           className="px-4 rounded-lg bg-command hover:bg-command/85 disabled:opacity-40 transition-colors font-semibold text-sm"
         >
-          Gửi
+          {t("common.send")}
         </button>
       </div>
     </div>

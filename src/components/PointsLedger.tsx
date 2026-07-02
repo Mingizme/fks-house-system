@@ -6,10 +6,12 @@ import { PointTransaction } from "@/lib/types";
 import { format } from "date-fns";
 import { formatPoints } from "@/lib/utils";
 import { HouseCrest } from "./HouseCrest";
+import { useI18n } from "@/components/I18nProvider";
 
 export function PointsLedger({ initial }: { initial: PointTransaction[] }) {
   const supabase = createClient();
   const [items, setItems] = useState<PointTransaction[]>(initial);
+  const { t, dateLocale } = useI18n();
 
   useEffect(() => {
     const channel = supabase
@@ -29,7 +31,7 @@ export function PointsLedger({ initial }: { initial: PointTransaction[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (items.length === 0) return <p className="text-sm text-ink-muted">Chưa có giao dịch điểm nào.</p>;
+  if (items.length === 0) return <p className="text-sm text-ink-muted">{t("points.empty")}</p>;
 
   return (
     <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border">
@@ -41,7 +43,7 @@ export function PointsLedger({ initial }: { initial: PointTransaction[] }) {
               <span className="font-semibold">{t.house?.name}</span> — {t.reason}
             </p>
             <p className="text-xs text-ink-faint font-mono">
-              {t.admin?.display_name} ({t.admin?.admin_role}) · {format(new Date(t.created_at), "d MMM HH:mm")}
+              {t.admin?.display_name} ({t.admin?.admin_role}) · {format(new Date(t.created_at), "d MMM HH:mm", { locale: dateLocale })}
             </p>
           </div>
           <span className={`font-mono font-bold shrink-0 ${t.points >= 0 ? "text-success" : "text-danger"}`}>

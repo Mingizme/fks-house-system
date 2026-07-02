@@ -3,8 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { HouseCrest } from "@/components/HouseCrest";
 import { HouseChatBox } from "@/components/HouseChatBox";
 import { formatPoints } from "@/lib/utils";
+import { getServerTranslator } from "@/lib/i18n-server";
 
 export default async function HousePage({ params }: { params: { slug: string } }) {
+  const { t } = getServerTranslator();
   const supabase = createClient();
   const {
     data: { user },
@@ -50,20 +52,20 @@ export default async function HousePage({ params }: { params: { slug: string } }
           <p className="text-ink-muted text-sm">{house.description}</p>
         </div>
         <div className="ml-auto text-right">
-          <p className="text-xs text-ink-muted font-mono">TỔNG ĐIỂM</p>
+          <p className="text-xs text-ink-muted font-mono">{t("house.totalPoints")}</p>
           <p className="font-mono text-4xl font-bold">{(points?.total_points ?? 0).toLocaleString()}</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <h2 className="font-display font-bold text-lg mb-3">Nhóm chat house</h2>
+          <h2 className="font-display font-bold text-lg mb-3">{t("house.groupChat")}</h2>
           <HouseChatBox houseId={house.id} currentUserId={user.id} initialMessages={(messages as any) ?? []} />
         </div>
 
         <div className="space-y-6">
           <div>
-            <h2 className="font-display font-bold text-lg mb-3">Thành viên ({roster?.length ?? 0})</h2>
+            <h2 className="font-display font-bold text-lg mb-3">{t("house.membersWithCount", { count: roster?.length ?? 0 })}</h2>
             <div className="rounded-xl2 border border-ink-border bg-ink-surface p-2 max-h-64 overflow-y-auto">
               {(roster ?? []).map((p) => (
                 <div key={p.id} className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-ink-surface2">
@@ -71,25 +73,27 @@ export default async function HousePage({ params }: { params: { slug: string } }
                   <span className="text-sm truncate">{p.display_name}</span>
                 </div>
               ))}
-              {(roster ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">Chưa có thành viên.</p>}
+              {(roster ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">{t("house.noMembers")}</p>}
             </div>
           </div>
 
           <div>
-            <h2 className="font-display font-bold text-lg mb-3">Lịch sử điểm gần đây</h2>
+            <h2 className="font-display font-bold text-lg mb-3">{t("house.recentPointHistory")}</h2>
             <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border">
-              {(recentTx ?? []).map((t: any) => (
-                <div key={t.id} className="p-3 flex items-start justify-between gap-2">
+              {(recentTx ?? []).map((tx: any) => (
+                <div key={tx.id} className="p-3 flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm truncate">{t.reason}</p>
-                    <p className="text-xs text-ink-faint font-mono">bởi {t.admin?.display_name}</p>
+                    <p className="text-sm truncate">{tx.reason}</p>
+                    <p className="text-xs text-ink-faint font-mono">
+                      {t("common.by", { name: tx.admin?.display_name ?? "" })}
+                    </p>
                   </div>
-                  <span className={`font-mono text-sm font-bold shrink-0 ${t.points >= 0 ? "text-success" : "text-danger"}`}>
-                    {formatPoints(t.points)}
+                  <span className={`font-mono text-sm font-bold shrink-0 ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
+                    {formatPoints(tx.points)}
                   </span>
                 </div>
               ))}
-              {(recentTx ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">Chưa có giao dịch điểm nào.</p>}
+              {(recentTx ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">{t("house.noPointTransactions")}</p>}
             </div>
           </div>
         </div>

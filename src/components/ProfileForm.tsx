@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/components/I18nProvider";
 
 export function ProfileForm({
   profile,
@@ -13,6 +14,7 @@ export function ProfileForm({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useI18n();
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [emoji, setEmoji] = useState(profile.avatar_emoji ?? "🙂");
   const [saving, setSaving] = useState(false);
@@ -32,14 +34,14 @@ export function ProfileForm({
       <div className="rounded-xl2 border border-ink-border bg-ink-surface p-5">
         <p className="text-xs text-ink-muted font-mono mb-4">@{profile.username}</p>
 
-        <label className="text-xs font-mono text-ink-muted block mb-1.5">TÊN HIỂN THỊ</label>
+        <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("profile.displayNameLabel")}</label>
         <input
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors mb-4"
         />
 
-        <label className="text-xs font-mono text-ink-muted block mb-2">BIỂU TƯỢNG</label>
+        <label className="text-xs font-mono text-ink-muted block mb-2">{t("profile.iconLabel")}</label>
         <div className="flex flex-wrap gap-2 mb-5">
           {emojiOptions.map((e) => (
             <button
@@ -59,7 +61,7 @@ export function ProfileForm({
           disabled={saving}
           className="rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold px-5 py-2.5 text-sm"
         >
-          {saving ? "Đang lưu..." : saved ? "Đã lưu ✓" : "Lưu thay đổi"}
+          {saving ? t("common.saving") : saved ? t("common.saved") : t("common.saveChanges")}
         </button>
       </div>
     </div>

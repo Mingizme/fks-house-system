@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/components/I18nProvider";
 
 interface Result {
   id: string;
@@ -22,6 +23,7 @@ export function NewConversationSearch({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [open, setOpen] = useState(false);
@@ -52,7 +54,7 @@ export function NewConversationSearch({
         onChange={(e) => search(e.target.value)}
         onFocus={() => query.length >= 2 && setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder={adminOnly ? "Tìm admin theo tên hoặc username..." : "Tìm người dùng để bắt đầu trò chuyện..."}
+        placeholder={adminOnly ? t("messages.searchAdmin") : t("messages.searchPlayer")}
         className="w-full rounded-lg bg-ink-surface border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command transition-colors"
       />
       {open && results.length > 0 && (

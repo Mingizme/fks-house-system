@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/components/I18nProvider";
 
 export function AddPointsForm({ houseId, adminId }: { houseId: string; adminId: string }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useI18n();
   const [points, setPoints] = useState<number>(10);
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
@@ -17,11 +19,11 @@ export function AddPointsForm({ houseId, adminId }: { houseId: string; adminId: 
     setError(null);
     setOk(false);
     if (!reason.trim()) {
-      setError("Cần nhập lý do để ghi vào lịch sử.");
+      setError(t("points.reasonRequired"));
       return;
     }
     if (!points || points <= 0) {
-      setError("Số điểm phải lớn hơn 0.");
+      setError(t("points.positiveRequired"));
       return;
     }
     setSaving(true);
@@ -33,7 +35,7 @@ export function AddPointsForm({ houseId, adminId }: { houseId: string; adminId: 
     });
     setSaving(false);
     if (insertError) {
-      setError("Không thể lưu, vui lòng thử lại.");
+      setError(t("points.saveFailed"));
       return;
     }
     setReason("");
@@ -43,7 +45,7 @@ export function AddPointsForm({ houseId, adminId }: { houseId: string; adminId: 
 
   return (
     <div className="rounded-xl2 border border-ink-border bg-ink-surface p-5">
-      <p className="font-display font-bold mb-4">Cộng / Trừ điểm</p>
+      <p className="font-display font-bold mb-4">{t("points.formTitle")}</p>
       <div className="flex gap-3 mb-3">
         <input
           type="number"
@@ -55,26 +57,26 @@ export function AddPointsForm({ houseId, adminId }: { houseId: string; adminId: 
         <input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Lý do (bắt buộc, sẽ được ghi lại)"
+          placeholder={t("points.reasonPlaceholder")}
           className="flex-1 rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
         />
       </div>
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
-      {ok && <p className="text-sm text-success mb-3">Đã ghi nhận ✓</p>}
+      {ok && <p className="text-sm text-success mb-3">{t("points.saved")}</p>}
       <div className="flex gap-2">
         <button
           onClick={() => submit(1)}
           disabled={saving}
           className="flex-1 rounded-lg bg-success/15 text-success border border-success/30 hover:bg-success/25 transition-colors font-semibold py-2 text-sm disabled:opacity-50"
         >
-          + Cộng điểm
+          {t("points.add")}
         </button>
         <button
           onClick={() => submit(-1)}
           disabled={saving}
           className="flex-1 rounded-lg bg-danger/15 text-danger border border-danger/30 hover:bg-danger/25 transition-colors font-semibold py-2 text-sm disabled:opacity-50"
         >
-          − Trừ điểm
+          {t("points.subtract")}
         </button>
       </div>
     </div>

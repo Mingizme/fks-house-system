@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Announcement } from "@/lib/types";
 import { format } from "date-fns";
-import { vi } from "date-fns/locale";
+import { useI18n } from "@/components/I18nProvider";
 
 export function AnnouncementsFeed({ initial }: { initial: Announcement[] }) {
   const supabase = createClient();
   const [items, setItems] = useState<Announcement[]>(initial);
+  const { t, dateLocale } = useI18n();
 
   useEffect(() => {
     const channel = supabase
@@ -34,7 +35,7 @@ export function AnnouncementsFeed({ initial }: { initial: Announcement[] }) {
   }, []);
 
   if (items.length === 0) {
-    return <p className="text-sm text-ink-muted">Chưa có thông báo nào.</p>;
+    return <p className="text-sm text-ink-muted">{t("announcements.empty")}</p>;
   }
 
   return (
@@ -44,7 +45,7 @@ export function AnnouncementsFeed({ initial }: { initial: Announcement[] }) {
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-display font-bold text-lg">{a.title}</h3>
             <span className="text-xs text-ink-faint font-mono shrink-0">
-              {format(new Date(a.created_at), "d MMM, HH:mm", { locale: vi })}
+              {format(new Date(a.created_at), "d MMM, HH:mm", { locale: dateLocale })}
             </span>
           </div>
           <p className="text-sm text-ink-muted whitespace-pre-wrap leading-relaxed">{a.content}</p>

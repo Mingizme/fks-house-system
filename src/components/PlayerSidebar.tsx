@@ -5,6 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { HouseCrest } from "./HouseCrest";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useI18n } from "@/components/I18nProvider";
+import type { TranslationKey } from "@/lib/i18n";
 
 interface Props {
   displayName: string;
@@ -13,15 +16,16 @@ interface Props {
 }
 
 const NAV = [
-  { href: "/dashboard", label: "Tổng quan", icon: "◆" },
-  { href: "/announcements", label: "Thông báo", icon: "📣" },
-  { href: "/messages", label: "Tin nhắn", icon: "✉" },
-];
+  { href: "/dashboard", labelKey: "nav.overview", icon: "◆" },
+  { href: "/announcements", labelKey: "nav.announcements", icon: "📣" },
+  { href: "/messages", labelKey: "nav.messages", icon: "✉" },
+] satisfies Array<{ href: string; labelKey: TranslationKey; icon: string }>;
 
 export function PlayerSidebar({ displayName, avatarEmoji, house }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -35,6 +39,7 @@ export function PlayerSidebar({ displayName, avatarEmoji, house }: Props) {
         <div className="flex items-center gap-2 text-command font-display font-bold text-sm tracking-wide">
           HOUSE SYSTEM
         </div>
+        <LanguageSwitcher className="mt-4" />
       </div>
 
       {house ? (
@@ -44,13 +49,13 @@ export function PlayerSidebar({ displayName, avatarEmoji, house }: Props) {
         >
           <HouseCrest color={house.color} icon={house.icon} size="sm" />
           <div className="min-w-0">
-            <p className="text-xs text-ink-muted font-mono">HOUSE CỦA BẠN</p>
+            <p className="text-xs text-ink-muted font-mono">{t("nav.playerHouse")}</p>
             <p className="font-semibold truncate">{house.name}</p>
           </div>
         </Link>
       ) : (
         <div className="m-4 p-3 rounded-xl2 border border-dashed border-ink-border text-xs text-ink-muted">
-          Bạn chưa được phân vào house nào. Vui lòng chờ admin phân bổ.
+          {t("nav.unassigned")}
         </div>
       )}
 
@@ -69,7 +74,7 @@ export function PlayerSidebar({ displayName, avatarEmoji, house }: Props) {
               )}
             >
               <span className="w-4 text-center">{item.icon}</span>
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
@@ -82,7 +87,7 @@ export function PlayerSidebar({ displayName, avatarEmoji, house }: Props) {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{displayName}</p>
           <button onClick={signOut} className="text-xs text-ink-muted hover:text-danger transition-colors">
-            Đăng xuất
+            {t("common.logout")}
           </button>
         </div>
       </div>

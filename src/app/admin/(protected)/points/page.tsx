@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { PointsLedger } from "@/components/PointsLedger";
+import { getServerTranslator } from "@/lib/i18n-server";
 
 export default async function AdminPointsPage() {
+  const { t } = getServerTranslator();
   const supabase = createClient();
   const { data: history } = await supabase
     .from("point_transactions")
@@ -12,9 +14,9 @@ export default async function AdminPointsPage() {
   return (
     <main className="p-8 max-w-4xl mx-auto">
       <header className="mb-6">
-        <p className="text-ink-muted font-mono text-xs mb-1">MINH BẠCH & KIỂM SOÁT</p>
-        <h1 className="font-display font-bold text-3xl">Lịch sử cộng/trừ điểm</h1>
-        <p className="text-ink-muted text-sm mt-1">Toàn bộ giao dịch điểm của mọi admin, hiển thị theo thời gian thực.</p>
+        <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.pointsKicker")}</p>
+        <h1 className="font-display font-bold text-3xl">{t("admin.pointsTitle")}</h1>
+        <p className="text-ink-muted text-sm mt-1">{t("admin.pointsSubtitle")}</p>
       </header>
       <PointsLedger initial={(history as any) ?? []} />
     </main>

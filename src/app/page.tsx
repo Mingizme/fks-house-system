@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getServerTranslator } from "@/lib/i18n-server";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
 
 export default async function HomePage() {
+  const { t } = getServerTranslator();
   const supabase = createClient();
   const {
     data: { user },
@@ -28,15 +31,15 @@ export default async function HomePage() {
       </div>
 
       <div className="relative z-10 text-center max-w-2xl">
+        <LanguageSwitcher className="w-40 mx-auto mb-6" />
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-ink-border bg-ink-surface/60 text-xs text-ink-muted font-mono mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulseSoft" /> HỆ THỐNG ĐANG HOẠT ĐỘNG
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulseSoft" /> {t("home.status")}
         </div>
         <h1 className="font-display font-extrabold text-5xl sm:text-6xl tracking-tight mb-4">
           HOUSE <span className="text-command">SYSTEM</span>
         </h1>
         <p className="text-ink-muted text-lg mb-10 leading-relaxed">
-          Trung tâm chỉ huy cho bốn ngôi nhà. Điểm số minh bạch, liên lạc thời gian thực,
-          mọi quyết định đều được ghi lại.
+          {t("home.tagline")}
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
@@ -44,19 +47,19 @@ export default async function HomePage() {
             href="/login"
             className="px-6 py-3 rounded-xl bg-command hover:bg-command/85 transition-colors font-semibold"
           >
-            Đăng nhập Player
+            {t("home.playerLogin")}
           </Link>
           <Link
             href="/signup"
             className="px-6 py-3 rounded-xl border border-ink-border hover:border-command/60 hover:bg-ink-surface transition-colors font-semibold"
           >
-            Tạo tài khoản Player
+            {t("home.playerSignup")}
           </Link>
           <Link
             href="/admin/login"
             className="px-6 py-3 rounded-xl border border-ink-border text-ink-muted hover:text-ink-text hover:border-ink-faint transition-colors text-sm font-mono"
           >
-            Cổng Admin →
+            {t("home.adminGate")}
           </Link>
         </div>
 

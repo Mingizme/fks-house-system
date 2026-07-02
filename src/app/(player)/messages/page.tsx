@@ -2,8 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { NewConversationSearch } from "@/components/NewConversationSearch";
 import { format } from "date-fns";
+import { getServerTranslator } from "@/lib/i18n-server";
 
 export default async function MessagesListPage() {
+  const { t } = getServerTranslator();
   const supabase = createClient();
   const {
     data: { user },
@@ -35,15 +37,15 @@ export default async function MessagesListPage() {
   return (
     <main className="p-8 max-w-2xl mx-auto">
       <header className="mb-6">
-        <p className="text-ink-muted font-mono text-xs mb-1">LIÊN LẠC</p>
-        <h1 className="font-display font-bold text-3xl">Tin nhắn</h1>
+        <p className="text-ink-muted font-mono text-xs mb-1">{t("messages.kicker")}</p>
+        <h1 className="font-display font-bold text-3xl">{t("messages.title")}</h1>
       </header>
 
       <NewConversationSearch excludeSelf={user!.id} basePath="/messages" />
 
       <div className="mt-6 space-y-1">
         {conversations.length === 0 && (
-          <p className="text-sm text-ink-muted">Chưa có cuộc trò chuyện nào. Tìm bạn ở ô trên để bắt đầu.</p>
+          <p className="text-sm text-ink-muted">{t("messages.empty")}</p>
         )}
         {conversations.map((c) => (
           <Link

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { HouseCrest } from "./HouseCrest";
 import { HousePoints } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/I18nProvider";
 
 const BAR_CLASS: Record<string, string> = {
   wolves: "bg-house-wolves",
@@ -23,6 +24,7 @@ export function HousePointsBoard({
 }) {
   const [houses, setHouses] = useState<HousePoints[]>(initial);
   const supabase = createClient();
+  const { t } = useI18n();
 
   useEffect(() => {
     const channel = supabase
@@ -65,7 +67,7 @@ export function HousePointsBoard({
               <HouseCrest color={h.color} icon={h.icon} />
               <div>
                 <p className="font-display font-bold">{h.name}</p>
-                <p className="text-xs text-ink-muted font-mono">HẠNG {i + 1}</p>
+                <p className="text-xs text-ink-muted font-mono">{t("house.rank", { rank: i + 1 })}</p>
               </div>
             </div>
             <p className="font-mono text-2xl font-bold tabular-nums">{h.total_points.toLocaleString()}</p>

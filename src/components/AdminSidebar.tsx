@@ -5,14 +5,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLE_LABELS, AdminRole } from "@/lib/types";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useI18n } from "@/components/I18nProvider";
+import type { TranslationKey } from "@/lib/i18n";
 
 const NAV = [
-  { href: "/admin", label: "Tổng quan", icon: "◆", exact: true },
-  { href: "/admin/players", label: "Player & House", icon: "👥" },
-  { href: "/admin/points", label: "Lịch sử điểm", icon: "📊" },
-  { href: "/admin/announcements", label: "Thông báo", icon: "📣" },
-  { href: "/admin/chat", label: "Chat Admin", icon: "🔒" },
-];
+  { href: "/admin", labelKey: "nav.overview", icon: "◆", exact: true },
+  { href: "/admin/players", labelKey: "nav.playerHouseManage", icon: "👥" },
+  { href: "/admin/points", labelKey: "nav.pointsHistory", icon: "📊" },
+  { href: "/admin/announcements", labelKey: "nav.announcements", icon: "📣" },
+  { href: "/admin/chat", labelKey: "nav.adminChat", icon: "🔒" },
+] satisfies Array<{ href: string; labelKey: TranslationKey; icon: string; exact?: boolean }>;
 
 const HOUSES = [
   { slug: "arctic-wolves", name: "Arctic Wolves", icon: "🐺" },
@@ -25,6 +28,7 @@ export function AdminSidebar({ displayName, adminRole }: { displayName: string; 
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -38,7 +42,8 @@ export function AdminSidebar({ displayName, adminRole }: { displayName: string; 
         <div className="flex items-center gap-2 text-command font-display font-bold text-sm tracking-wide">
           HOUSE SYSTEM
         </div>
-        <span className="text-[10px] font-mono text-ink-faint">CỔNG QUẢN TRỊ</span>
+        <span className="text-[10px] font-mono text-ink-faint">{t("common.adminPortal")}</span>
+        <LanguageSwitcher className="mt-4" />
       </div>
 
       <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto">
@@ -54,12 +59,12 @@ export function AdminSidebar({ displayName, adminRole }: { displayName: string; 
               )}
             >
               <span className="w-4 text-center">{item.icon}</span>
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
 
-        <p className="text-[10px] font-mono text-ink-faint px-3 pt-5 pb-1">GIÁM SÁT CÁC HOUSE</p>
+        <p className="text-[10px] font-mono text-ink-faint px-3 pt-5 pb-1">{t("nav.houseMonitor")}</p>
         {HOUSES.map((h) => {
           const active = pathname === `/admin/houses/${h.slug}`;
           return (
@@ -82,7 +87,7 @@ export function AdminSidebar({ displayName, adminRole }: { displayName: string; 
         <p className="text-sm font-medium truncate">{displayName}</p>
         <p className="text-xs text-command font-mono mb-2">{adminRole ? ADMIN_ROLE_LABELS[adminRole] : ""}</p>
         <button onClick={signOut} className="text-xs text-ink-muted hover:text-danger transition-colors">
-          Đăng xuất
+          {t("common.logout")}
         </button>
       </div>
     </aside>

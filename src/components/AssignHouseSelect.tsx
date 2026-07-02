@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { House } from "@/lib/types";
+import { useI18n } from "@/components/I18nProvider";
 
 export function AssignHouseSelect({
   playerId,
@@ -14,6 +15,7 @@ export function AssignHouseSelect({
   houses: House[];
 }) {
   const supabase = createClient();
+  const { t } = useI18n();
   const [value, setValue] = useState(currentHouseId ?? "");
   const [saving, setSaving] = useState(false);
 
@@ -32,7 +34,7 @@ export function AssignHouseSelect({
       disabled={saving}
       className="rounded-lg bg-ink-surface2 border border-ink-border px-3 py-1.5 text-sm outline-none focus:border-command transition-colors disabled:opacity-50"
     >
-      <option value="">— Chưa xếp house —</option>
+      <option value="">{t("admin.houseUnassignedOption")}</option>
       {houses.map((h) => (
         <option key={h.id} value={h.id}>
           {h.icon} {h.name}

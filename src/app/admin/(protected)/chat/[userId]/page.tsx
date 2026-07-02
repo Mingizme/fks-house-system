@@ -2,8 +2,10 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DirectChatBox } from "@/components/DirectChatBox";
 import Link from "next/link";
+import { getServerTranslator } from "@/lib/i18n-server";
 
 export default async function AdminChatThreadPage({ params }: { params: { userId: string } }) {
+  const { t } = getServerTranslator();
   const supabase = createClient();
   const {
     data: { user },
@@ -36,7 +38,7 @@ export default async function AdminChatThreadPage({ params }: { params: { userId
 
   return (
     <main className="p-8 max-w-2xl mx-auto">
-      <Link href="/admin/chat" className="text-ink-muted text-sm font-mono hover:text-ink-text">← Tất cả chat admin</Link>
+      <Link href="/admin/chat" className="text-ink-muted text-sm font-mono hover:text-ink-text">{t("messages.backAllAdmin")}</Link>
       <div className="mt-4">
         <DirectChatBox
           currentUserId={user.id}
