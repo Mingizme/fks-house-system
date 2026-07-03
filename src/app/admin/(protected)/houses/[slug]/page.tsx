@@ -5,6 +5,15 @@ import { HouseChatBox } from "@/components/HouseChatBox";
 import { AddPointsForm } from "@/components/AddPointsForm";
 import { formatPoints } from "@/lib/utils";
 import { getServerTranslator } from "@/lib/i18n-server";
+import type { HouseSlug } from "@/lib/types";
+import type { TranslationKey } from "@/lib/i18n";
+
+const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
+  "arctic-wolves": "house.motto.arcticWolves",
+  "inferno-phoenix": "house.motto.infernoPhoenix",
+  "noble-lions": "house.motto.nobleLions",
+  "ironclad-rhinos": "house.motto.ironcladRhinos",
+};
 
 export default async function AdminHousePage({ params }: { params: { slug: string } }) {
   const { t } = getServerTranslator();
@@ -41,6 +50,9 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
         <div>
           <h1 className="font-display font-extrabold text-3xl">{house.name}</h1>
           <p className="text-ink-muted text-sm">{t("house.memberCount", { count: roster?.length ?? 0 })}</p>
+          <p className="text-ink-muted text-sm">
+            {t(HOUSE_MOTTO_KEYS[house.slug as HouseSlug] ?? "house.motto.arcticWolves")}
+          </p>
         </div>
         <div className="ml-auto text-right">
           <p className="text-xs text-ink-muted font-mono">{t("house.totalPoints")}</p>

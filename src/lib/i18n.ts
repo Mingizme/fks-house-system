@@ -40,6 +40,10 @@ export const DATE_LOCALES: Record<Language, Locale> = {
 
 export const dictionaries = {
   vi: {
+    "house.motto.arcticWolves": "Chúng ta không đuổi theo chiến thắng, chúng ta săn lấy nó.",
+    "house.motto.ironcladRhinos": "Đứng vững, tiến công.",
+    "house.motto.nobleLions": "Lòng dũng cảm trên hết.",
+    "house.motto.infernoPhoenix": "Luôn trỗi dậy.",
     "meta.description": "Hệ thống quản lý House: điểm số, thông báo và liên lạc thời gian thực.",
     "common.language": "Ngôn ngữ",
     "common.home": "Trang chủ",
@@ -220,6 +224,10 @@ export const dictionaries = {
   },
 
   en: {
+    "house.motto.arcticWolves": "We don't chase victory, we hunt it.",
+    "house.motto.ironcladRhinos": "Stand firm, charge forward.",
+    "house.motto.nobleLions": "Courage above all.",
+    "house.motto.infernoPhoenix": "Rise Every Time.",
     "meta.description": "House management system for scores, announcements, and realtime communication.",
     "common.language": "Language",
     "common.home": "Home",
@@ -400,6 +408,10 @@ export const dictionaries = {
   },
 
   ja: {
+    "house.motto.arcticWolves": "勝利を追わない。狩りに行く。",
+    "house.motto.ironcladRhinos": "揺るがず立ち、前へ突き進め。",
+    "house.motto.nobleLions": "勇気を何よりも。",
+    "house.motto.infernoPhoenix": "何度でも立ち上がれ。",
     "meta.description": "House のスコア、告知、リアルタイム連絡を管理するシステムです。",
     "common.language": "言語",
     "common.home": "ホーム",
@@ -548,6 +560,10 @@ export const dictionaries = {
   },
 
   th: {
+    "house.motto.arcticWolves": "เราไม่ไล่ตามชัยชนะ เราล่ามัน",
+    "house.motto.ironcladRhinos": "ยืนหยัดให้มั่น บุกไปข้างหน้า",
+    "house.motto.nobleLions": "ความกล้าหาญเหนือสิ่งอื่นใด",
+    "house.motto.infernoPhoenix": "ลุกขึ้นใหม่ทุกครั้ง",
     "meta.description": "ระบบจัดการ House สำหรับคะแนน ประกาศ และการสื่อสารแบบเรียลไทม์",
     "common.language": "ภาษา",
     "common.home": "หน้าแรก",
@@ -696,6 +712,10 @@ export const dictionaries = {
   },
 
   ta: {
+    "house.motto.arcticWolves": "நாங்கள் வெற்றியைத் துரத்துவதில்லை; அதை வேட்டையாடுகிறோம்.",
+    "house.motto.ironcladRhinos": "உறுதியாக நில், முன்னே பாய்ந்து செல்.",
+    "house.motto.nobleLions": "துணிச்சல் எல்லாவற்றிற்கும் மேலானது.",
+    "house.motto.infernoPhoenix": "ஒவ்வொரு முறையும் மீண்டும் எழு.",
     "meta.description": "House மதிப்பெண்கள், அறிவிப்புகள் மற்றும் நேரடி தொடர்புகளுக்கான மேலாண்மை அமைப்பு.",
     "common.language": "மொழி",
     "common.home": "முகப்பு",
@@ -844,6 +864,10 @@ export const dictionaries = {
   },
 
   ko: {
+    "house.motto.arcticWolves": "우리는 승리를 쫓지 않는다, 사냥한다.",
+    "house.motto.ironcladRhinos": "굳건히 서서 앞으로 돌진하라.",
+    "house.motto.nobleLions": "용기가 무엇보다 우선이다.",
+    "house.motto.infernoPhoenix": "매번 다시 일어나라.",
     "meta.description": "House 점수, 공지, 실시간 소통을 관리하는 시스템입니다.",
     "common.language": "언어",
     "common.home": "홈",

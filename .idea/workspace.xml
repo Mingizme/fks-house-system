@@ -6,17 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="d86c6a22-8701-457f-bea8-bace0b64306b" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(player)/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(player)/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(player)/profile/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(player)/profile/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/(protected)/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/(protected)/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/login/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/login/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/AdminSidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AdminSidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/PlayerSidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/PlayerSidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ProfileForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ProfileForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(player)/house/[slug]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(player)/house/[slug]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/(protected)/houses/[slug]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/(protected)/houses/[slug]/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/i18n.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/i18n.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/types.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/schema.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
