@@ -12,6 +12,7 @@ import type { TranslationKey } from "@/lib/i18n";
 interface Props {
   displayName: string;
   avatarEmoji: string;
+  avatarUrl: string | null;
   house: { name: string; slug: string; color: string; icon: string } | null;
 }
 
@@ -19,9 +20,10 @@ const NAV = [
   { href: "/dashboard", labelKey: "nav.overview", icon: "◆" },
   { href: "/announcements", labelKey: "nav.announcements", icon: "📣" },
   { href: "/messages", labelKey: "nav.messages", icon: "✉" },
+  { href: "/profile", labelKey: "nav.settings", icon: "⚙" },
 ] satisfies Array<{ href: string; labelKey: TranslationKey; icon: string }>;
 
-export function PlayerSidebar({ displayName, avatarEmoji, house }: Props) {
+export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -81,8 +83,13 @@ export function PlayerSidebar({ displayName, avatarEmoji, house }: Props) {
       </nav>
 
       <div className="p-4 border-t border-ink-border flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg">
-          {avatarEmoji}
+        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            avatarEmoji
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{displayName}</p>

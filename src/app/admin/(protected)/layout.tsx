@@ -12,7 +12,7 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, user_type, admin_role")
+    .select("display_name, avatar_emoji, avatar_url, user_type, admin_role")
     .eq("id", user.id)
     .single();
 
@@ -20,7 +20,12 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
 
   return (
     <div className="flex">
-      <AdminSidebar displayName={profile.display_name} adminRole={profile.admin_role} />
+      <AdminSidebar
+        displayName={profile.display_name}
+        adminRole={profile.admin_role}
+        avatarEmoji={profile.avatar_emoji ?? "🙂"}
+        avatarUrl={profile.avatar_url}
+      />
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   );

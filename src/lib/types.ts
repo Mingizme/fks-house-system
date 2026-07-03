@@ -19,12 +19,15 @@ export interface HousePoints extends House {
 
 export interface Profile {
   id: string;
+  email: string | null;
   username: string;
   display_name: string;
   user_type: UserType;
   admin_role: AdminRole | null;
   house_id: string | null;
   avatar_emoji: string | null;
+  avatar_url: string | null;
+  display_name_changed_at: string | null;
   created_at: string;
 }
 

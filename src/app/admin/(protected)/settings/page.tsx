@@ -4,7 +4,7 @@ import { getServerTranslator } from "@/lib/i18n-server";
 
 const EMOJIS = ["🙂", "😎", "🐺", "🔥", "🦁", "🦏", "⚡", "🎯", "🛡️", "🗡️", "🌙", "☀️"];
 
-export default async function ProfilePage() {
+export default async function AdminSettingsPage() {
   const { t } = getServerTranslator();
   const supabase = createClient();
   const {

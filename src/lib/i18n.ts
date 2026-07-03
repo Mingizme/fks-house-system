@@ -92,6 +92,21 @@ export const dictionaries = {
     "auth.usernamePlaceholder": "vd: minh_tran",
     "auth.passwordPlaceholder": "Ít nhất 6 ký tự",
     "auth.adminManual": "Tài khoản Admin được tạo thủ công bởi quản trị hệ thống.",
+    "auth.emailOrUsername": "EMAIL HOẶC USERNAME",
+    "auth.forgotPassword": "Quên mật khẩu?",
+    "auth.forgotPasswordTitle": "Khôi phục mật khẩu",
+    "auth.forgotPasswordSubtitle": "Nhập email hoặc username. Nếu tài khoản tồn tại, hệ thống sẽ gửi link đặt lại mật khẩu.",
+    "auth.sendResetLink": "Gửi link đặt lại mật khẩu",
+    "auth.sendingReset": "Đang gửi...",
+    "auth.resetEmailSent": "Nếu tài khoản tồn tại, link đặt lại mật khẩu đã được gửi đến email đã đăng ký.",
+    "auth.resetPasswordTitle": "Đặt mật khẩu mới",
+    "auth.resetPasswordSubtitle": "Nhập mật khẩu mới sau khi mở link xác nhận từ email.",
+    "auth.newPassword": "MẬT KHẨU MỚI",
+    "auth.confirmPassword": "XÁC NHẬN MẬT KHẨU",
+    "auth.passwordsDoNotMatch": "Hai mật khẩu không khớp.",
+    "auth.resetPasswordFailed": "Không thể đổi mật khẩu. Vui lòng mở lại link trong email.",
+    "auth.passwordUpdated": "Mật khẩu đã được cập nhật.",
+    "auth.updatePassword": "Cập nhật mật khẩu",
 
     "nav.overview": "Tổng quan",
     "nav.announcements": "Thông báo",
@@ -101,6 +116,7 @@ export const dictionaries = {
     "nav.playerHouseManage": "Player & House",
     "nav.pointsHistory": "Lịch sử điểm",
     "nav.adminChat": "Chat Admin",
+    "nav.settings": "Cài đặt",
     "nav.houseMonitor": "GIÁM SÁT CÁC HOUSE",
 
     "dashboard.kicker": "TỔNG QUAN",
@@ -185,6 +201,22 @@ export const dictionaries = {
 
     "profile.displayNameLabel": "TÊN HIỂN THỊ",
     "profile.iconLabel": "BIỂU TƯỢNG",
+    "profile.avatarImageLabel": "ẢNH ĐẠI DIỆN",
+    "profile.avatarHelp": "PNG, JPG, WEBP hoặc GIF. Tối đa 2MB.",
+    "profile.avatarInvalidType": "File avatar phải là ảnh.",
+    "profile.avatarTooLarge": "Ảnh đại diện tối đa 2MB.",
+    "profile.avatarUploadFailed": "Không thể upload avatar. Hãy kiểm tra bucket Storage avatars đã được tạo.",
+    "profile.avatarReady": "Avatar đã sẵn sàng. Bấm lưu thay đổi để áp dụng.",
+    "profile.removeAvatar": "Gỡ ảnh",
+    "profile.displayNameRequired": "Tên hiển thị không được để trống.",
+    "profile.displayNameTooLong": "Tên hiển thị tối đa 40 ký tự.",
+    "profile.displayNameAvailable": "Bạn có thể đổi tên hiển thị. Sau khi lưu, lần đổi tiếp theo là sau 30 ngày.",
+    "profile.displayNameCooldown": "Tên hiển thị chỉ đổi được 30 ngày một lần. Có thể đổi lại từ {date}.",
+    "profile.securityTitle": "Bảo mật",
+    "profile.securitySubtitle": "Đổi mật khẩu luôn cần xác nhận qua email của tài khoản.",
+    "profile.sendPasswordEmail": "Gửi email đổi mật khẩu",
+    "profile.passwordEmailSent": "Email đổi mật khẩu đã được gửi.",
+    "profile.emailMissing": "Tài khoản này chưa có email trong profile. Hãy chạy SQL cập nhật schema trước.",
   },
 
   en: {
@@ -240,6 +272,21 @@ export const dictionaries = {
     "auth.usernamePlaceholder": "e.g. minh_tran",
     "auth.passwordPlaceholder": "At least 6 characters",
     "auth.adminManual": "Admin accounts are created manually by system management.",
+    "auth.emailOrUsername": "EMAIL OR USERNAME",
+    "auth.forgotPassword": "Forgot password?",
+    "auth.forgotPasswordTitle": "Recover password",
+    "auth.forgotPasswordSubtitle": "Enter your email or username. If the account exists, a reset link will be sent.",
+    "auth.sendResetLink": "Send reset link",
+    "auth.sendingReset": "Sending...",
+    "auth.resetEmailSent": "If the account exists, a password reset link has been sent to the registered email.",
+    "auth.resetPasswordTitle": "Set a new password",
+    "auth.resetPasswordSubtitle": "Enter a new password after opening the confirmation link from email.",
+    "auth.newPassword": "NEW PASSWORD",
+    "auth.confirmPassword": "CONFIRM PASSWORD",
+    "auth.passwordsDoNotMatch": "Passwords do not match.",
+    "auth.resetPasswordFailed": "Could not update password. Please reopen the email link.",
+    "auth.passwordUpdated": "Password has been updated.",
+    "auth.updatePassword": "Update password",
 
     "nav.overview": "Overview",
     "nav.announcements": "Announcements",
@@ -249,6 +296,7 @@ export const dictionaries = {
     "nav.playerHouseManage": "Players & Houses",
     "nav.pointsHistory": "Points History",
     "nav.adminChat": "Admin Chat",
+    "nav.settings": "Settings",
     "nav.houseMonitor": "HOUSE MONITORING",
 
     "dashboard.kicker": "OVERVIEW",
@@ -333,6 +381,22 @@ export const dictionaries = {
 
     "profile.displayNameLabel": "DISPLAY NAME",
     "profile.iconLabel": "ICON",
+    "profile.avatarImageLabel": "AVATAR IMAGE",
+    "profile.avatarHelp": "PNG, JPG, WEBP, or GIF. Max 2MB.",
+    "profile.avatarInvalidType": "Avatar file must be an image.",
+    "profile.avatarTooLarge": "Avatar image must be 2MB or smaller.",
+    "profile.avatarUploadFailed": "Could not upload avatar. Check that the avatars Storage bucket exists.",
+    "profile.avatarReady": "Avatar is ready. Save changes to apply it.",
+    "profile.removeAvatar": "Remove image",
+    "profile.displayNameRequired": "Display name is required.",
+    "profile.displayNameTooLong": "Display name must be 40 characters or fewer.",
+    "profile.displayNameAvailable": "You can change your display name. After saving, the next change is available after 30 days.",
+    "profile.displayNameCooldown": "Display name can only be changed once every 30 days. Next available on {date}.",
+    "profile.securityTitle": "Security",
+    "profile.securitySubtitle": "Password changes require confirmation through the account email.",
+    "profile.sendPasswordEmail": "Send password change email",
+    "profile.passwordEmailSent": "Password change email sent.",
+    "profile.emailMissing": "This account has no email in its profile. Run the schema update SQL first.",
   },
 
   ja: {
@@ -931,11 +995,11 @@ export const dictionaries = {
 export type TranslationKey = keyof typeof dictionaries.vi;
 
 export function translate(language: Language, key: TranslationKey, vars?: Record<string, string | number>) {
-  const template = dictionaries[language]?.[key] ?? dictionaries.vi[key] ?? key;
+  const dictionary = dictionaries[language] as Partial<Record<TranslationKey, string>>;
+  const template = dictionary[key] ?? dictionaries.vi[key] ?? key;
   if (!vars) return template;
   return Object.entries(vars).reduce(
     (value, [name, replacement]) => value.replaceAll(`{${name}}`, String(replacement)),
     template
   );
 }
-

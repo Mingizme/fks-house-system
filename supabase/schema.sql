@@ -35,17 +35,30 @@ on conflict (slug) do nothing;
 -- ---------- PROFILES ----------
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
+  email text,
   username text not null unique,
   display_name text not null,
   user_type user_type not null default 'player',
   admin_role admin_role,
   house_id uuid references houses(id) on delete set null,
   avatar_emoji text default '🙂',
+  avatar_url text,
+  display_name_changed_at timestamptz,
   created_at timestamptz default now()
 );
 
+alter table profiles add column if not exists email text;
+alter table profiles add column if not exists avatar_url text;
+alter table profiles add column if not exists display_name_changed_at timestamptz;
+
 create index if not exists idx_profiles_house on profiles(house_id);
 create index if not exists idx_profiles_user_type on profiles(user_type);
+create unique index if not exists idx_profiles_email_unique on profiles(lower(email)) where email is not null;
+
+update profiles p
+set email = lower(u.email)
+from auth.users u
+where p.id = u.id and p.email is null;
 
 -- ---------- POINT TRANSACTIONS ----------
 create table if not exists point_transactions (
@@ -129,6 +142,69 @@ as $$
     where (blocker_id = a and blocked_id = b) or (blocker_id = b and blocked_id = a)
   );
 $$;
+
+create or replace function get_login_email(login_identifier text)
+returns text
+language sql security definer stable
+set search_path = public
+as $$
+  select p.email
+  from profiles p
+  where lower(p.username) = lower(trim(login_identifier))
+     or lower(p.email) = lower(trim(login_identifier))
+  limit 1;
+$$;
+
+grant execute on function get_login_email(text) to anon, authenticated;
+
+create or replace function enforce_profile_display_name_cooldown()
+returns trigger
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if new.display_name is distinct from old.display_name then
+    if old.display_name_changed_at is not null
+       and old.display_name_changed_at > now() - interval '30 days' then
+      raise exception 'Display name can only be changed once every 30 days.';
+    end if;
+
+    new.display_name_changed_at = now();
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists profile_display_name_cooldown on profiles;
+create trigger profile_display_name_cooldown
+  before update of display_name on profiles
+  for each row execute procedure enforce_profile_display_name_cooldown();
+
+create or replace function protect_profile_self_update()
+returns trigger
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() = new.id then
+    if new.email is distinct from old.email
+       or new.username is distinct from old.username
+       or new.user_type is distinct from old.user_type
+       or new.admin_role is distinct from old.admin_role
+       or new.house_id is distinct from old.house_id then
+      raise exception 'Protected profile fields cannot be changed from user settings.';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists profile_self_update_guard on profiles;
+create trigger profile_self_update_guard
+  before update on profiles
+  for each row execute procedure protect_profile_self_update();
 
 -- =========================================================
 -- VIEW: house points totals (real-time friendly aggregate)
@@ -242,13 +318,60 @@ create policy "blocks_delete_own" on blocks for delete
   to authenticated using (blocker_id = auth.uid());
 
 -- =========================================================
+-- STORAGE: public avatar images uploaded by each account into its own folder
+-- =========================================================
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'avatars',
+  'avatars',
+  true,
+  2097152,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "avatars_select_public" on storage.objects;
+create policy "avatars_select_public" on storage.objects for select
+  using (bucket_id = 'avatars');
+
+drop policy if exists "avatars_insert_own" on storage.objects;
+create policy "avatars_insert_own" on storage.objects for insert
+  to authenticated with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "avatars_update_own" on storage.objects;
+create policy "avatars_update_own" on storage.objects for update
+  to authenticated using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "avatars_delete_own" on storage.objects;
+create policy "avatars_delete_own" on storage.objects for delete
+  to authenticated using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- =========================================================
 -- REALTIME: bật realtime cho các bảng cần update trực tiếp
 -- =========================================================
-alter publication supabase_realtime add table house_messages;
-alter publication supabase_realtime add table direct_messages;
-alter publication supabase_realtime add table point_transactions;
-alter publication supabase_realtime add table announcements;
-alter publication supabase_realtime add table profiles;
+do $$ begin
+  alter publication supabase_realtime add table house_messages;
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter publication supabase_realtime add table direct_messages;
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter publication supabase_realtime add table point_transactions;
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter publication supabase_realtime add table announcements;
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter publication supabase_realtime add table profiles;
+exception when duplicate_object then null; end $$;
 
 -- =========================================================
 -- TRIGGER: tự tạo profile khi có user mới đăng ký (mặc định player, chưa có house)
@@ -258,9 +381,10 @@ returns trigger
 language plpgsql security definer
 as $$
 begin
-  insert into public.profiles (id, username, display_name, user_type, house_id)
+  insert into public.profiles (id, email, username, display_name, user_type, house_id)
   values (
     new.id,
+    lower(new.email),
     coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
     coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
     'player',

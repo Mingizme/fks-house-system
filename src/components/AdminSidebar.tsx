@@ -15,6 +15,7 @@ const NAV = [
   { href: "/admin/points", labelKey: "nav.pointsHistory", icon: "📊" },
   { href: "/admin/announcements", labelKey: "nav.announcements", icon: "📣" },
   { href: "/admin/chat", labelKey: "nav.adminChat", icon: "🔒" },
+  { href: "/admin/settings", labelKey: "nav.settings", icon: "⚙" },
 ] satisfies Array<{ href: string; labelKey: TranslationKey; icon: string; exact?: boolean }>;
 
 const HOUSES = [
@@ -24,7 +25,17 @@ const HOUSES = [
   { slug: "ironclad-rhinos", name: "Ironclad Rhinos", icon: "🦏" },
 ];
 
-export function AdminSidebar({ displayName, adminRole }: { displayName: string; adminRole: AdminRole | null }) {
+export function AdminSidebar({
+  displayName,
+  adminRole,
+  avatarEmoji,
+  avatarUrl,
+}: {
+  displayName: string;
+  adminRole: AdminRole | null;
+  avatarEmoji: string;
+  avatarUrl: string | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -83,12 +94,22 @@ export function AdminSidebar({ displayName, adminRole }: { displayName: string; 
         })}
       </nav>
 
-      <div className="p-4 border-t border-ink-border">
-        <p className="text-sm font-medium truncate">{displayName}</p>
-        <p className="text-xs text-command font-mono mb-2">{adminRole ? ADMIN_ROLE_LABELS[adminRole] : ""}</p>
-        <button onClick={signOut} className="text-xs text-ink-muted hover:text-danger transition-colors">
-          {t("common.logout")}
-        </button>
+      <div className="p-4 border-t border-ink-border flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            avatarEmoji
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium truncate">{displayName}</p>
+          <p className="text-xs text-command font-mono">{adminRole ? ADMIN_ROLE_LABELS[adminRole] : ""}</p>
+          <button onClick={signOut} className="text-xs text-ink-muted hover:text-danger transition-colors">
+            {t("common.logout")}
+          </button>
+        </div>
       </div>
     </aside>
   );

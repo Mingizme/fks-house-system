@@ -12,7 +12,7 @@ export default async function PlayerLayout({ children }: { children: React.React
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_emoji, user_type, house:houses(name, slug, color, icon)")
+    .select("id, display_name, avatar_emoji, avatar_url, user_type, house:houses(name, slug, color, icon)")
     .eq("id", user.id)
     .single();
 
@@ -26,6 +26,7 @@ export default async function PlayerLayout({ children }: { children: React.React
       <PlayerSidebar
         displayName={profile.display_name}
         avatarEmoji={profile.avatar_emoji ?? "🙂"}
+        avatarUrl={profile.avatar_url}
         house={house ?? null}
       />
       <div className="flex-1 min-w-0">{children}</div>

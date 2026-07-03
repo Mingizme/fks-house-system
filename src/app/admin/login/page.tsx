@@ -6,12 +6,13 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useI18n } from "@/components/I18nProvider";
+import { resolveLoginEmail } from "@/lib/auth-client";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const supabase = createClient();
   const { t } = useI18n();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -20,6 +21,13 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    const { email, error: lookupError } = await resolveLoginEmail(supabase, identifier);
+    if (lookupError || !email) {
+      setError(t("auth.invalidCredentials"));
+      setLoading(false);
+      return;
+    }
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError) {
@@ -61,10 +69,11 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.email")}</label>
+            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("auth.emailOrUsername")}</label>
             <input
-              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+              type="text" required value={identifier} onChange={(e) => setIdentifier(e.target.value)}
               className="w-full rounded-lg bg-ink-surface border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
+              placeholder="admin@example.com / director"
             />
           </div>
           <div>
@@ -86,6 +95,12 @@ export default function AdminLoginPage() {
             {loading ? t("auth.verifying") : t("auth.enterSystem")}
           </button>
         </form>
+
+        <div className="mt-4 text-center">
+          <Link href="/forgot-password" className="text-sm text-command hover:underline">
+            {t("auth.forgotPassword")}
+          </Link>
+        </div>
 
         <p className="text-xs text-ink-faint mt-8 text-center font-mono">
           {t("auth.adminManual")}
