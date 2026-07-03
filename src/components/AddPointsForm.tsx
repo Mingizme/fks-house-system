@@ -52,12 +52,14 @@ export function AddPointsForm({ houseId, adminId }: { houseId: string; adminId: 
           min={1}
           value={points}
           onChange={(e) => setPoints(Number(e.target.value))}
+          aria-label={t("points.formTitle")}
           className="w-24 rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
         />
         <input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder={t("points.reasonPlaceholder")}
+          aria-label={t("points.reasonPlaceholder")}
           className="flex-1 rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
         />
       </div>

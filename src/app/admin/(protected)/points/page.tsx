@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { PointsLedger } from "@/components/PointsLedger";
 import { getServerTranslator } from "@/lib/i18n-server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Points History — House System",
+  description: "View and filter point transaction history and ledgers.",
+};
 
 export default async function AdminPointsPage() {
   const { t } = getServerTranslator();

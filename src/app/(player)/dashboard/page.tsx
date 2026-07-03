@@ -3,6 +3,12 @@ import { HousePointsBoard } from "@/components/HousePointsBoard";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { getServerTranslator } from "@/lib/i18n-server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard — House System",
+  description: "View point boards, leaderboard standings, and latest announcements.",
+};
 
 export default async function DashboardPage() {
   const { t, dateLocale } = getServerTranslator();

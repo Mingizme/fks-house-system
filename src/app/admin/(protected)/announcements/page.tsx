@@ -2,6 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { NewAnnouncementForm } from "@/components/NewAnnouncementForm";
 import { getServerTranslator } from "@/lib/i18n-server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Announcements Management — House System",
+  description: "Create and manage official system-wide announcements.",
+};
 
 export default async function AdminAnnouncementsPage() {
   const { t } = getServerTranslator();

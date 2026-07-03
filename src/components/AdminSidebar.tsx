@@ -42,7 +42,11 @@ export function AdminSidebar({
   const { t } = useI18n();
 
   async function signOut() {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Sign-out failed, redirect anyway
+    }
     router.push("/admin/login");
   }
 
@@ -56,7 +60,7 @@ export function AdminSidebar({
         <LanguageSwitcher className="mt-4" />
       </div>
 
-      <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto" aria-label="Admin navigation">
         {NAV.map((item) => {
           const active = item.exact ? pathname === item.href : pathname?.startsWith(item.href);
           return (
@@ -105,7 +109,7 @@ export function AdminSidebar({
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{displayName}</p>
           <p className="text-xs text-command font-mono">{adminRole ? ADMIN_ROLE_LABELS[adminRole] : ""}</p>
-          <button onClick={signOut} className="text-xs text-ink-muted hover:text-danger transition-colors">
+          <button onClick={signOut} aria-label={t("common.logout")} className="text-xs text-ink-muted hover:text-danger transition-colors">
             {t("common.logout")}
           </button>
         </div>

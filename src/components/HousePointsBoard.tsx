@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { HouseCrest } from "./HouseCrest";
@@ -35,11 +35,9 @@ export function HousePointsBoard({
         (payload) => {
           const row = payload.new as { house_id: string; points: number };
           setHouses((prev) =>
-            prev
-              .map((h) =>
-                h.house_id === row.house_id ? { ...h, total_points: h.total_points + row.points } : h
-              )
-              .sort((a, b) => b.total_points - a.total_points)
+            prev.map((h) =>
+              h.house_id === row.house_id ? { ...h, total_points: h.total_points + row.points } : h
+            )
           );
         }
       )
@@ -48,11 +46,16 @@ export function HousePointsBoard({
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase]);
 
-  const sorted = [...houses].sort((a, b) => b.total_points - a.total_points);
-  const max = Math.max(...sorted.map((h) => h.total_points), 1);
+  const sorted = useMemo(
+    () => [...houses].sort((a, b) => b.total_points - a.total_points),
+    [houses]
+  );
+  const max = useMemo(
+    () => Math.max(...sorted.map((h) => h.total_points), 1),
+    [sorted]
+  );
 
   return (
     <div className="grid sm:grid-cols-2 gap-4">

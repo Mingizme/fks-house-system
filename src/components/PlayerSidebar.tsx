@@ -30,7 +30,11 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
   const { t } = useI18n();
 
   async function signOut() {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Sign-out failed, redirect anyway
+    }
     router.push("/login");
   }
 
@@ -60,7 +64,7 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
         </div>
       )}
 
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 px-3 space-y-1" aria-label="Player navigation">
         {NAV.map((item) => {
           const active = pathname === item.href || pathname?.startsWith(item.href + "/");
           return (
@@ -92,7 +96,7 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{displayName}</p>
-          <button onClick={signOut} className="text-xs text-ink-muted hover:text-danger transition-colors">
+          <button onClick={signOut} aria-label={t("common.logout")} className="text-xs text-ink-muted hover:text-danger transition-colors">
             {t("common.logout")}
           </button>
         </div>

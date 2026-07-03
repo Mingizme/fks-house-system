@@ -24,22 +24,29 @@ export function AnnouncementsFeed({ initial }: { initial: Announcement[] }) {
             .select("display_name, admin_role")
             .eq("id", row.admin_id)
             .single();
-          setItems((prev) => [{ ...row, admin: admin ?? undefined }, ...prev]);
+          
+          setItems((prev) => [
+            { 
+              ...row, 
+              admin: admin || { display_name: "Admin", admin_role: null } 
+            }, 
+            ...prev
+          ]);
         }
       )
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase]);
 
   if (items.length === 0) {
     return <p className="text-sm text-ink-muted">{t("announcements.empty")}</p>;
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" role="feed" aria-label={t("announcements.title")}>
       {items.map((a) => (
         <article key={a.id} className="rounded-xl2 border border-ink-border bg-ink-surface p-5">
           <div className="flex items-center justify-between mb-2">

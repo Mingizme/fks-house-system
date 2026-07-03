@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { AssignHouseSelect } from "@/components/AssignHouseSelect";
 import { getServerTranslator } from "@/lib/i18n-server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Player Management — House System",
+  description: "Assign players to houses and manage player accounts.",
+};
 
 export default async function AdminPlayersPage() {
   const { t } = getServerTranslator();

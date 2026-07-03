@@ -32,9 +32,9 @@ Bạn cần tạo 2 tài khoản miễn phí:
 5. (Tuỳ chọn) Vào **Authentication → Providers → Email**, nếu muốn bỏ bước xác nhận email khi test nhanh:
    tắt "Confirm email" (không khuyến khích khi chạy thật, chỉ tắt lúc test).
 
-Lấy 2 thông tin sau (dùng ở bước 3), tại **Project Settings → API**:
-- `Project URL` → đây là `NEXT_PUBLIC_SUPABASE_URL` https://oufgusflshicyopynacj.supabase.co
-- `anon public` key → đây là `NEXT_PUBLIC_SUPABASE_ANON_KEY` sb_publishable_up0xji8W1VZAyGw6bskyPg_LxAtMe8k
+Lấy 2 thông tin sau (dùng ở bước 2), tại **Project Settings → API**:
+- `Project URL` → lưu lại làm `NEXT_PUBLIC_SUPABASE_URL`
+- `anon public` key → lưu lại làm `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ---
 

@@ -3,6 +3,12 @@ import Link from "next/link";
 import { NewConversationSearch } from "@/components/NewConversationSearch";
 import { format } from "date-fns";
 import { getServerTranslator } from "@/lib/i18n-server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Messages — House System",
+  description: "Chat with players from other houses or administrative staff.",
+};
 
 export default async function MessagesListPage() {
   const { t } = getServerTranslator();

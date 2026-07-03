@@ -22,32 +22,35 @@ export function PointsLedger({ initial }: { initial: PointTransaction[] }) {
           supabase.from("profiles").select("id, display_name, admin_role").eq("id", row.admin_id).single(),
           supabase.from("houses").select("id, name, slug, color, icon").eq("id", row.house_id).single(),
         ]);
-        setItems((prev) => [{ ...row, admin: admin ?? undefined, house: house ?? undefined }, ...prev]);
+        setItems((prev) => [{
+          ...row,
+          admin: admin ?? { id: row.admin_id, display_name: "Admin", admin_role: null },
+          house: house ?? undefined,
+        }, ...prev]);
       })
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase]);
 
   if (items.length === 0) return <p className="text-sm text-ink-muted">{t("points.empty")}</p>;
 
   return (
     <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border">
-      {items.map((t) => (
-        <div key={t.id} className="p-4 flex items-center gap-3">
-          {t.house && <HouseCrest color={t.house.color} icon={t.house.icon} size="sm" />}
+      {items.map((tx) => (
+        <div key={tx.id} className="p-4 flex items-center gap-3">
+          {tx.house && <HouseCrest color={tx.house.color} icon={tx.house.icon} size="sm" />}
           <div className="min-w-0 flex-1">
             <p className="text-sm">
-              <span className="font-semibold">{t.house?.name}</span> — {t.reason}
+              <span className="font-semibold">{tx.house?.name}</span> — {tx.reason}
             </p>
             <p className="text-xs text-ink-faint font-mono">
-              {t.admin?.display_name} ({t.admin?.admin_role}) · {format(new Date(t.created_at), "d MMM HH:mm", { locale: dateLocale })}
+              {tx.admin?.display_name} ({tx.admin?.admin_role}) · {format(new Date(tx.created_at), "d MMM HH:mm", { locale: dateLocale })}
             </p>
           </div>
-          <span className={`font-mono font-bold shrink-0 ${t.points >= 0 ? "text-success" : "text-danger"}`}>
-            {formatPoints(t.points)}
+          <span className={`font-mono font-bold shrink-0 ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
+            {formatPoints(tx.points)}
           </span>
         </div>
       ))}

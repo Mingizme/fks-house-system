@@ -41,12 +41,14 @@ export function NewAnnouncementForm({ adminId }: { adminId: string }) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder={t("announcements.titlePlaceholder")}
+        aria-label={t("announcements.titlePlaceholder")}
         className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command mb-3"
       />
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder={t("announcements.contentPlaceholder")}
+        aria-label={t("announcements.contentPlaceholder")}
         rows={4}
         className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command mb-3 resize-none"
       />

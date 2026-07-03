@@ -44,6 +44,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Verify admin role for admin routes — prevent players from accessing admin pages
+  if (user && isAdminArea) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.user_type !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+  }
+
   return response;
 }
 

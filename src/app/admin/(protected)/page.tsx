@@ -2,6 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { HousePointsBoard } from "@/components/HousePointsBoard";
 import Link from "next/link";
 import { getServerTranslator } from "@/lib/i18n-server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard — House System",
+  description: "Administrative dashboard for managing houses, players, and points.",
+};
 
 export default async function AdminDashboardPage() {
   const { t } = getServerTranslator();

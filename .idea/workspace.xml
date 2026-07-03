@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d86c6a22-8701-457f-bea8-bace0b64306b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/login/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/login/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/signup/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/signup/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/AdminSidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AdminSidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/LanguageSwitcher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/LanguageSwitcher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/NewConversationSearch.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/NewConversationSearch.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/PlayerSidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/PlayerSidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/i18n.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/i18n.ts" afterDir="false" />
-    </list>
+    <list default="true" id="d86c6a22-8701-457f-bea8-bace0b64306b" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
