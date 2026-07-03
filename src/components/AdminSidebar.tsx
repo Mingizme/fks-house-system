@@ -44,7 +44,6 @@ export function AdminSidebar({
   async function signOut() {
     await supabase.auth.signOut();
     router.push("/admin/login");
-    router.refresh();
   }
 
   return (

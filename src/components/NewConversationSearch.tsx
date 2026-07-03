@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/I18nProvider";
@@ -24,6 +24,7 @@ export function NewConversationSearch({
   const supabase = createClient();
   const router = useRouter();
   const { t } = useI18n();
+  const [isPending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [open, setOpen] = useState(false);
@@ -62,12 +63,15 @@ export function NewConversationSearch({
           {results.map((r) => (
             <button
               key={r.id}
+              disabled={isPending}
               onClick={() => {
-                router.push(`${basePath}/${r.id}`);
                 setOpen(false);
                 setQuery("");
+                startTransition(() => {
+                  router.push(`${basePath}/${r.id}`);
+                });
               }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-ink-bg text-left transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-ink-bg text-left transition-colors disabled:opacity-60"
             >
               <span>{r.avatar_emoji ?? "🙂"}</span>
               <span className="text-sm">{r.display_name}</span>

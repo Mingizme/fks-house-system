@@ -51,7 +51,6 @@ export default function SignupPage() {
 
     if (data.session) {
       router.push("/dashboard");
-      router.refresh();
     } else {
       setDone(true);
       setLoading(false);

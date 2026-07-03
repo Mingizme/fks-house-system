@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   LANGUAGE_COOKIE,
@@ -12,13 +13,17 @@ import { useI18n } from "@/components/I18nProvider";
 export function LanguageSwitcher({ className = "" }: { className?: string }) {
   const router = useRouter();
   const { language, setLanguage, t } = useI18n();
+  const [isPending, startTransition] = useTransition();
 
   function changeLanguage(next: Language) {
+    if (next === language) return;
     setLanguage(next);
     document.documentElement.lang = next;
     document.cookie = `${LANGUAGE_COOKIE}=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
     window.localStorage.setItem(LANGUAGE_COOKIE, next);
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   }
 
   return (
@@ -28,6 +33,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
         value={language}
         onChange={(event) => changeLanguage(event.target.value as Language)}
         aria-label={t("common.language")}
+        disabled={isPending}
         className="w-full rounded-lg border border-ink-border bg-ink-surface2 px-3 py-2 text-xs font-mono text-ink-muted outline-none transition-colors hover:text-ink-text focus:border-command"
       >
         {SUPPORTED_LANGUAGES.map((item) => (

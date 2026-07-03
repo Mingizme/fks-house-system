@@ -6,6 +6,11 @@
   color-scheme: dark;
 }
 
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
 html, body {
   background-color: #12141A;
   color: #EDEEF2;
@@ -13,11 +18,22 @@ html, body {
 
 body {
   font-family: var(--font-inter), sans-serif;
+  overflow-y: scroll;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
   scrollbar-width: thin;
   scrollbar-color: #2D3140 transparent;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 *::-webkit-scrollbar {
   width: 8px;
