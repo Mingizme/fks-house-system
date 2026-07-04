@@ -93,14 +93,16 @@ export function MemberPopover({
                 <span className="w-4 text-center">{"\u{1F464}"}</span>
                 {t("member.viewProfile")}
               </Link>
-              <Link
-                href={`${messagesBasePath}/${memberId}`}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-ink-surface2 transition-colors"
-                onClick={() => setOpen(false)}
-              >
-                <span className="w-4 text-center">💬</span>
-                {t("member.directMessage")}
-              </Link>
+              {!isSelf && (
+                <Link
+                  href={`${messagesBasePath}/${memberId}`}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-ink-surface2 transition-colors"
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="w-4 text-center">💬</span>
+                  {t("member.directMessage")}
+                </Link>
+              )}
             </div>
           </div>,
           document.body
