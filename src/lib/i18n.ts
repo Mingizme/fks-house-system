@@ -233,7 +233,7 @@ export const dictionaries = {
     "nav.adminMessages": "Tin nhắn",
     "admin.groupChatKicker": "NHÓM CHAT ADMIN",
     "member.viewProfile": "Xem hồ sơ",
-    "member.directMessage": "Nhắn tin",
+    "member.directMessage": "Chat riêng",
     "member.blockUser": "Chặn",
   },
 

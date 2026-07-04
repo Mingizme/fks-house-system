@@ -11,7 +11,6 @@ export default async function AdminMessageThreadPage({ params }: { params: { use
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
-  if (params.userId === user.id) redirect("/admin/messages");
 
   const { data: otherUser } = await supabase
     .from("profiles")

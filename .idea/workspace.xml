@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d86c6a22-8701-457f-bea8-bace0b64306b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(player)/house/[slug]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(player)/house/[slug]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(player)/messages/[userId]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(player)/messages/[userId]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/(protected)/chat/[userId]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/(protected)/chat/[userId]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/(protected)/messages/[userId]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/(protected)/messages/[userId]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/DirectChatBox.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/DirectChatBox.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/MemberPopover.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/MemberPopover.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/types.ts" afterDir="false" />
-    </list>
+    <list default="true" id="d86c6a22-8701-457f-bea8-bace0b64306b" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
