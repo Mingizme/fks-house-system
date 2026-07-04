@@ -57,15 +57,17 @@ export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdm
     if (!content || sending || blocked) return;
     setSending(true);
     setText("");
-    const { error: insertError } = await supabase.from("direct_messages").insert({
+    const { data, error: insertError } = await supabase.from("direct_messages").insert({
       sender_id: currentUserId,
       recipient_id: otherUser.id,
       content,
       is_admin_chat: isAdminChat,
-    });
+    }).select().single();
     if (insertError) {
       setText(content);
       showError("Could not send message. Please try again.");
+    } else if (data) {
+      setMessages((prev) => [...prev, data as DirectMessage]);
     }
     setSending(false);
   }
