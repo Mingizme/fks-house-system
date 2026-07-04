@@ -1,7 +1,9 @@
 -- =========================================================
--- SCHEMA UPDATE: Security hardening & performance
+-- SCHEMA UPDATE: Security hardening & performance + Chat/Profile v2
 -- Run this in Supabase Dashboard > SQL Editor
 -- =========================================================
+
+-- ========== SECURITY HARDENING (v1) ==========
 
 -- Add SET search_path = public to security definer functions
 CREATE OR REPLACE FUNCTION is_admin()
@@ -91,3 +93,34 @@ $$;
 
 -- Add index for recipient-based DM queries (unread messages, conversation list)
 CREATE INDEX IF NOT EXISTS idx_dm_recipient ON direct_messages(recipient_id, read_at, created_at);
+
+
+-- ========== CHAT & PROFILE v2 ==========
+
+-- Add bio column to profiles
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio text DEFAULT '';
+
+-- Create admin_messages table for admin group chat
+CREATE TABLE IF NOT EXISTS admin_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  content text NOT NULL CHECK(char_length(content) <= 2000),
+  created_at timestamptz DEFAULT now()
+);
+
+-- RLS for admin_messages
+ALTER TABLE admin_messages ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'admin_messages' AND policyname = 'Admins can view admin messages') THEN
+    CREATE POLICY "Admins can view admin messages"
+      ON admin_messages FOR SELECT USING (is_admin());
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'admin_messages' AND policyname = 'Admins can insert admin messages') THEN
+    CREATE POLICY "Admins can insert admin messages"
+      ON admin_messages FOR INSERT WITH CHECK (is_admin() AND auth.uid() = sender_id);
+  END IF;
+END $$;
+
+-- Enable realtime for admin_messages
+ALTER PUBLICATION supabase_realtime ADD TABLE admin_messages;

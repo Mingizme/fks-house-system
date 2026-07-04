@@ -6,18 +6,18 @@ import { PlayerList } from "@/components/PlayerList";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Messages — House System",
-  description: "Chat with players from other houses or administrative staff.",
+  title: "Messages — Admin — House System",
+  description: "Direct messages with any player or administrator.",
 };
 
-export default async function MessagesListPage() {
+export default async function AdminMessagesPage() {
   const { t } = getServerTranslator();
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch recent conversations
+  // Fetch recent DM conversations (non-admin-group, personal DMs)
   const { data: dms } = await supabase
     .from("direct_messages")
     .select("sender_id, recipient_id, content, created_at")
@@ -34,14 +34,14 @@ export default async function MessagesListPage() {
   const otherIds = [...lastByUser.keys()];
   const { data: convProfiles } =
     otherIds.length > 0
-      ? await supabase.from("profiles").select("id, display_name, avatar_emoji").in("id", otherIds)
+      ? await supabase.from("profiles").select("id, display_name, avatar_emoji, admin_role, user_type").in("id", otherIds)
       : { data: [] };
 
   const conversations = (convProfiles ?? [])
     .map((p) => ({ ...p, last: lastByUser.get(p.id)! }))
     .sort((a, b) => new Date(b.last.created_at).getTime() - new Date(a.last.created_at).getTime());
 
-  // Fetch all players + houses for the "All Players" section
+  // Fetch all users (players + admins) for "All Users" list
   const [{ data: allProfiles }, { data: houses }] = await Promise.all([
     supabase
       .from("profiles")
@@ -63,14 +63,19 @@ export default async function MessagesListPage() {
           {conversations.map((c) => (
             <Link
               key={c.id}
-              href={`/messages/${c.id}`}
+              href={`/admin/messages/${c.id}`}
               className="flex items-center gap-3 p-3 rounded-xl2 hover:bg-ink-surface border border-transparent hover:border-ink-border transition-colors"
             >
               <span className="w-10 h-10 rounded-full bg-ink-surface2 flex items-center justify-center text-lg shrink-0">
                 {c.avatar_emoji ?? "🙂"}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-medium truncate">{c.display_name}</p>
+                <p className="font-medium truncate">
+                  {c.display_name}
+                  {c.user_type === "admin" && c.admin_role && (
+                    <span className="text-xs text-command font-mono ml-1">· {c.admin_role}</span>
+                  )}
+                </p>
                 <p className="text-sm text-ink-muted truncate">{c.last.content}</p>
               </div>
               <span className="text-xs text-ink-faint font-mono shrink-0">
@@ -81,13 +86,13 @@ export default async function MessagesListPage() {
         </div>
       )}
 
-      {/* All Players section */}
+      {/* All Users section */}
       <section>
-        <h2 className="font-display font-bold text-lg mb-3">{t("messages.allPlayers")}</h2>
+        <h2 className="font-display font-bold text-lg mb-3">{t("messages.allUsers")}</h2>
         <PlayerList
           players={(allProfiles ?? []) as any}
           houses={(houses ?? []) as any}
-          basePath="/messages"
+          basePath="/admin/messages"
           currentUserId={user!.id}
         />
       </section>

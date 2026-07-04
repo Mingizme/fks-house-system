@@ -14,7 +14,8 @@ const NAV = [
   { href: "/admin/players", labelKey: "nav.playerHouseManage", icon: "👥" },
   { href: "/admin/points", labelKey: "nav.pointsHistory", icon: "📊" },
   { href: "/admin/announcements", labelKey: "nav.announcements", icon: "📣" },
-  { href: "/admin/chat", labelKey: "nav.adminChat", icon: "🔒" },
+  { href: "/admin/chat", labelKey: "nav.adminGroupChat", icon: "🔒" },
+  { href: "/admin/messages", labelKey: "nav.adminMessages", icon: "💬" },
   { href: "/admin/settings", labelKey: "nav.settings", icon: "⚙" },
 ] satisfies Array<{ href: string; labelKey: TranslationKey; icon: string; exact?: boolean }>;
 

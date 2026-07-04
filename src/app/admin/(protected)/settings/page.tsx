@@ -13,7 +13,7 @@ export default async function AdminSettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, email, username, display_name, avatar_emoji, avatar_url, display_name_changed_at")
+    .select("id, email, username, display_name, avatar_emoji, avatar_url, bio, display_name_changed_at")
     .eq("id", user!.id)
     .single();
 

@@ -27,6 +27,7 @@ export interface Profile {
   house_id: string | null;
   avatar_emoji: string | null;
   avatar_url: string | null;
+  bio: string | null;
   display_name_changed_at: string | null;
   created_at: string;
 }
@@ -68,6 +69,14 @@ export interface HouseMessage {
   content: string;
   created_at: string;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "user_type" | "admin_role">;
+}
+
+export interface AdminMessage {
+  id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;
 }
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {

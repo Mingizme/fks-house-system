@@ -12,6 +12,7 @@ type SettingsProfile = {
   display_name: string;
   avatar_emoji: string | null;
   avatar_url: string | null;
+  bio: string | null;
   display_name_changed_at: string | null;
 };
 
@@ -31,6 +32,7 @@ export function ProfileForm({
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [emoji, setEmoji] = useState(profile.avatar_emoji ?? "🙂");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url);
+  const [bio, setBio] = useState(profile.bio ?? "");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sendingPasswordEmail, setSendingPasswordEmail] = useState(false);
@@ -109,7 +111,7 @@ export function ProfileForm({
 
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ display_name: nextName, avatar_emoji: emoji, avatar_url: avatarUrl })
+      .update({ display_name: nextName, avatar_emoji: emoji, avatar_url: avatarUrl, bio: bio.trim() })
       .eq("id", profile.id);
 
     if (updateError) {
@@ -181,6 +183,20 @@ export function ProfileForm({
                 : t("profile.displayNameCooldown", {
                     date: nextDisplayNameChange?.toLocaleDateString() ?? "",
                   })}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("profile.bioLabel")}</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={200}
+              placeholder={t("profile.bioPlaceholder") || "Write something about yourself..."}
+              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors resize-none h-24 text-sm"
+            />
+            <p className="text-xs text-ink-faint mt-1.5 font-mono text-right">
+              {bio.length}/200
             </p>
           </div>
 
