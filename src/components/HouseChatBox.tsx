@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { HouseMessage, UserType, AdminRole } from "@/lib/types";
 import { format } from "date-fns";
 import { useI18n } from "@/components/I18nProvider";
+import Link from "next/link";
 
 interface SenderInfo {
   display_name: string;
@@ -18,9 +19,10 @@ interface Props {
   houseId: string;
   currentUserId: string;
   initialMessages: HouseMessage[];
+  profileBasePath: string;
 }
 
-export function HouseChatBox({ houseId, currentUserId, initialMessages }: Props) {
+export function HouseChatBox({ houseId, currentUserId, initialMessages, profileBasePath }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
   const [messages, setMessages] = useState<HouseMessage[]>(initialMessages);
@@ -103,7 +105,10 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages }: Props)
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[75%] ${mine ? "items-end" : "items-start"} flex flex-col gap-1`}>
                 {!mine && (
-                  <span className="text-xs text-ink-muted px-1 flex items-center gap-1">
+                  <Link
+                    href={`${profileBasePath}/${m.sender_id}`}
+                    className="text-xs text-ink-muted hover:text-command transition-colors px-1 flex items-center gap-1"
+                  >
                     {senderInfo?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={senderInfo.avatar_url} alt="" className="w-4 h-4 rounded-full object-cover inline-block" />
@@ -112,7 +117,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages }: Props)
                     )}{" "}
                     {senderInfo?.display_name}
                     {isAdmin && <span className="text-command ml-1">· {senderInfo?.admin_role}</span>}
-                  </span>
+                  </Link>
                 )}
                 <div
                   className={`rounded-2xl px-4 py-2 text-sm leading-relaxed ${

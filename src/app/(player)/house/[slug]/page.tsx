@@ -75,7 +75,12 @@ export default async function HousePage({ params }: { params: { slug: string } }
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <h2 className="font-display font-bold text-lg mb-3">{t("house.groupChat")}</h2>
-          <HouseChatBox houseId={house.id} currentUserId={user.id} initialMessages={(messages as any) ?? []} />
+          <HouseChatBox
+            houseId={house.id}
+            currentUserId={user.id}
+            initialMessages={(messages as any) ?? []}
+            profileBasePath={profileBasePath}
+          />
         </div>
 
         <div className="space-y-6">

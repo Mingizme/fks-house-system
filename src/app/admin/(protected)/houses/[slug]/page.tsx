@@ -7,6 +7,7 @@ import { formatPoints } from "@/lib/utils";
 import { getServerTranslator } from "@/lib/i18n-server";
 import type { HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
+import { MemberPopover } from "@/components/MemberPopover";
 
 const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
   "arctic-wolves": "house.motto.arcticWolves",
@@ -43,6 +44,9 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
       .limit(100),
   ]);
 
+  const profileBasePath = "/admin/profile";
+  const messagesBasePath = "/admin/messages";
+
   return (
     <main className="p-8 max-w-6xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
@@ -68,19 +72,29 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
               {t("house.groupChat")}{" "}
               <span className="text-xs text-ink-muted font-mono">{t("house.adminChatNote")}</span>
             </h2>
-            <HouseChatBox houseId={house.id} currentUserId={user.id} initialMessages={(messages as any) ?? []} />
+            <HouseChatBox
+              houseId={house.id}
+              currentUserId={user.id}
+              initialMessages={(messages as any) ?? []}
+              profileBasePath={profileBasePath}
+            />
           </div>
         </div>
 
         <div className="space-y-6">
           <div>
             <h2 className="font-display font-bold text-lg mb-3">{t("house.members")}</h2>
-            <div className="rounded-xl2 border border-ink-border bg-ink-surface p-2 max-h-56 overflow-y-auto">
+            <div className="rounded-xl2 border border-ink-border bg-ink-surface p-2 max-h-56 overflow-y-auto space-y-0.5">
               {(roster ?? []).map((p) => (
-                <div key={p.id} className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-ink-surface2">
-                  <span>{p.avatar_emoji}</span>
-                  <span className="text-sm truncate">{p.display_name}</span>
-                </div>
+                <MemberPopover
+                  key={p.id}
+                  memberId={p.id}
+                  displayName={p.display_name}
+                  avatarEmoji={p.avatar_emoji}
+                  messagesBasePath={messagesBasePath}
+                  profileBasePath={profileBasePath}
+                  currentUserId={user.id}
+                />
               ))}
               {(roster ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">{t("house.noMembers")}</p>}
             </div>
