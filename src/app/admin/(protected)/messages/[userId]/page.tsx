@@ -15,7 +15,7 @@ export default async function AdminMessageThreadPage({ params }: { params: { use
 
   const { data: otherUser } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_emoji")
+    .select("id, display_name, avatar_emoji, avatar_url")
     .eq("id", params.userId)
     .single();
   if (!otherUser) notFound();
@@ -46,6 +46,7 @@ export default async function AdminMessageThreadPage({ params }: { params: { use
           currentUserId={user.id}
           otherUser={otherUser}
           initialMessages={messages ?? []}
+          profileBasePath="/admin/profile"
           isAdminChat={false}
           initiallyBlocked={!!blockRow}
         />

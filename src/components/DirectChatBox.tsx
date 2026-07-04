@@ -1,20 +1,29 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { DirectMessage } from "@/lib/types";
-import { format } from "date-fns";
 import { useI18n } from "@/components/I18nProvider";
 
 interface Props {
   currentUserId: string;
-  otherUser: { id: string; display_name: string; avatar_emoji: string | null };
+  otherUser: { id: string; display_name: string; avatar_emoji: string | null; avatar_url: string | null };
   initialMessages: DirectMessage[];
+  profileBasePath: string;
   isAdminChat?: boolean;
   initiallyBlocked?: boolean;
 }
 
-export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdminChat = false, initiallyBlocked = false }: Props) {
+export function DirectChatBox({
+  currentUserId,
+  otherUser,
+  initialMessages,
+  profileBasePath,
+  isAdminChat = false,
+  initiallyBlocked = false,
+}: Props) {
   const supabase = createClient();
   const { t } = useI18n();
   const [messages, setMessages] = useState<DirectMessage[]>(initialMessages);
@@ -57,12 +66,16 @@ export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdm
     if (!content || sending || blocked) return;
     setSending(true);
     setText("");
-    const { data, error: insertError } = await supabase.from("direct_messages").insert({
-      sender_id: currentUserId,
-      recipient_id: otherUser.id,
-      content,
-      is_admin_chat: isAdminChat,
-    }).select().single();
+    const { data, error: insertError } = await supabase
+      .from("direct_messages")
+      .insert({
+        sender_id: currentUserId,
+        recipient_id: otherUser.id,
+        content,
+        is_admin_chat: isAdminChat,
+      })
+      .select()
+      .single();
     if (insertError) {
       setText(content);
       showError("Could not send message. Please try again.");
@@ -92,15 +105,26 @@ export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdm
 
   return (
     <div className="flex flex-col h-[560px] rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
-      <div className="p-4 border-b border-ink-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{otherUser.avatar_emoji ?? "🙂"}</span>
-          <span className="font-semibold">{otherUser.display_name}</span>
-        </div>
+      <div className="p-4 border-b border-ink-border flex items-center justify-between gap-3">
+        <Link
+          href={`${profileBasePath}/${otherUser.id}`}
+          className="flex min-w-0 items-center gap-2 rounded-lg pr-2 hover:text-command transition-colors"
+          aria-label={t("member.viewProfile")}
+        >
+          <span className="w-7 h-7 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-lg overflow-hidden shrink-0">
+            {otherUser.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              otherUser.avatar_emoji ?? "\u{1F642}"
+            )}
+          </span>
+          <span className="font-semibold truncate">{otherUser.display_name}</span>
+        </Link>
         <button
           onClick={toggleBlock}
           aria-label={blocked ? t("messages.unblock") : t("messages.block")}
-          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors shrink-0 ${
             blocked
               ? "border-danger/40 text-danger bg-danger/10 hover:bg-danger/15"
               : "border-ink-border text-ink-muted hover:text-danger hover:border-danger/40"
@@ -111,9 +135,7 @@ export function DirectChatBox({ currentUserId, otherUser, initialMessages, isAdm
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3" role="log" aria-live="polite">
-        {messages.length === 0 && (
-          <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noDirectMessages")}</p>
-        )}
+        {messages.length === 0 && <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noDirectMessages")}</p>}
         {messages.map((m) => {
           const mine = m.sender_id === currentUserId;
           return (

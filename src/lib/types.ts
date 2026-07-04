@@ -68,7 +68,7 @@ export interface HouseMessage {
   sender_id: string;
   content: string;
   created_at: string;
-  sender?: Pick<Profile, "display_name" | "avatar_emoji" | "user_type" | "admin_role">;
+  sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;
 }
 
 export interface AdminMessage {

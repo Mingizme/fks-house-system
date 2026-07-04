@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useI18n } from "@/components/I18nProvider";
 
@@ -12,7 +13,7 @@ interface MemberPopoverProps {
   messagesBasePath: string;
   /** Base path for profile, e.g. "/profile" or "/admin/profile" */
   profileBasePath: string;
-  /** Current user id — hide "message self" */
+  /** Current user id; hide "message self" */
   currentUserId: string;
 }
 
@@ -25,59 +26,102 @@ export function MemberPopover({
   currentUserId,
 }: MemberPopoverProps) {
   const [open, setOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (ref.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
+
     if (open) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    function updatePosition() {
+      const button = buttonRef.current;
+      if (!button) return;
+
+      const rect = button.getBoundingClientRect();
+      const width = Math.max(220, rect.width);
+      const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
+      const estimatedHeight = 132;
+      const top =
+        rect.bottom + estimatedHeight + 8 > window.innerHeight
+          ? Math.max(8, rect.top - estimatedHeight - 6)
+          : rect.bottom + 6;
+
+      setMenuPosition({ top, left, width });
+    }
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open]);
+
   const isSelf = memberId === currentUserId;
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-ink-surface2 w-full text-left transition-colors"
-      >
-        <span>{avatarEmoji ?? "🙂"}</span>
-        <span className="text-sm truncate">{displayName}</span>
-      </button>
-
-      {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 min-w-[180px] rounded-xl border border-ink-border bg-ink-surface shadow-xl animate-in fade-in slide-in-from-top-2 duration-150">
-          <div className="p-3 border-b border-ink-border">
-            <p className="text-sm font-semibold truncate">{displayName}</p>
-          </div>
-          <div className="p-1.5 space-y-0.5">
-            <Link
-              href={`${profileBasePath}/${memberId}`}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-ink-surface2 transition-colors"
-              onClick={() => setOpen(false)}
-            >
-              <span className="w-4 text-center">👤</span>
-              {t("member.viewProfile")}
-            </Link>
-            {!isSelf && (
-              <>
+  const menu =
+    open && menuPosition
+      ? createPortal(
+          <div
+            ref={menuRef}
+            style={menuPosition}
+            className="fixed z-50 rounded-xl border border-ink-border bg-ink-surface shadow-xl animate-in fade-in slide-in-from-top-2 duration-150"
+          >
+            <div className="p-3 border-b border-ink-border">
+              <p className="text-sm font-semibold truncate">{displayName}</p>
+            </div>
+            <div className="p-1.5 space-y-0.5">
+              <Link
+                href={`${profileBasePath}/${memberId}`}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-ink-surface2 transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                <span className="w-4 text-center">{"\u{1F464}"}</span>
+                {t("member.viewProfile")}
+              </Link>
+              {!isSelf && (
                 <Link
                   href={`${messagesBasePath}/${memberId}`}
                   className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-ink-surface2 transition-colors"
                   onClick={() => setOpen(false)}
                 >
-                  <span className="w-4 text-center">💬</span>
+                  <span className="w-4 text-center">{"\u{1F4AC}"}</span>
                   {t("member.directMessage")}
                 </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+              )}
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
+
+  return (
+    <div ref={ref}>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-ink-surface2 w-full text-left transition-colors"
+      >
+        <span>{avatarEmoji ?? "\u{1F642}"}</span>
+        <span className="text-sm truncate">{displayName}</span>
+      </button>
+
+      {menu}
     </div>
   );
 }
