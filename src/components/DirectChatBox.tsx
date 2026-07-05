@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { DirectMessage } from "@/lib/types";
 import { useI18n } from "@/components/I18nProvider";
+import ChatMessage from "./chat/ChatMessage";
+import ChatInput from "./chat/ChatInput";
 
 interface Props {
   currentUserId: string;
@@ -14,6 +15,27 @@ interface Props {
   profileBasePath: string;
   isAdminChat?: boolean;
   initiallyBlocked?: boolean;
+}
+
+function groupReactions(reactionsList: any[]) {
+  const grouped: Record<string, { emoji: string; count: number; userIds: string[] }[]> = {};
+  for (const r of reactionsList) {
+    if (!grouped[r.message_id]) grouped[r.message_id] = [];
+    const existing = grouped[r.message_id].find((x) => x.emoji === r.emoji);
+    if (existing) {
+      if (!existing.userIds.includes(r.user_id)) {
+        existing.userIds.push(r.user_id);
+        existing.count++;
+      }
+    } else {
+      grouped[r.message_id].push({
+        emoji: r.emoji,
+        count: 1,
+        userIds: [r.user_id],
+      });
+    }
+  }
+  return grouped;
 }
 
 export function DirectChatBox({
@@ -31,7 +53,29 @@ export function DirectChatBox({
   const [sending, setSending] = useState(false);
   const [blocked, setBlocked] = useState(initiallyBlocked);
   const [error, setError] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<{ id: string; content: string; senderName: string } | null>(null);
+  const [editingMessage, setEditingMessage] = useState<{ id: string; content: string } | null>(null);
+  const [reactions, setReactions] = useState<Record<string, { emoji: string; count: number; userIds: string[] }[]>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const refetchReactions = useCallback(() => {
+    const msgIds = messages.map((m) => m.id);
+    if (msgIds.length === 0) return;
+    supabase
+      .from("message_reactions")
+      .select("*")
+      .eq("message_type", "dm")
+      .in("message_id", msgIds)
+      .then(({ data }) => {
+        if (data) {
+          setReactions(groupReactions(data));
+        }
+      });
+  }, [messages, supabase]);
+
+  useEffect(() => {
+    refetchReactions();
+  }, [messages.length, refetchReactions]);
 
   useEffect(() => {
     const channel = supabase
@@ -42,15 +86,38 @@ export function DirectChatBox({
         (payload) => {
           const row = payload.new as DirectMessage;
           if (row.sender_id === otherUser.id) {
-            setMessages((prev) => [...prev, row]);
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === row.id)) return prev;
+              return [...prev, row];
+            });
           }
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "direct_messages" },
+        (payload) => {
+          const row = payload.new as DirectMessage;
+          if (row.sender_id === otherUser.id || row.recipient_id === otherUser.id) {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === row.id ? row : m))
+            );
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "message_reactions", filter: "message_type=eq.dm" },
+        () => {
+          refetchReactions();
+        }
+      )
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, otherUser.id, supabase]);
+  }, [currentUserId, otherUser.id, supabase, refetchReactions]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -66,6 +133,9 @@ export function DirectChatBox({
     if (!content || sending || blocked) return;
     setSending(true);
     setText("");
+    const replyToId = replyingTo?.id || null;
+    setReplyingTo(null);
+
     const { data, error: insertError } = await supabase
       .from("direct_messages")
       .insert({
@@ -73,9 +143,11 @@ export function DirectChatBox({
         recipient_id: otherUser.id,
         content,
         is_admin_chat: isAdminChat,
+        reply_to_id: replyToId,
       })
       .select()
       .single();
+
     if (insertError) {
       setText(content);
       showError("Could not send message. Please try again.");
@@ -84,6 +156,102 @@ export function DirectChatBox({
     }
     setSending(false);
   }
+
+  const handleReply = (messageId: string) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg) return;
+    const senderName = msg.sender_id === currentUserId ? "You" : otherUser.display_name;
+    setReplyingTo({ id: msg.id, content: msg.content, senderName });
+  };
+
+  const handleStartEdit = (messageId: string, content: string) => {
+    setEditingMessage({ id: messageId, content });
+    setText(content);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+    setText("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMessage || !text.trim()) return;
+    const content = text.trim();
+    const msgId = editingMessage.id;
+    setEditingMessage(null);
+    setText("");
+
+    const { error: err } = await supabase
+      .from("direct_messages")
+      .update({
+        content,
+        edited_at: new Date().toISOString(),
+      })
+      .eq("id", msgId);
+
+    if (err) {
+      showError("Could not edit message. Please try again.");
+    } else {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === msgId ? { ...m, content, edited_at: new Date().toISOString() } : m
+        )
+      );
+    }
+  };
+
+  const handleDelete = async (messageId: string) => {
+    if (!window.confirm(t("chat.confirmDelete"))) return;
+    const { error: err } = await supabase
+      .from("direct_messages")
+      .update({
+        deleted_at: new Date().toISOString(),
+      })
+      .eq("id", messageId);
+
+    if (err) {
+      showError("Could not delete message. Please try again.");
+    } else {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, deleted_at: new Date().toISOString() } : m
+        )
+      );
+    }
+  };
+
+  const handleReact = async (messageId: string, emoji: string) => {
+    const { error: err } = await supabase
+      .from("message_reactions")
+      .insert({
+        user_id: currentUserId,
+        emoji,
+        message_type: "dm",
+        message_id: messageId,
+      });
+
+    if (err && err.code !== "23505") { // Ignore unique constraint violation
+      showError("Action failed.");
+    } else {
+      refetchReactions();
+    }
+  };
+
+  const handleRemoveReact = async (messageId: string, emoji: string) => {
+    const { error: err } = await supabase
+      .from("message_reactions")
+      .delete()
+      .eq("user_id", currentUserId)
+      .eq("emoji", emoji)
+      .eq("message_type", "dm")
+      .eq("message_id", messageId);
+
+    if (err) {
+      showError("Action failed.");
+    } else {
+      refetchReactions();
+    }
+  };
 
   async function toggleBlock() {
     const prevBlocked = blocked;
@@ -113,7 +281,6 @@ export function DirectChatBox({
         >
           <span className="w-7 h-7 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-lg overflow-hidden shrink-0">
             {otherUser.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
             ) : (
               otherUser.avatar_emoji ?? "\u{1F642}"
@@ -138,21 +305,31 @@ export function DirectChatBox({
         {messages.length === 0 && <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noDirectMessages")}</p>}
         {messages.map((m) => {
           const mine = m.sender_id === currentUserId;
+          const msgReactions = reactions[m.id] || [];
+          const replyMsg = m.reply_to_id ? messages.find((r) => r.id === m.reply_to_id) : null;
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-              <div className="max-w-[75%] flex flex-col gap-1">
-                <div
-                  className={`rounded-2xl px-4 py-2 text-sm leading-relaxed ${
-                    mine ? "bg-command text-white rounded-br-sm ml-auto" : "bg-ink-surface2 rounded-bl-sm"
-                  }`}
-                >
-                  {m.content}
-                </div>
-                <span className={`text-[10px] text-ink-faint px-1 font-mono ${mine ? "text-right" : ""}`}>
-                  {format(new Date(m.created_at), "HH:mm")}
-                </span>
-              </div>
-            </div>
+            <ChatMessage
+              key={m.id}
+              id={m.id}
+              content={m.content}
+              senderId={m.sender_id}
+              senderName={mine ? undefined : otherUser.display_name}
+              senderEmoji={mine ? null : otherUser.avatar_emoji}
+              senderAvatarUrl={mine ? null : otherUser.avatar_url}
+              currentUserId={currentUserId}
+              timestamp={m.created_at}
+              editedAt={m.edited_at}
+              deletedAt={m.deleted_at}
+              replyTo={replyMsg ? { id: replyMsg.id, content: replyMsg.content, senderName: replyMsg.sender_id === currentUserId ? "You" : otherUser.display_name } : null}
+              reactions={msgReactions}
+              profileBasePath={profileBasePath}
+              showSender={false}
+              onReply={handleReply}
+              onEdit={handleStartEdit}
+              onDelete={handleDelete}
+              onReact={handleReact}
+              onRemoveReact={handleRemoveReact}
+            />
           );
         })}
         <div ref={bottomRef} />
@@ -164,24 +341,19 @@ export function DirectChatBox({
         </div>
       )}
 
-      <div className="p-3 border-t border-ink-border flex gap-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          disabled={blocked}
-          placeholder={blocked ? t("messages.blockedPlaceholder") : t("messages.placeholder")}
-          aria-label={t("messages.placeholder")}
-          className="flex-1 rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command transition-colors disabled:opacity-50"
-        />
-        <button
-          onClick={send}
-          disabled={!text.trim() || sending || blocked}
-          className="px-4 rounded-lg bg-command hover:bg-command/85 disabled:opacity-40 transition-colors font-semibold text-sm"
-        >
-          {t("common.send")}
-        </button>
-      </div>
+      <ChatInput
+        value={text}
+        onChange={setText}
+        onSend={send}
+        disabled={blocked}
+        placeholder={blocked ? t("messages.blockedPlaceholder") : t("messages.placeholder")}
+        sendLabel={t("common.send")}
+        replyingTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
+        editingMessage={editingMessage}
+        onCancelEdit={handleCancelEdit}
+        onSaveEdit={handleSaveEdit}
+      />
     </div>
   );
 }

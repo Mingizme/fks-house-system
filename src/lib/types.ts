@@ -60,6 +60,9 @@ export interface DirectMessage {
   is_admin_chat: boolean;
   created_at: string;
   read_at: string | null;
+  edited_at: string | null;
+  deleted_at: string | null;
+  reply_to_id: string | null;
 }
 
 export interface HouseMessage {
@@ -68,6 +71,9 @@ export interface HouseMessage {
   sender_id: string;
   content: string;
   created_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+  reply_to_id: string | null;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;
 }
 
@@ -76,7 +82,20 @@ export interface AdminMessage {
   sender_id: string;
   content: string;
   created_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+  reply_to_id: string | null;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;
+}
+
+export interface MessageReaction {
+  id: string;
+  user_id: string;
+  emoji: string;
+  message_type: 'dm' | 'house' | 'admin';
+  message_id: string;
+  created_at: string;
+  user?: Pick<Profile, 'display_name'>;
 }
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
