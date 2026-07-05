@@ -36,7 +36,7 @@ export default async function HomePage() {
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulseSoft" /> {t("home.status")}
         </div>
         <h1 className="font-display font-extrabold text-5xl sm:text-6xl tracking-tight mb-4">
-          HOUSE <span className="text-command">SYSTEM</span>
+          FUNDING <span className="text-command">KINGDOM</span>
         </h1>
         <p className="text-ink-muted text-lg mb-10 leading-relaxed">
           {t("home.tagline")}

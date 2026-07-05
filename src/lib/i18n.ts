@@ -63,7 +63,7 @@ export const dictionaries = {
     "common.adminPortal": "CỔNG QUẢN TRỊ",
 
     "home.status": "HỆ THỐNG ĐANG HOẠT ĐỘNG",
-    "home.tagline": "1 Funking Kingdom Server và Giving back to the roblox community",
+    "home.tagline": "Đóng góp lại cho cộng đồng roblox",
     "home.playerLogin": "Đăng nhập",
     "home.playerSignup": "Tạo tài khoản Player",
     "home.adminGate": "Cổng Admin →",
@@ -261,7 +261,7 @@ export const dictionaries = {
     "common.adminPortal": "ADMIN PORTAL",
 
     "home.status": "SYSTEM ONLINE",
-    "home.tagline": "A Funking Kingdom Server and Giving back to the roblox community",
+    "home.tagline": "Giving back to the roblox community",
     "home.playerLogin": "Sign In",
     "home.playerSignup": "Create Player Account",
     "home.adminGate": "Admin Gate →",
@@ -459,7 +459,7 @@ export const dictionaries = {
     "common.adminPortal": "管理ポータル",
 
     "home.status": "システム稼働中",
-    "home.tagline": "A Funking Kingdom Server and Giving back to the roblox community",
+    "home.tagline": "Robloxコミュニティへの還元",
     "home.playerLogin": "ログイン",
     "home.playerSignup": "Player アカウント作成",
     "home.adminGate": "Admin 入口 →",
@@ -657,7 +657,7 @@ export const dictionaries = {
     "common.adminPortal": "พอร์ทัลผู้ดูแล",
 
     "home.status": "ระบบออนไลน์",
-    "home.tagline": "A Funking Kingdom Server and Giving back to the roblox community",
+    "home.tagline": "ตอบแทนสู่ชุมชน roblox",
     "home.playerLogin": "เข้าสู่ระบบ",
     "home.playerSignup": "สร้างบัญชี Player",
     "home.adminGate": "ประตู Admin →",
@@ -855,7 +855,7 @@ export const dictionaries = {
     "common.adminPortal": "ADMIN தளம்",
 
     "home.status": "அமைப்பு இயங்குகிறது",
-    "home.tagline": "A Funking Kingdom Server and Giving back to the roblox community",
+    "home.tagline": "ராப்லாக்ஸ் சமூகத்திற்கு திரும்ப அளித்தல்",
     "home.playerLogin": "உள்நுழை",
     "home.playerSignup": "Player கணக்கு உருவாக்கு",
     "home.adminGate": "Admin நுழைவு →",
@@ -1053,7 +1053,7 @@ export const dictionaries = {
     "common.adminPortal": "관리자 포털",
 
     "home.status": "시스템 온라인",
-    "home.tagline": "A Funking Kingdom Server and Giving back to the roblox community",
+    "home.tagline": "Roblox 커뮤니티에 환원하기",
     "home.playerLogin": "로그인",
     "home.playerSignup": "Player 계정 만들기",
     "home.adminGate": "Admin 게이트 →",
