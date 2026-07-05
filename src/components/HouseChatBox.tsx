@@ -263,7 +263,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
 
   return (
     <div className="flex flex-col h-[560px] rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" role="log" aria-live="polite">
+      <div className="flex-1 overflow-y-auto p-4 pb-10 space-y-3" role="log" aria-live="polite">
         {messages.length === 0 && (
           <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noHouseMessages")}</p>
         )}

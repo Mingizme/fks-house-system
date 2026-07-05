@@ -161,9 +161,9 @@ export default function ChatMessage({
           {/* Action bar */}
           {hovered && (
             <div
-              className={`absolute -top-8 ${
-                isMine ? "left-0" : "right-0"
-              } flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-0.5 z-10 animate-in fade-in duration-100`}
+              className={`absolute top-full mt-1 ${
+                isMine ? "right-0" : "left-0"
+              } flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-0.5 z-50 animate-in fade-in duration-100`}
             >
               {/* React button */}
               <div className="relative" ref={quickReactRef}>

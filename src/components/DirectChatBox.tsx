@@ -301,7 +301,7 @@ export function DirectChatBox({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" role="log" aria-live="polite">
+      <div className="flex-1 overflow-y-auto p-4 pb-10 space-y-3" role="log" aria-live="polite">
         {messages.length === 0 && <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noDirectMessages")}</p>}
         {messages.map((m) => {
           const mine = m.sender_id === currentUserId;
