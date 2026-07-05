@@ -4,7 +4,7 @@ import { getServerTranslator } from "@/lib/i18n-server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Profile — House System",
+  title: "Profile — FKS System",
   description: "Customize your user profile details, emoji, and account settings.",
 };
 

@@ -4,7 +4,7 @@ import { getServerTranslator } from "@/lib/i18n-server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Player Management — House System",
+  title: "Player Management — FKS System",
   description: "Assign players to houses and manage player accounts.",
 };
 

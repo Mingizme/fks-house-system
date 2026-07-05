@@ -45,7 +45,7 @@ export default async function HomePage() {
         <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
           <Link
             href="/login"
-            className="px-6 py-3 rounded-xl bg-command hover:bg-command/85 transition-colors font-semibold"
+            className="px-6 py-3 rounded-xl bg-command hover:bg-command/85 transition-colors font-semibold shadow-crest"
           >
             {t("home.playerLogin")}
           </Link>
@@ -54,12 +54,6 @@ export default async function HomePage() {
             className="px-6 py-3 rounded-xl border border-ink-border hover:border-command/60 hover:bg-ink-surface transition-colors font-semibold"
           >
             {t("home.playerSignup")}
-          </Link>
-          <Link
-            href="/admin/login"
-            className="px-6 py-3 rounded-xl border border-ink-border text-ink-muted hover:text-ink-text hover:border-ink-faint transition-colors text-sm font-mono"
-          >
-            {t("home.adminGate")}
           </Link>
         </div>
 

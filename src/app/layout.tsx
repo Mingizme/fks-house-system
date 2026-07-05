@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jbmono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jbmono" });
 
 export const metadata: Metadata = {
-  title: "House System — Command Center",
+  title: "FKS System",
   description: "House management system for scores, announcements, and realtime communication.",
 };
 

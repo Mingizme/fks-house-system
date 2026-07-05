@@ -5,7 +5,7 @@ import { getServerTranslator } from "@/lib/i18n-server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard — House System",
+  title: "Admin Dashboard — FKS System",
   description: "Administrative dashboard for managing houses, players, and points.",
 };
 

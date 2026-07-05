@@ -5,7 +5,7 @@ import { getServerTranslator } from "@/lib/i18n-server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Announcements Management — House System",
+  title: "Announcements Management — FKS System",
   description: "Create and manage official system-wide announcements.",
 };
 

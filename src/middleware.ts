@@ -38,9 +38,8 @@ export async function middleware(request: NextRequest) {
     );
 
   if (!user && (isAdminArea || isPlayerArea)) {
-    const loginPath = isAdminArea ? "/admin/login" : "/login";
     const url = request.nextUrl.clone();
-    url.pathname = loginPath;
+    url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 

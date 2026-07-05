@@ -43,13 +43,10 @@ export default function LoginPage() {
       .single();
 
     if (profile?.user_type === "admin") {
-      await supabase.auth.signOut();
-      setError(t("auth.accountIsAdmin"));
-      setLoading(false);
-      return;
+      router.push("/admin");
+    } else {
+      router.push("/dashboard");
     }
-
-    router.push("/dashboard");
   }
 
   return (

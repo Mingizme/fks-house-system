@@ -6,7 +6,7 @@ import { PlayerList } from "@/components/PlayerList";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Messages — House System",
+  title: "Messages — FKS System",
   description: "Chat with players from other houses or administrative staff.",
 };
 

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin Group Chat — House System",
+  title: "Admin Group Chat — FKS System",
   description: "Private group chat for all administrators.",
 };
 
