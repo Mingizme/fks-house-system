@@ -356,6 +356,7 @@ export default function ChatInput({
           </button>
           {showEmojiPicker && (
             <EmojiPicker
+              positionClass="absolute bottom-full mb-2 right-0"
               onSelect={(emoji) => {
                 handleEmojiSelect(emoji);
                 setShowEmojiPicker(false);
