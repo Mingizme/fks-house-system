@@ -204,7 +204,7 @@ export default function ChatMessage({
 
                 {/* Quick react popup */}
                 {showQuickReact && (
-                  <div className="absolute bottom-full mb-1 left-0 flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-1 z-20 animate-in fade-in duration-100">
+                  <div className={`absolute bottom-full mb-1 ${isMine ? "right-0" : "left-0"} flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-1 z-20 animate-in fade-in duration-100`}>
                     {QUICK_REACTIONS.map((emoji) => (
                       <button
                         key={emoji}
