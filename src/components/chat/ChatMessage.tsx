@@ -60,6 +60,31 @@ export default function ChatMessage({
   const [showQuickReact, setShowQuickReact] = useState(false);
   const [showFullPicker, setShowFullPicker] = useState(false);
   const quickReactRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHovered(false);
+      setShowQuickReact(false);
+    }, 300); // 300ms delay to make mouse transition forgiving
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const isMine = senderId === currentUserId;
   const isDeleted = !!deletedAt;
@@ -115,11 +140,8 @@ export default function ChatMessage({
   return (
     <div
       className={`group flex ${isMine ? "justify-end" : "justify-start"} px-4 py-0.5`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false);
-        setShowQuickReact(false);
-      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div className={`relative max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col`}>
         {/* Sender name */}
