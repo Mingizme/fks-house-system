@@ -146,9 +146,10 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
     setTimeout(() => setError(null), 3000);
   }
 
-  async function send() {
+  async function send(mediaUrl?: string | null, mediaType?: "image" | "video" | null) {
     const content = text.trim();
-    if (!content || sending) return;
+    if (!content && !mediaUrl) return;
+    if (sending) return;
     setSending(true);
     setText("");
     const replyToId = replyingTo?.id || null;
@@ -156,10 +157,17 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
 
     const { error: insertError } = await supabase
       .from("house_messages")
-      .insert({ house_id: houseId, sender_id: currentUserId, content, reply_to_id: replyToId });
+      .insert({ 
+        house_id: houseId, 
+        sender_id: currentUserId, 
+        content, 
+        reply_to_id: replyToId,
+        media_url: mediaUrl || null,
+        media_type: mediaType || null
+      });
 
     if (insertError) {
-      setText(content);
+      if (content) setText(content);
       showError("Could not send message. Please try again.");
     }
     setSending(false);
@@ -292,6 +300,8 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
               reactions={msgReactions}
               profileBasePath={profileBasePath}
               showSender={!mine}
+              mediaUrl={m.media_url}
+              mediaType={m.media_type}
               onReply={handleReply}
               onEdit={handleStartEdit}
               onDelete={handleDelete}

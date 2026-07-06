@@ -21,7 +21,7 @@ export default async function AdminChatPage() {
   const [{ data: messages }, { data: admins }] = await Promise.all([
     supabase
       .from("admin_messages")
-      .select("id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role)")
+      .select("id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role)")
       .order("created_at", { ascending: true })
       .limit(200),
     supabase

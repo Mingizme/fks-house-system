@@ -63,6 +63,8 @@ export interface DirectMessage {
   edited_at: string | null;
   deleted_at: string | null;
   reply_to_id: string | null;
+  media_url: string | null;
+  media_type: 'image' | 'video' | null;
 }
 
 export interface HouseMessage {
@@ -74,6 +76,8 @@ export interface HouseMessage {
   edited_at: string | null;
   deleted_at: string | null;
   reply_to_id: string | null;
+  media_url: string | null;
+  media_type: 'image' | 'video' | null;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;
 }
 
@@ -85,6 +89,8 @@ export interface AdminMessage {
   edited_at: string | null;
   deleted_at: string | null;
   reply_to_id: string | null;
+  media_url: string | null;
+  media_type: 'image' | 'video' | null;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;
 }
 

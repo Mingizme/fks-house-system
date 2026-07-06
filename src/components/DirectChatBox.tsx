@@ -128,9 +128,10 @@ export function DirectChatBox({
     setTimeout(() => setError(null), 3000);
   }
 
-  async function send() {
+  async function send(mediaUrl?: string | null, mediaType?: "image" | "video" | null) {
     const content = text.trim();
-    if (!content || sending || blocked) return;
+    if (!content && !mediaUrl) return;
+    if (sending || blocked) return;
     setSending(true);
     setText("");
     const replyToId = replyingTo?.id || null;
@@ -144,12 +145,14 @@ export function DirectChatBox({
         content,
         is_admin_chat: isAdminChat,
         reply_to_id: replyToId,
+        media_url: mediaUrl || null,
+        media_type: mediaType || null,
       })
       .select()
       .single();
 
     if (insertError) {
-      setText(content);
+      if (content) setText(content);
       showError("Could not send message. Please try again.");
     } else if (data) {
       setMessages((prev) => [...prev, data as DirectMessage]);
@@ -324,6 +327,8 @@ export function DirectChatBox({
               reactions={msgReactions}
               profileBasePath={profileBasePath}
               showSender={false}
+              mediaUrl={m.media_url}
+              mediaType={m.media_type}
               onReply={handleReply}
               onEdit={handleStartEdit}
               onDelete={handleDelete}

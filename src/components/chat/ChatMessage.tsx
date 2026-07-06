@@ -23,6 +23,8 @@ interface ChatMessageProps {
   reactions: { emoji: string; count: number; userIds: string[] }[];
   profileBasePath?: string;
   showSender?: boolean;
+  mediaUrl?: string | null;
+  mediaType?: 'image' | 'video' | null;
   onReply: (messageId: string) => void;
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
@@ -46,6 +48,8 @@ export default function ChatMessage({
   reactions,
   profileBasePath,
   showSender,
+  mediaUrl,
+  mediaType,
   onReply,
   onEdit,
   onDelete,
@@ -261,6 +265,16 @@ export default function ChatMessage({
                 : "bg-ink-surface2 text-ink-text rounded-bl-md"
             }`}
           >
+            {mediaUrl && mediaType === "image" && (
+              <div className="mb-2 max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
+                <img src={mediaUrl} alt="Attachment" className="w-full h-auto object-cover max-h-60" />
+              </div>
+            )}
+            {mediaUrl && mediaType === "video" && (
+              <div className="mb-2 max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
+                <video src={mediaUrl} controls className="w-full h-auto max-h-60" />
+              </div>
+            )}
             {content}
             <span className="inline-flex items-center ml-2 gap-1 text-[10px] opacity-50 align-bottom">
               {formattedTime}

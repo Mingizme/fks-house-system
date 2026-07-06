@@ -38,7 +38,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
       .limit(15),
     supabase
       .from("house_messages")
-      .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, sender:profiles(display_name, avatar_emoji, user_type, admin_role)")
+      .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, user_type, admin_role)")
       .eq("house_id", house.id)
       .order("created_at", { ascending: true })
       .limit(100),
