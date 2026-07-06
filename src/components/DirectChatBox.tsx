@@ -185,7 +185,10 @@ export function DirectChatBox({
     const msg = messages.find((m) => m.id === messageId);
     if (!msg) return;
     const senderName = msg.sender_id === currentUserId ? "You" : otherUser.display_name;
-    setReplyingTo({ id: msg.id, content: msg.content, senderName });
+    const content = msg.media_url 
+      ? (msg.media_type === "video" ? `🎥 Video${msg.content ? `: ${msg.content}` : ""}` : `📷 Ảnh${msg.content ? `: ${msg.content}` : ""}`)
+      : msg.content;
+    setReplyingTo({ id: msg.id, content, senderName });
   };
 
   const handleStartEdit = (messageId: string, content: string) => {
@@ -340,6 +343,11 @@ export function DirectChatBox({
           const mine = m.sender_id === currentUserId;
           const msgReactions = reactions[m.id] || [];
           const replyMsg = m.reply_to_id ? messages.find((r) => r.id === m.reply_to_id) : null;
+          const replyContent = replyMsg 
+            ? (replyMsg.media_url 
+                ? (replyMsg.media_type === "video" ? `🎥 Video${replyMsg.content ? `: ${replyMsg.content}` : ""}` : `📷 Ảnh${replyMsg.content ? `: ${replyMsg.content}` : ""}`)
+                : replyMsg.content)
+            : "";
           return (
             <ChatMessage
               key={m.id}
@@ -353,7 +361,7 @@ export function DirectChatBox({
               timestamp={m.created_at}
               editedAt={m.edited_at}
               deletedAt={m.deleted_at}
-              replyTo={replyMsg ? { id: replyMsg.id, content: replyMsg.content, senderName: replyMsg.sender_id === currentUserId ? "You" : otherUser.display_name } : null}
+              replyTo={replyMsg ? { id: replyMsg.id, content: replyContent, senderName: replyMsg.sender_id === currentUserId ? "You" : otherUser.display_name } : null}
               reactions={msgReactions}
               profileBasePath={profileBasePath}
               showSender={false}

@@ -204,7 +204,10 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg) return;
     const senderInfo = msg.sender as SenderInfo | undefined;
-    setReplyingTo({ id: msg.id, content: msg.content, senderName: senderInfo?.display_name || "Admin" });
+    const content = msg.media_url 
+      ? (msg.media_type === "video" ? `🎥 Video${msg.content ? `: ${msg.content}` : ""}` : `📷 Ảnh${msg.content ? `: ${msg.content}` : ""}`)
+      : msg.content;
+    setReplyingTo({ id: msg.id, content, senderName: senderInfo?.display_name || "Admin" });
   };
 
   const handleStartEdit = (messageId: string, content: string) => {
@@ -316,7 +319,11 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
           const msgReactions = reactions[m.id] || [];
           const replyMsg = m.reply_to_id ? messages.find((r) => r.id === m.reply_to_id) : null;
           const replySender = replyMsg?.sender as SenderInfo | undefined;
-
+          const replyContent = replyMsg 
+            ? (replyMsg.media_url 
+                ? (replyMsg.media_type === "video" ? `🎥 Video${replyMsg.content ? `: ${replyMsg.content}` : ""}` : `📷 Ảnh${replyMsg.content ? `: ${replyMsg.content}` : ""}`)
+                : replyMsg.content)
+            : "";
           return (
             <ChatMessage
               key={m.id}
@@ -331,7 +338,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
               timestamp={m.created_at}
               editedAt={m.edited_at}
               deletedAt={m.deleted_at}
-              replyTo={replyMsg ? { id: replyMsg.id, content: replyMsg.content, senderName: replySender?.display_name || "Admin" } : null}
+              replyTo={replyMsg ? { id: replyMsg.id, content: replyContent, senderName: replySender?.display_name || "Admin" } : null}
               reactions={msgReactions}
               profileBasePath="/admin/profile"
               showSender={!isMine}
