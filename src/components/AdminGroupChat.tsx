@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { AdminMessage, UserType, AdminRole } from "@/lib/types";
 import { useI18n } from "@/components/I18nProvider";
 import ChatMessage from "./chat/ChatMessage";
 import ChatInput from "./chat/ChatInput";
+import EmojiPicker from "./chat/EmojiPicker";
 
 interface SenderInfo {
   display_name: string;
@@ -51,7 +53,26 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
   const [replyingTo, setReplyingTo] = useState<{ id: string; content: string; senderName: string } | null>(null);
   const [editingMessage, setEditingMessage] = useState<{ id: string; content: string } | null>(null);
   const [reactions, setReactions] = useState<Record<string, { emoji: string; count: number; userIds: string[] }[]>>({});
+  const [activePicker, setActivePicker] = useState<{ messageId: string; x: number; y: number } | null>(null);
+  const [pickerMounted, setPickerMounted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setPickerMounted(true);
+    return () => setPickerMounted(false);
+  }, []);
+
+  const handleOpenFullPicker = useCallback((messageId: string, buttonRect: DOMRect) => {
+    let pickerLeft = window.scrollX + buttonRect.left - 320 + buttonRect.width;
+    if (pickerLeft < 10) pickerLeft = 10;
+    
+    let pickerTop = window.scrollY + buttonRect.top - 360 - 5;
+    if (buttonRect.top - 360 - 5 < 10) {
+      pickerTop = window.scrollY + buttonRect.top + buttonRect.height + 5;
+    }
+    
+    setActivePicker({ messageId, x: pickerLeft, y: pickerTop });
+  }, []);
   const profileCache = useRef<Map<string, SenderInfo>>(new Map());
 
   // Seed cache from initial messages
@@ -321,6 +342,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
               onDelete={handleDelete}
               onReact={handleReact}
               onRemoveReact={handleRemoveReact}
+              onOpenFullPicker={handleOpenFullPicker}
             />
           );
         })}
@@ -339,6 +361,22 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
         onCancelEdit={handleCancelEdit}
         onSaveEdit={handleSaveEdit}
       />
+
+      {pickerMounted && activePicker && createPortal(
+        <div 
+          className="fixed z-[9999]"
+          style={{ top: activePicker.y, left: activePicker.x }}
+        >
+          <EmojiPicker
+            onSelect={(emoji) => {
+              handleReact(activePicker.messageId, emoji);
+              setActivePicker(null);
+            }}
+            onClose={() => setActivePicker(null)}
+          />
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

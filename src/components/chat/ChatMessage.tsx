@@ -30,6 +30,7 @@ interface ChatMessageProps {
   onDelete: (messageId: string) => void;
   onReact: (messageId: string, emoji: string) => void;
   onRemoveReact: (messageId: string, emoji: string) => void;
+  onOpenFullPicker: (messageId: string, buttonRect: DOMRect) => void;
 }
 
 export default function ChatMessage({
@@ -55,10 +56,10 @@ export default function ChatMessage({
   onDelete,
   onReact,
   onRemoveReact,
+  onOpenFullPicker,
 }: ChatMessageProps) {
   const [hovered, setHovered] = useState(false);
   const [showQuickReact, setShowQuickReact] = useState(false);
-  const [showFullPicker, setShowFullPicker] = useState(false);
   const quickReactRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -217,9 +218,10 @@ export default function ChatMessage({
                     ))}
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
                         setShowQuickReact(false);
-                        setShowFullPicker(true);
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        onOpenFullPicker(id, rect);
                       }}
                       className="w-8 h-8 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-base text-ink-muted cursor-pointer"
                       title="More emojis"
@@ -263,19 +265,6 @@ export default function ChatMessage({
                   🗑️
                 </button>
               )}
-            </div>
-          )}
-
-          {/* Full emoji picker */}
-          {showFullPicker && (
-            <div className={`absolute bottom-full mb-1 ${isMine ? "right-0" : "left-0"} z-30`}>
-              <EmojiPicker
-                onSelect={(emoji) => {
-                  onReact(id, emoji);
-                  setShowFullPicker(false);
-                }}
-                onClose={() => setShowFullPicker(false)}
-              />
             </div>
           )}
 
