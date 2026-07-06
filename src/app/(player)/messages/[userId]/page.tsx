@@ -37,9 +37,8 @@ export default async function MessageThreadPage({ params }: { params: { userId: 
     .maybeSingle();
 
   return (
-    <main className="p-8 max-w-2xl mx-auto">
-      <Link href="/messages" className="text-ink-muted text-sm font-mono hover:text-ink-text">{t("messages.backAll")}</Link>
-      <div className="mt-4">
+    <main className="h-screen flex flex-col bg-ink-surface">
+      <div className="flex-1 min-h-0">
         <DirectChatBox
           currentUserId={user.id}
           otherUser={otherUser}

@@ -37,11 +37,8 @@ export default async function AdminMessageThreadPage({ params }: { params: { use
     .maybeSingle();
 
   return (
-    <main className="p-8 max-w-2xl mx-auto">
-      <Link href="/admin/messages" className="text-ink-muted text-sm font-mono hover:text-ink-text">
-        ← {t("messages.title")}
-      </Link>
-      <div className="mt-4">
+    <main className="h-screen flex flex-col bg-ink-surface">
+      <div className="flex-1 min-h-0">
         <DirectChatBox
           currentUserId={user.id}
           otherUser={otherUser}

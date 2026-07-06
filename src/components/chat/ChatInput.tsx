@@ -175,10 +175,10 @@ export default function ChatInput({
   const isEditing = !!editingMessage;
 
   return (
-    <div className="border-t border-ink-border">
+    <div className="p-4 bg-ink-surface">
       {/* Reply preview bar */}
       {replyingTo && (
-        <div className="flex items-center justify-between bg-ink-surface2 border-b border-ink-border px-3 py-2">
+        <div className="flex items-center justify-between bg-ink-surface2 border border-b-0 border-ink-border rounded-t-xl px-3 py-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-0.5 h-5 bg-command/50 rounded-full flex-shrink-0" />
             <div className="min-w-0 flex-1">
@@ -216,7 +216,7 @@ export default function ChatInput({
 
       {/* Edit indicator bar */}
       {isEditing && (
-        <div className="flex items-center justify-between bg-ink-surface2 border-b border-ink-border px-3 py-2">
+        <div className="flex items-center justify-between bg-ink-surface2 border border-b-0 border-ink-border rounded-t-xl px-3 py-2">
           <div className="flex items-center gap-2">
             <span className="text-sm">✏️</span>
             <span className="text-xs font-semibold text-command">
@@ -249,7 +249,7 @@ export default function ChatInput({
 
       {/* Media Upload Preview Bar */}
       {mediaPreview && (
-        <div className="bg-ink-surface2 border-b border-ink-border p-3 flex items-center justify-between">
+        <div className="bg-ink-surface2 border border-b-0 border-ink-border rounded-t-xl p-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {mediaPreview.type === "image" ? (
               <img
@@ -298,14 +298,18 @@ export default function ChatInput({
 
       {/* Error Message Bar */}
       {errorMsg && (
-        <div className="bg-danger/10 border-b border-danger/20 px-3 py-1.5 flex items-center justify-between text-xs text-danger">
+        <div className="bg-danger/10 border border-b-0 border-danger/20 rounded-t-xl px-3 py-1.5 flex items-center justify-between text-xs text-danger">
           <span>{errorMsg}</span>
           <button onClick={() => setErrorMsg(null)} className="hover:opacity-80">✕</button>
         </div>
       )}
 
-      {/* Input row */}
-      <div className="p-3 flex items-center gap-2">
+      {/* Main Input Container styled like Discord */}
+      <div 
+        className={`flex items-center gap-3 bg-ink-surface2/60 hover:bg-ink-surface2/80 border border-ink-border px-4 py-2.5 transition-colors ${
+          replyingTo || isEditing || mediaPreview || errorMsg ? "rounded-b-xl border-t-0" : "rounded-xl"
+        }`}
+      >
         {/* Hidden File Input */}
         <input
           type="file"
@@ -316,23 +320,35 @@ export default function ChatInput({
           disabled={disabled || uploading || isEditing}
         />
 
-        {/* Upload Attachment Button */}
+        {/* Upload Attachment Button (Discord style circular + button) */}
         <button
           type="button"
           onClick={triggerFileSelect}
-          className="p-2 rounded-lg hover:bg-ink-surface2 transition-colors text-lg text-ink-muted hover:text-ink-text cursor-pointer disabled:opacity-40"
+          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-ink-text font-bold text-base cursor-pointer disabled:opacity-40 transition-colors"
           title="Đính kèm ảnh/video"
           disabled={disabled || uploading || isEditing}
         >
-          📎
+          +
         </button>
 
-        {/* Emoji picker toggle */}
+        {/* Text Input (Discord style: borderless, full height inside pill) */}
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={uploading ? "Đang tải tệp lên..." : placeholder}
+          disabled={disabled || uploading}
+          className="flex-1 bg-transparent border-0 outline-none text-sm placeholder:text-ink-muted disabled:opacity-50 focus:ring-0 focus:outline-none"
+        />
+
+        {/* Emoji picker toggle on the right side of the text input */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-2 rounded-lg hover:bg-ink-surface2 transition-colors text-lg cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-lg cursor-pointer disabled:opacity-40"
             title="Emoji"
             disabled={disabled || uploading}
           >
@@ -349,63 +365,27 @@ export default function ChatInput({
           )}
         </div>
 
-        {/* Text input */}
-        <input
-          ref={inputRef}
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={uploading ? "Đang tải tệp lên..." : placeholder}
-          disabled={disabled || uploading}
-          className="flex-1 rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command transition-colors placeholder:text-ink-muted disabled:opacity-50"
-        />
-
-        {/* Send / Save button */}
+        {/* Send / Save icon (clean SVG paper-plane icon) */}
         <button
           type="button"
           onClick={handleSendClick}
           disabled={disabled || uploading || (!value.trim() && !selectedFile)}
-          className="px-4 py-2.5 rounded-lg bg-command hover:bg-command/85 disabled:opacity-40 transition-colors font-semibold text-sm text-white cursor-pointer disabled:cursor-not-allowed flex items-center justify-center min-w-[50px]"
+          className="p-1.5 rounded-lg text-command hover:bg-command/10 disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed flex items-center justify-center"
         >
           {uploading ? (
-            <svg
-              className="animate-spin h-5 w-5 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
+            <svg className="animate-spin h-5 w-5 text-command" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           ) : isEditing ? (
-            /* Save icon */
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           ) : (
-            sendLabel || "Gửi"
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transform rotate-45 -mr-0.5">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
           )}
         </button>
       </div>

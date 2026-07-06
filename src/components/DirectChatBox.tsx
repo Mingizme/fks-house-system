@@ -296,22 +296,31 @@ export function DirectChatBox({
   }
 
   return (
-    <div className="flex flex-col h-[560px] rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
-      <div className="p-4 border-b border-ink-border flex items-center justify-between gap-3">
-        <Link
-          href={`${profileBasePath}/${otherUser.id}`}
-          className="flex min-w-0 items-center gap-2 rounded-lg pr-2 hover:text-command transition-colors"
-          aria-label={t("member.viewProfile")}
-        >
-          <span className="w-7 h-7 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-lg overflow-hidden shrink-0">
-            {otherUser.avatar_url ? (
-              <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
-            ) : (
-              otherUser.avatar_emoji ?? "\u{1F642}"
-            )}
-          </span>
-          <span className="font-semibold truncate">{otherUser.display_name}</span>
-        </Link>
+    <div className="flex flex-col h-full bg-ink-surface overflow-hidden">
+      <div className="p-4 border-b border-ink-border flex items-center justify-between gap-3 bg-ink-surface">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href={profileBasePath.startsWith("/admin") ? "/admin/messages" : "/messages"}
+            className="text-ink-muted hover:text-ink-text text-lg pr-1"
+            title="Quay lại"
+          >
+            ←
+          </Link>
+          <Link
+            href={`${profileBasePath}/${otherUser.id}`}
+            className="flex min-w-0 items-center gap-2 rounded-lg pr-2 hover:text-command transition-colors"
+            aria-label={t("member.viewProfile")}
+          >
+            <span className="w-7 h-7 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-lg overflow-hidden shrink-0">
+              {otherUser.avatar_url ? (
+                <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                otherUser.avatar_emoji ?? "\u{1F642}"
+              )}
+            </span>
+            <span className="font-semibold truncate">{otherUser.display_name}</span>
+          </Link>
+        </div>
         <button
           onClick={toggleBlock}
           aria-label={blocked ? t("messages.unblock") : t("messages.block")}
