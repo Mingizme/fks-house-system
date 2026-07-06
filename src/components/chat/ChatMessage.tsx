@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import EmojiPicker from "./EmojiPicker";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+
+let cancelActiveHover: (() => void) | null = null;
 
 interface ChatMessageProps {
   id: string;
@@ -61,14 +63,49 @@ export default function ChatMessage({
   const [hovered, setHovered] = useState(false);
   const [showQuickReact, setShowQuickReact] = useState(false);
   const quickReactRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const closeHover = useCallback(() => {
+    setHovered(false);
+    setShowQuickReact(false);
+    if (cancelActiveHover === closeHover) {
+      cancelActiveHover = null;
+    }
+  }, []);
+
   const handleMouseEnter = () => {
+    if (cancelActiveHover && cancelActiveHover !== closeHover) {
+      cancelActiveHover();
+    }
+
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+
     setHovered(true);
+    cancelActiveHover = closeHover;
   };
 
   const handleMouseLeave = () => {
-    setHovered(false);
-    setShowQuickReact(false);
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      closeHover();
+    }, 150);
   };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      if (cancelActiveHover === closeHover) {
+        cancelActiveHover = null;
+      }
+    };
+  }, [closeHover]);
 
   const isMine = senderId === currentUserId;
   const isDeleted = !!deletedAt;
@@ -124,10 +161,12 @@ export default function ChatMessage({
   return (
     <div
       className={`group flex ${isMine ? "justify-end" : "justify-start"} px-4 py-0.5`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
-      <div className={`relative max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col`}>
+      <div 
+        className={`relative max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         {/* Sender name */}
         {showSender && !isMine && senderName && (
           <div className="text-xs font-semibold text-ink-muted mb-0.5 px-1">
@@ -171,9 +210,7 @@ export default function ChatMessage({
           {/* Action bar */}
           {hovered && (
             <div
-              className={`absolute top-full mt-1 ${
-                isMine ? "right-0" : "left-0"
-              } flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-0.5 z-50 animate-in fade-in duration-100`}
+              className="absolute -top-3.5 right-2 flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-0.5 z-[99] animate-in fade-in duration-100"
             >
               {/* React button */}
               <div className="relative" ref={quickReactRef}>
