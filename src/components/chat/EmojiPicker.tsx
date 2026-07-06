@@ -16,9 +16,14 @@ const EMOJI_CATEGORIES = [
 interface EmojiPickerProps {
   onSelect: (emoji: string) => void;
   onClose: () => void;
+  positionClass?: string;
 }
 
-export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
+export default function EmojiPicker({ 
+  onSelect, 
+  onClose,
+  positionClass = "absolute bottom-full mb-2"
+}: EmojiPickerProps) {
   const [search, setSearch] = useState("");
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -48,7 +53,7 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
   return (
     <div
       ref={pickerRef}
-      className="absolute bottom-full mb-2 w-[320px] max-h-[360px] flex flex-col bg-ink-surface2 border border-ink-border rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150"
+      className={`${positionClass} w-[320px] max-h-[360px] flex flex-col bg-ink-surface2 border border-ink-border rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150`}
     >
       {/* Search */}
       <div className="p-2 border-b border-ink-border">

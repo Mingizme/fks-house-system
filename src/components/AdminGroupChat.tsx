@@ -63,12 +63,12 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
   }, []);
 
   const handleOpenFullPicker = useCallback((messageId: string, buttonRect: DOMRect) => {
-    let pickerLeft = window.scrollX + buttonRect.left - 320 + buttonRect.width;
+    let pickerLeft = buttonRect.left - 320 + buttonRect.width;
     if (pickerLeft < 10) pickerLeft = 10;
     
-    let pickerTop = window.scrollY + buttonRect.top - 360 - 5;
+    let pickerTop = buttonRect.top - 360 - 5;
     if (buttonRect.top - 360 - 5 < 10) {
-      pickerTop = window.scrollY + buttonRect.top + buttonRect.height + 5;
+      pickerTop = buttonRect.top + buttonRect.height + 5;
     }
     
     setActivePicker({ messageId, x: pickerLeft, y: pickerTop });
@@ -368,6 +368,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
           style={{ top: activePicker.y, left: activePicker.x }}
         >
           <EmojiPicker
+            positionClass="relative"
             onSelect={(emoji) => {
               handleReact(activePicker.messageId, emoji);
               setActivePicker(null);
