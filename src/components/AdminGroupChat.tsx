@@ -283,7 +283,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 pb-10 space-y-3">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-10 space-y-3">
         {messages.length === 0 && (
           <p className="text-sm text-ink-muted text-center mt-8">
             {t("messages.noHouseMessages")}
