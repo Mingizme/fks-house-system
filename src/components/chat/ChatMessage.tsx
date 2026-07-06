@@ -163,7 +163,7 @@ export default function ChatMessage({
       className={`group flex ${isMine ? "justify-end" : "justify-start"} px-4 py-0.5`}
     >
       <div 
-        className={`relative max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col`}
+        className={`relative max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col p-3 -m-3`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -210,7 +210,7 @@ export default function ChatMessage({
           {/* Action bar */}
           {hovered && (
             <div
-              className="absolute -top-3.5 right-2 flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-0.5 z-[99] animate-in fade-in duration-100"
+              className="absolute -top-6 right-2 flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-0.5 z-[99] animate-in fade-in duration-100"
             >
               {/* React button */}
               <div className="relative" ref={quickReactRef}>
