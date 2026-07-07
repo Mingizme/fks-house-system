@@ -1,5 +1,6 @@
 export type UserType = "player" | "admin";
 export type AdminRole = "director" | "admin" | "judge" | "security" | "linguistic";
+export type HouseRole = "master" | "vice";
 export type HouseSlug = "arctic-wolves" | "inferno-phoenix" | "noble-lions" | "ironclad-rhinos";
 
 export interface House {
@@ -24,6 +25,7 @@ export interface Profile {
   display_name: string;
   user_type: UserType;
   admin_role: AdminRole | null;
+  house_role: HouseRole | null;
   house_id: string | null;
   avatar_emoji: string | null;
   avatar_url: string | null;
@@ -52,6 +54,16 @@ export interface Announcement {
   admin?: Pick<Profile, "display_name" | "admin_role">;
 }
 
+export interface HouseAnnouncement {
+  id: string;
+  house_id: string;
+  author_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  author?: Pick<Profile, "display_name" | "avatar_emoji" | "house_role">;
+}
+
 export interface DirectMessage {
   id: string;
   sender_id: string;
@@ -78,7 +90,7 @@ export interface HouseMessage {
   reply_to_id: string | null;
   media_url: string | null;
   media_type: 'image' | 'video' | null;
-  sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;
+  sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role" | "house_role">;
 }
 
 export interface AdminMessage {
@@ -110,6 +122,11 @@ export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
   judge: "Judge",
   security: "Security",
   linguistic: "Linguistic",
+};
+
+export const HOUSE_ROLE_LABELS: Record<HouseRole, string> = {
+  master: "House Master",
+  vice: "Vice Master",
 };
 
 export const HOUSE_LABELS: Record<HouseSlug, string> = {

@@ -25,6 +25,7 @@ interface ChatMessageProps {
   reactions: { emoji: string; count: number; userIds: string[] }[];
   profileBasePath?: string;
   showSender?: boolean;
+  canModerate?: boolean;
   mediaUrl?: string | null;
   mediaType?: 'image' | 'video' | null;
   onReply: (messageId: string) => void;
@@ -51,6 +52,7 @@ export default function ChatMessage({
   reactions,
   profileBasePath,
   showSender,
+  canModerate,
   mediaUrl,
   mediaType,
   onReply,
@@ -274,8 +276,8 @@ export default function ChatMessage({
                 </button>
               )}
 
-              {/* Delete button (own messages only) */}
-              {isMine && (
+              {/* Delete button (own messages, or house leader moderating) */}
+              {(isMine || canModerate) && (
                 <button
                   type="button"
                   onClick={() => onDelete(id)}

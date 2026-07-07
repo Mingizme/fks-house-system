@@ -9,6 +9,8 @@ interface MemberPopoverProps {
   memberId: string;
   displayName: string;
   avatarEmoji: string | null;
+  /** Optional leadership label, e.g. "House Master" */
+  roleLabel?: string | null;
   /** Base path for messages, e.g. "/messages" or "/admin/messages" */
   messagesBasePath: string;
   /** Base path for profile, e.g. "/profile" or "/admin/profile" */
@@ -21,6 +23,7 @@ export function MemberPopover({
   memberId,
   displayName,
   avatarEmoji,
+  roleLabel,
   messagesBasePath,
   profileBasePath,
   currentUserId,
@@ -83,6 +86,7 @@ export function MemberPopover({
           >
             <div className="p-3 border-b border-ink-border">
               <p className="text-sm font-semibold truncate">{displayName}</p>
+              {roleLabel && <p className="text-xs text-success font-mono mt-0.5">{roleLabel}</p>}
             </div>
             <div className="p-1.5 space-y-0.5">
               <Link
@@ -119,6 +123,11 @@ export function MemberPopover({
       >
         <span>{avatarEmoji ?? "\u{1F642}"}</span>
         <span className="text-sm truncate">{displayName}</span>
+        {roleLabel && (
+          <span className="ml-auto shrink-0 text-[10px] font-mono text-success bg-success/10 border border-success/30 rounded px-1.5 py-0.5">
+            {roleLabel}
+          </span>
+        )}
       </button>
 
       {menu}

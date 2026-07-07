@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import type { HouseRole } from "@/lib/types";
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
@@ -24,3 +25,10 @@ export const HOUSE_COLOR_KEY: Record<string, string> = {
   lions: "lions",
   rhinos: "rhinos",
 };
+
+/** i18n key for a house leadership role, or null for ordinary members. */
+export function houseRoleKey(role: HouseRole | null | undefined): "role.houseMaster" | "role.viceMaster" | null {
+  if (role === "master") return "role.houseMaster";
+  if (role === "vice") return "role.viceMaster";
+  return null;
+}

@@ -19,6 +19,7 @@ interface Props {
 const NAV = [
   { href: "/dashboard", labelKey: "nav.overview", icon: "◆" },
   { href: "/announcements", labelKey: "nav.announcements", icon: "📣" },
+  { href: "/house-announcements", labelKey: "nav.houseAnnouncements", icon: "🏰" },
   { href: "/messages", labelKey: "nav.messages", icon: "✉" },
   { href: "/profile", labelKey: "nav.settings", icon: "⚙" },
 ] satisfies Array<{ href: string; labelKey: TranslationKey; icon: string }>;

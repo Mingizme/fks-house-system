@@ -6,6 +6,7 @@ import { getServerTranslator } from "@/lib/i18n-server";
 import { format } from "date-fns";
 import { ADMIN_ROLE_LABELS } from "@/lib/types";
 import type { AdminRole } from "@/lib/types";
+import { houseRoleKey } from "@/lib/utils";
 
 export default async function PublicProfilePage({ params }: { params: { id: string } }) {
   const { t, dateLocale } = getServerTranslator();
@@ -17,7 +18,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, house_id, created_at")
+    .select("id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, house_role, house_id, created_at")
     .eq("id", params.id)
     .single();
 
@@ -54,6 +55,11 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
             {profile.user_type === "admin" && profile.admin_role && (
               <span className="inline-block mt-1 text-xs font-mono text-command bg-command/10 border border-command/30 rounded-md px-2 py-0.5">
                 {ADMIN_ROLE_LABELS[profile.admin_role as AdminRole]}
+              </span>
+            )}
+            {profile.house_role && houseRoleKey(profile.house_role) && (
+              <span className="inline-block mt-1 ml-1 text-xs font-mono text-success bg-success/10 border border-success/30 rounded-md px-2 py-0.5">
+                {t(houseRoleKey(profile.house_role)!)}
               </span>
             )}
           </div>

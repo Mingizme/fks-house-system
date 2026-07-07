@@ -8,6 +8,8 @@ import { getServerTranslator } from "@/lib/i18n-server";
 import type { HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 import { MemberPopover } from "@/components/MemberPopover";
+import { HouseLeadershipSelect } from "@/components/HouseLeadershipSelect";
+import { houseRoleKey } from "@/lib/utils";
 
 const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
   "arctic-wolves": "house.motto.arcticWolves",
@@ -29,7 +31,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
 
   const [{ data: points }, { data: roster }, { data: history }, { data: messages }] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
-    supabase.from("profiles").select("id, display_name, avatar_emoji").eq("house_id", house.id).order("display_name"),
+    supabase.from("profiles").select("id, display_name, avatar_emoji, house_role").eq("house_id", house.id).order("display_name"),
     supabase
       .from("point_transactions")
       .select("id, points, reason, created_at, admin:profiles(display_name, admin_role)")
@@ -38,7 +40,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
       .limit(15),
     supabase
       .from("house_messages")
-      .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, user_type, admin_role)")
+      .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
       .eq("house_id", house.id)
       .order("created_at", { ascending: true })
       .limit(100),
@@ -82,20 +84,26 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
         </div>
 
         <div className="space-y-6">
+          <HouseLeadershipSelect roster={(roster as any) ?? []} />
+
           <div>
             <h2 className="font-display font-bold text-lg mb-3">{t("house.members")}</h2>
             <div className="rounded-xl2 border border-ink-border bg-ink-surface p-2 max-h-56 overflow-y-auto space-y-0.5">
-              {(roster ?? []).map((p) => (
-                <MemberPopover
-                  key={p.id}
-                  memberId={p.id}
-                  displayName={p.display_name}
-                  avatarEmoji={p.avatar_emoji}
-                  messagesBasePath={messagesBasePath}
-                  profileBasePath={profileBasePath}
-                  currentUserId={user.id}
-                />
-              ))}
+              {(roster ?? []).map((p: any) => {
+                const roleKey = houseRoleKey(p.house_role);
+                return (
+                  <MemberPopover
+                    key={p.id}
+                    memberId={p.id}
+                    displayName={p.display_name}
+                    avatarEmoji={p.avatar_emoji}
+                    roleLabel={roleKey ? t(roleKey) : null}
+                    messagesBasePath={messagesBasePath}
+                    profileBasePath={profileBasePath}
+                    currentUserId={user.id}
+                  />
+                );
+              })}
               {(roster ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">{t("house.noMembers")}</p>}
             </div>
           </div>

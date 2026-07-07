@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
-import { HouseMessage, UserType, AdminRole } from "@/lib/types";
+import { HouseMessage, UserType, AdminRole, HouseRole } from "@/lib/types";
 import { useI18n } from "@/components/I18nProvider";
 import ChatMessage from "./chat/ChatMessage";
 import ChatInput from "./chat/ChatInput";
@@ -15,6 +15,7 @@ interface SenderInfo {
   avatar_url: string | null;
   user_type: UserType;
   admin_role: AdminRole | null;
+  house_role: HouseRole | null;
 }
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
   currentUserId: string;
   initialMessages: HouseMessage[];
   profileBasePath: string;
+  canModerate?: boolean;
 }
 
 function groupReactions(reactionsList: any[]) {
@@ -45,7 +47,7 @@ function groupReactions(reactionsList: any[]) {
   return grouped;
 }
 
-export function HouseChatBox({ houseId, currentUserId, initialMessages, profileBasePath }: Props) {
+export function HouseChatBox({ houseId, currentUserId, initialMessages, profileBasePath, canModerate }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
   const [messages, setMessages] = useState<HouseMessage[]>(initialMessages);
@@ -116,10 +118,10 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
           if (!sender) {
             const { data } = await supabase
               .from("profiles")
-              .select("display_name, avatar_emoji, avatar_url, user_type, admin_role")
+              .select("display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role")
               .eq("id", row.sender_id)
               .single();
-            const newSender: SenderInfo = data ?? { display_name: "Unknown", avatar_emoji: null, avatar_url: null, user_type: "player", admin_role: null };
+            const newSender: SenderInfo = data ?? { display_name: "Unknown", avatar_emoji: null, avatar_url: null, user_type: "player", admin_role: null, house_role: null };
             profileCache.current.set(row.sender_id, newSender);
             sender = newSender;
           }
@@ -305,11 +307,16 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
           const msgReactions = reactions[m.id] || [];
           const replyMsg = m.reply_to_id ? messages.find((r) => r.id === m.reply_to_id) : null;
           const replySender = replyMsg?.sender as SenderInfo | undefined;
-          const replyContent = replyMsg 
-            ? (replyMsg.media_url 
+          const replyContent = replyMsg
+            ? (replyMsg.media_url
                 ? (replyMsg.media_type === "video" ? `🎥 Video${replyMsg.content ? `: ${replyMsg.content}` : ""}` : `📷 Ảnh${replyMsg.content ? `: ${replyMsg.content}` : ""}`)
                 : replyMsg.content)
             : "";
+          const roleLabel = senderInfo?.house_role
+            ? t(senderInfo.house_role === "master" ? "role.houseMaster" : "role.viceMaster")
+            : senderInfo?.user_type === "admin"
+            ? senderInfo.admin_role
+            : null;
           return (
             <ChatMessage
               key={m.id}
@@ -319,7 +326,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
               senderName={senderInfo?.display_name}
               senderEmoji={senderInfo?.avatar_emoji}
               senderAvatarUrl={senderInfo?.avatar_url}
-              senderRole={senderInfo?.user_type === "admin" ? senderInfo.admin_role : null}
+              senderRole={roleLabel}
               currentUserId={currentUserId}
               timestamp={m.created_at}
               editedAt={m.edited_at}
@@ -328,6 +335,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
               reactions={msgReactions}
               profileBasePath={profileBasePath}
               showSender={!mine}
+              canModerate={canModerate && !mine}
               mediaUrl={m.media_url}
               mediaType={m.media_type}
               onReply={handleReply}
