@@ -31,8 +31,9 @@ export interface House {
 }
 
 export interface HousePoints extends House {
-  total_points: number;
+  total_points: number | null;
   house_id: string;
+  can_view_score?: boolean;
 }
 
 export interface SystemSettings {

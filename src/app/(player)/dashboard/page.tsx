@@ -19,14 +19,27 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, house:houses(name, slug, color, icon)")
+    .select("display_name, house_id, house_role, house:houses(name, slug, color, icon)")
     .eq("id", user!.id)
     .single();
 
-  const { data: houses } = await supabase
-    .from("house_points")
-    .select("*")
-    .order("total_points", { ascending: false });
+  const { data: canViewLeaderboardData, error: canViewLeaderboardError } = await supabase.rpc("can_view_leaderboard");
+  const canViewLeaderboard = canViewLeaderboardError ? true : canViewLeaderboardData !== false;
+
+  const [{ data: houses }, { data: canViewOwnHouseScore, error: ownHouseScoreError }] = await Promise.all([
+    canViewLeaderboard
+      ? supabase
+          .from("house_points")
+          .select("*")
+          .order("total_points", { ascending: false })
+      : Promise.resolve({ data: [] } as any),
+    canViewLeaderboard && profile?.house_id
+      ? supabase.rpc("can_view_house_score", { house_uuid: profile.house_id, viewer_id: user!.id })
+      : Promise.resolve({ data: true } as any),
+  ]);
+
+  const hiddenHouseIds =
+    !ownHouseScoreError && canViewOwnHouseScore === false && profile?.house_id ? [profile.house_id] : [];
 
   const { data: announcements } = await supabase
     .from("announcements")
@@ -52,7 +65,13 @@ export default async function DashboardPage() {
 
       <section className="mb-10">
         <h2 className="font-display font-bold text-lg mb-4">{t("dashboard.leaderboard")}</h2>
-        <HousePointsBoard initial={houses ?? []} />
+        {canViewLeaderboard ? (
+          <HousePointsBoard initial={houses ?? []} hiddenHouseIds={hiddenHouseIds} />
+        ) : (
+          <p className="rounded-xl2 border border-ink-border bg-ink-surface p-4 text-sm text-ink-muted">
+            {t("permissions.leaderboardHiddenForPlayer")}
+          </p>
+        )}
       </section>
 
       <section>

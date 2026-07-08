@@ -184,6 +184,14 @@ begin
     raise exception 'Only a Global Director can change admin roles.';
   end if;
 
+  if auth.uid() = target_id then
+    raise exception 'A Global Director cannot change their own role.';
+  end if;
+
+  if new_rank = 'global_director' then
+    raise exception 'Global Director rank must be assigned manually, not through role management.';
+  end if;
+
   select id into dep_id from departments where key = dept_key;
   if dep_id is null then
     raise exception 'Unknown department: %', dept_key;

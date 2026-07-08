@@ -84,6 +84,7 @@ export default async function AdminAdminDirectoryPage() {
         messagesBasePath="/admin/messages"
         profileBasePath="/admin/profile"
         canSetRole={canSetRole}
+        currentUserId={user.id}
       />
     </main>
   );

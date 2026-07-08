@@ -18,6 +18,7 @@ interface Props {
   isPlayer?: boolean;
   /** Viewer có quyền đổi role không (Global Director) */
   canSetRole?: boolean;
+  currentUserId?: string;
 }
 
 /**
@@ -32,6 +33,7 @@ export function AdminDirectoryClient({
   profileBasePath,
   isPlayer: _isPlayer,
   canSetRole = false,
+  currentUserId,
 }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
@@ -298,7 +300,7 @@ export function AdminDirectoryClient({
               </Link>
             </div>
 
-            {canSetRole && (
+            {canSetRole && selectedAdmin.id !== currentUserId && (
               <AdminSetRoleControl
                 targetId={selectedAdmin.id}
                 targetName={selectedAdmin.display_name}

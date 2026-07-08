@@ -330,6 +330,25 @@ $$;
 grant execute on function can_view_leaderboard() to authenticated;
 grant execute on function can_view_house_score(uuid, uuid) to authenticated;
 
+-- Rebuild house_points with score visibility awareness.
+-- This keeps the existing aggregate shape, but masks the score for viewers
+-- blocked by can_view_house_score().
+create or replace view house_points as
+select
+  h.id as house_id,
+  h.name,
+  h.slug,
+  h.color,
+  h.icon,
+  case
+    when auth.uid() is not null and can_view_house_score(h.id, auth.uid()) then coalesce(sum(pt.points), 0)::bigint
+    else null::bigint
+  end as total_points,
+  (auth.uid() is not null and can_view_house_score(h.id, auth.uid())) as can_view_score
+from houses h
+left join point_transactions pt on pt.house_id = h.id
+group by h.id, h.name, h.slug, h.color, h.icon;
+
 -- =========================================================
 -- PHẦN 6 — PROFILE FULL: thêm cột cho Admin Directory
 -- =========================================================

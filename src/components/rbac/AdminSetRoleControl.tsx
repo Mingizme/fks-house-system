@@ -19,10 +19,9 @@ interface Props {
 }
 
 const RANKS: Array<{
-  value: AdminRank;
-  labelKey: "permissions.rankGlobalDirector" | "permissions.rankDirector" | "permissions.rankMember";
+  value: Exclude<AdminRank, "global_director">;
+  labelKey: "permissions.rankDirector" | "permissions.rankMember";
 }> = [
-  { value: "global_director", labelKey: "permissions.rankGlobalDirector" },
   { value: "director", labelKey: "permissions.rankDirector" },
   { value: "member", labelKey: "permissions.rankMember" },
 ];
@@ -48,7 +47,9 @@ export function AdminSetRoleControl({
   const router = useRouter();
   const { t } = useI18n();
   const [deptKey, setDeptKey] = useState<string>(currentDeptKey ?? "admin");
-  const [rank, setRank] = useState<AdminRank>(currentRank ?? "member");
+  const [rank, setRank] = useState<Exclude<AdminRank, "global_director">>(
+    currentRank === "director" || currentRank === "member" ? currentRank : "member"
+  );
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -115,7 +116,7 @@ export function AdminSetRoleControl({
           >
             {departments.slice().sort((a, b) => a.sort_order - b.sort_order).map((d) => (
               <option key={d.key} value={d.key}>
-                {d.name} ({d.key})
+                {d.name}
               </option>
             ))}
           </select>
@@ -124,7 +125,7 @@ export function AdminSetRoleControl({
           <span className="text-[10px] font-mono text-ink-muted uppercase block mb-1">{t("permissions.role")}</span>
           <select
             value={rank}
-            onChange={(e) => setRank(e.target.value as AdminRank)}
+            onChange={(e) => setRank(e.target.value as Exclude<AdminRank, "global_director">)}
             disabled={saving}
             className="w-full rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-xs outline-none focus:border-command"
           >

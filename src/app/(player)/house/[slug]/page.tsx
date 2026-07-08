@@ -44,6 +44,8 @@ export default async function HousePage({ params }: { params: { slug: string } }
 
   const messagesBasePath = isAdmin ? "/admin/messages" : "/messages";
   const profileBasePath = isAdmin ? "/admin/profile" : "/profile";
+  const { data: canViewLeaderboardData, error: canViewLeaderboardError } = await supabase.rpc("can_view_leaderboard");
+  const canViewLeaderboard = canViewLeaderboardError ? true : canViewLeaderboardData !== false;
 
   const [
     { data: points },
@@ -55,21 +57,25 @@ export default async function HousePage({ params }: { params: { slug: string } }
     { data: viewerMute },
   ] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
-    supabase
-      .from("house_points")
-      .select("*")
-      .order("total_points", { ascending: false }),
+    canViewLeaderboard
+      ? supabase
+          .from("house_points")
+          .select("*")
+          .order("total_points", { ascending: false })
+      : Promise.resolve({ data: [] } as any),
     supabase
       .from("profiles")
       .select("id, display_name, avatar_emoji, avatar_url, house_role, username")
       .eq("house_id", house.id)
       .order("display_name"),
-    supabase
-      .from("point_transactions")
-      .select("id, points, reason, created_at, admin:profiles(display_name, admin_role)")
-      .eq("house_id", house.id)
-      .order("created_at", { ascending: false })
-      .limit(8),
+    canViewLeaderboard
+      ? supabase
+          .from("point_transactions")
+          .select("id, points, reason, created_at, admin:profiles(display_name, admin_role)")
+          .eq("house_id", house.id)
+          .order("created_at", { ascending: false })
+          .limit(8)
+      : Promise.resolve({ data: [] } as any),
     supabase
       .from("house_messages")
       .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
@@ -103,7 +109,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
       : false;
 
   // Xác định quyền xem leaderboard (chỉ để ẩn/hiện tab leaderboard)
-  const hideLeaderboard = false; // server check sẽ chặn, nhưng tab luôn hiện vì admin/Factory case
+  const hideLeaderboard = !canViewLeaderboard;
 
   void recentTx;
 
@@ -150,7 +156,11 @@ export default async function HousePage({ params }: { params: { slug: string } }
         }
         leaderboardSlot={
           <div className="space-y-6">
-            <HousePointsBoard initial={(leaderboard as any) ?? []} linkPrefix="/house" />
+            <HousePointsBoard
+              initial={(leaderboard as any) ?? []}
+              linkPrefix="/house"
+              hiddenHouseIds={viewerCanSeeScore ? [] : [house.id]}
+            />
             <div>
               <h2 className="font-display font-bold text-lg mb-3">{t("house.recentPointHistory")}</h2>
               <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border">
