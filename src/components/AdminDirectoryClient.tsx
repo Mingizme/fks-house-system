@@ -200,7 +200,7 @@ export function AdminDirectoryClient({
                 <div>
                   <p className="font-display font-bold">Players</p>
                   <p className="text-[11px] text-ink-muted font-mono">
-                    Bấm để phong lên Admin
+                    {t("permissions.playersSectionHint")}
                   </p>
                 </div>
                 <span className="text-xs text-ink-faint font-mono">{playersList.length}</span>

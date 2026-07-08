@@ -344,6 +344,18 @@ export const dictionaries = {
     "house.clearRole": "Gỡ chức vụ",
     "house.onlyOneRole": "Một Player chỉ giữ duy nhất 1 chức vụ (Master hoặc Vice Master) tại một thời điểm.",
     "house.roleAlreadyAssigned": "Chức vụ đã được gán cho người khác — hệ thống sẽ tự gỡ khỏi người cũ.",
+
+    "permissions.youAreGlobalDirector": "Bạn là Global Director — bấm vào bất kỳ ai để đổi Department/Rank hoặc phong Player lên Admin.",
+    "permissions.playersSection": "Players",
+    "permissions.playersSectionHint": "Bấm để phong lên Admin",
+    "permissions.applyRole": "Áp dụng",
+    "permissions.promoteToAdmin": "Phong làm Admin",
+    "permissions.demoteToPlayer": "Hạ xuống Player",
+    "permissions.confirmDemote": "Hạ {name} xuống Player?",
+    "permissions.rankGlobalDirector": "Global Director",
+    "permissions.rankDirector": "Director",
+    "permissions.rankMember": "Member",
+    "permissions.playerBadge": "PLAYER",
   },
 
   en: {
@@ -651,6 +663,18 @@ export const dictionaries = {
     "house.clearRole": "Clear role",
     "house.onlyOneRole": "A Player can only hold one role (Master or Vice Master) at a time.",
     "house.roleAlreadyAssigned": "The role is already assigned to someone else — the previous holder will be cleared automatically.",
+
+    "permissions.youAreGlobalDirector": "You are a Global Director — click anyone to change Department/Rank or promote a Player to Admin.",
+    "permissions.playersSection": "Players",
+    "permissions.playersSectionHint": "Click to promote to Admin",
+    "permissions.applyRole": "Apply",
+    "permissions.promoteToAdmin": "Promote to Admin",
+    "permissions.demoteToPlayer": "Demote to Player",
+    "permissions.confirmDemote": "Demote {name} to Player?",
+    "permissions.rankGlobalDirector": "Global Director",
+    "permissions.rankDirector": "Director",
+    "permissions.rankMember": "Member",
+    "permissions.playerBadge": "PLAYER",
   },
 
   ja: {
@@ -939,6 +963,18 @@ export const dictionaries = {
     "house.clearRole": "役職を解除",
     "house.onlyOneRole": "Player は同時に1つの役職のみ保持できます。",
     "house.roleAlreadyAssigned": "役職は既に別の人が保持しています — 前任者は自動的に解除されます。",
+
+    "permissions.youAreGlobalDirector": "あなたは Global Director です — 誰かをクリックして Department/Rank を変更、または Player を Admin に昇格できます。",
+    "permissions.playersSection": "Players",
+    "permissions.playersSectionHint": "クリックして Admin に昇格",
+    "permissions.applyRole": "適用",
+    "permissions.promoteToAdmin": "Admin に昇格",
+    "permissions.demoteToPlayer": "Player に降格",
+    "permissions.confirmDemote": "{name} を Player に降格しますか？",
+    "permissions.rankGlobalDirector": "Global Director",
+    "permissions.rankDirector": "Director",
+    "permissions.rankMember": "Member",
+    "permissions.playerBadge": "PLAYER",
   },
 
   th: {
@@ -1227,6 +1263,18 @@ export const dictionaries = {
     "house.clearRole": "ลบบทบาท",
     "house.onlyOneRole": "Player สามารถถือบทบาทเดียวเท่านั้นพร้อมกัน",
     "house.roleAlreadyAssigned": "บทบาทนี้ถูกมอบให้ผู้อื่นแล้ว — ผู้ครองเดิมจะถูกลบโดยอัตโนมัติ",
+
+    "permissions.youAreGlobalDirector": "คุณเป็น Global Director — คลิกใครก็ได้เพื่อเปลี่ยน Department/Rank หรือเลื่อนตำแหน่ง Player เป็น Admin",
+    "permissions.playersSection": "Players",
+    "permissions.playersSectionHint": "คลิกเพื่อเลื่อนตำแหน่งเป็น Admin",
+    "permissions.applyRole": "นำไปใช้",
+    "permissions.promoteToAdmin": "เลื่อนตำแหน่งเป็น Admin",
+    "permissions.demoteToPlayer": "ลดตำแหน่งเป็น Player",
+    "permissions.confirmDemote": "ลด {name} เป็น Player?",
+    "permissions.rankGlobalDirector": "Global Director",
+    "permissions.rankDirector": "Director",
+    "permissions.rankMember": "Member",
+    "permissions.playerBadge": "PLAYER",
   },
 
   ta: {
@@ -1515,6 +1563,18 @@ export const dictionaries = {
     "house.clearRole": "பங்கை நீக்கு",
     "house.onlyOneRole": "Player ஒரே நேரத்தில் ஒரு பங்கை மட்டுமே வைத்திருக்க முடியும்.",
     "house.roleAlreadyAssigned": "பங்கு ஏற்கனவே வேறொருவருக்கு — பழையவர் தானாக நீக்கப்படுவார்.",
+
+    "permissions.youAreGlobalDirector": "நீங்கள் Global Director — யாரையும் கிளிக் செய்து Department/Rank ஐ மாற்றவும் அல்லது Player ஐ Admin ஆக உயர்த்தவும்.",
+    "permissions.playersSection": "Players",
+    "permissions.playersSectionHint": "கிளிக் செய்து Admin ஆக உயர்த்தவும்",
+    "permissions.applyRole": "பயன்படுத்து",
+    "permissions.promoteToAdmin": "Admin ஆக உயர்த்து",
+    "permissions.demoteToPlayer": "Player ஆக இறக்கு",
+    "permissions.confirmDemote": "{name} ஐ Player ஆக இறக்கவா?",
+    "permissions.rankGlobalDirector": "Global Director",
+    "permissions.rankDirector": "Director",
+    "permissions.rankMember": "Member",
+    "permissions.playerBadge": "PLAYER",
   },
 
   ko: {
@@ -1803,6 +1863,18 @@ export const dictionaries = {
     "house.clearRole": "역할 해제",
     "house.onlyOneRole": "Player 는 동시에 하나의 역할만 가질 수 있습니다.",
     "house.roleAlreadyAssigned": "역할이 이미 다른 사람에게 지정되어 있어 — 이전 보유자가 자동으로 해제됩니다.",
+
+    "permissions.youAreGlobalDirector": "회원님은 Global Director 입니다 — 누구든 클릭하여 Department/Rank 를 변경하거나 Player 를 Admin 으로 승격하세요.",
+    "permissions.playersSection": "Players",
+    "permissions.playersSectionHint": "클릭하여 Admin 으로 승격",
+    "permissions.applyRole": "적용",
+    "permissions.promoteToAdmin": "Admin 으로 승격",
+    "permissions.demoteToPlayer": "Player 로 강등",
+    "permissions.confirmDemote": "{name} 을(를) Player 로 강등하시겠습니까?",
+    "permissions.rankGlobalDirector": "Global Director",
+    "permissions.rankDirector": "Director",
+    "permissions.rankMember": "Member",
+    "permissions.playerBadge": "PLAYER",
   },
 } satisfies Record<Language, Record<string, string>>;
 
