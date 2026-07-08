@@ -55,11 +55,20 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
   const [reactions, setReactions] = useState<Record<string, { emoji: string; count: number; userIds: string[] }[]>>({});
   const [activePicker, setActivePicker] = useState<{ messageId: string; x: number; y: number } | null>(null);
   const [pickerMounted, setPickerMounted] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setPickerMounted(true);
     return () => setPickerMounted(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
+    };
   }, []);
 
   const handleOpenFullPicker = useCallback((messageId: string, buttonRect: DOMRect) => {
@@ -272,6 +281,21 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     }
   };
 
+  const handleJumpToMessage = useCallback((messageId: string) => {
+    const target = scrollAreaRef.current?.querySelector<HTMLElement>(
+      `[data-chat-message-id="${messageId}"]`
+    );
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedMessageId(messageId);
+
+    if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
+    highlightTimeoutRef.current = setTimeout(() => {
+      setHighlightedMessageId((current) => (current === messageId ? null : current));
+    }, 1800);
+  }, []);
+
   const handleReact = async (messageId: string, emoji: string) => {
     const { error: err } = await supabase
       .from("message_reactions")
@@ -313,7 +337,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-10 space-y-3">
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-10 space-y-3">
         {messages.length === 0 && (
           <p className="text-sm text-ink-muted text-center mt-8">
             {t("messages.noHouseMessages")}
@@ -346,12 +370,14 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
               showSender={!isMine}
               mediaUrl={m.media_url}
               mediaType={m.media_type}
+              highlighted={highlightedMessageId === m.id}
               onReply={handleReply}
               onEdit={handleStartEdit}
               onDelete={handleDelete}
               onReact={handleReact}
               onRemoveReact={handleRemoveReact}
               onOpenFullPicker={handleOpenFullPicker}
+              onJumpToMessage={handleJumpToMessage}
             />
           );
         })}

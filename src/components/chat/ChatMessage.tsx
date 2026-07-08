@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import EmojiPicker from "./EmojiPicker";
 import { useI18n } from "@/components/I18nProvider";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
@@ -29,12 +28,14 @@ interface ChatMessageProps {
   canModerate?: boolean;
   mediaUrl?: string | null;
   mediaType?: 'image' | 'video' | null;
+  highlighted?: boolean;
   onReply: (messageId: string) => void;
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
   onReact: (messageId: string, emoji: string) => void;
   onRemoveReact: (messageId: string, emoji: string) => void;
   onOpenFullPicker: (messageId: string, buttonRect: DOMRect) => void;
+  onJumpToMessage?: (messageId: string) => void;
 }
 
 export default function ChatMessage({
@@ -56,12 +57,14 @@ export default function ChatMessage({
   canModerate,
   mediaUrl,
   mediaType,
+  highlighted,
   onReply,
   onEdit,
   onDelete,
   onReact,
   onRemoveReact,
   onOpenFullPicker,
+  onJumpToMessage,
 }: ChatMessageProps) {
   const { t } = useI18n();
   const [hovered, setHovered] = useState(false);
@@ -154,8 +157,15 @@ export default function ChatMessage({
   // Deleted message
   if (isDeleted) {
     return (
-      <div className={`flex ${isMine ? "justify-end" : "justify-start"} px-4 py-0.5`}>
-        <div className="px-3 py-1.5 rounded-xl bg-ink-surface2/50 text-ink-muted text-sm italic">
+      <div
+        data-chat-message-id={id}
+        className={`flex ${isMine ? "justify-end" : "justify-start"} scroll-mt-24 px-4 py-0.5 transition-colors duration-300 ${
+          highlighted ? "bg-command/10" : ""
+        }`}
+      >
+        <div className={`px-3 py-1.5 rounded-xl bg-ink-surface2/50 text-ink-muted text-sm italic transition-shadow duration-300 ${
+          highlighted ? "ring-2 ring-command/70" : ""
+        }`}>
           {t("chat.deleted")}
         </div>
       </div>
@@ -164,10 +174,13 @@ export default function ChatMessage({
 
   return (
     <div
-      className={`group flex ${isMine ? "justify-end" : "justify-start"} px-4 py-0.5`}
+      data-chat-message-id={id}
+      className={`group flex ${isMine ? "justify-end" : "justify-start"} scroll-mt-24 px-4 py-0.5 transition-colors duration-300 ${
+        highlighted ? "bg-command/10" : ""
+      }`}
     >
       <div 
-        className={`relative max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col p-3 -m-3`}
+        className={`relative max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col px-3 py-2 -mx-3 -my-2 rounded-lg`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -203,10 +216,19 @@ export default function ChatMessage({
 
         {/* Reply preview */}
         {replyTo && (
-          <div className="border-l-2 border-command/50 pl-2 text-xs text-ink-muted truncate mb-1 max-w-full">
-            <span className="font-semibold">{replyTo.senderName}</span>
-            <span className="ml-1 opacity-70">{replyTo.content}</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => onJumpToMessage?.(replyTo.id)}
+            className={`mb-1 max-w-full rounded-md border-l-2 border-command/50 px-2 py-1 text-left text-xs text-ink-muted transition-colors ${
+              onJumpToMessage ? "cursor-pointer hover:bg-ink-surface2/80 hover:text-ink-text" : "cursor-default"
+            }`}
+            title={replyTo.content}
+          >
+            <span className="block truncate">
+              <span className="font-semibold">{replyTo.senderName}</span>
+              <span className="ml-1 opacity-70">{replyTo.content}</span>
+            </span>
+          </button>
         )}
 
         {/* Message bubble with hover actions */}
@@ -214,7 +236,9 @@ export default function ChatMessage({
           {/* Action bar */}
           {hovered && (
             <div
-              className="absolute -top-6 right-2 flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-0.5 z-[99] animate-in fade-in duration-100"
+              className={`absolute top-0 z-[99] flex items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest backdrop-blur animate-in fade-in duration-100 ${
+                isMine ? "left-0 -translate-x-full -ml-2" : "right-0 translate-x-full ml-2"
+              }`}
             >
               {/* React button */}
               <div className="relative" ref={quickReactRef}>
@@ -294,7 +318,9 @@ export default function ChatMessage({
 
           {/* Bubble */}
           <div
-            className={`rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap ${
+            className={`rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-300 ${
+              highlighted ? "ring-2 ring-command/70 ring-offset-2 ring-offset-ink-surface" : ""
+            } ${
               isMine
                 ? "bg-command text-white rounded-br-md"
                 : "bg-ink-surface2 text-ink-text rounded-bl-md"
