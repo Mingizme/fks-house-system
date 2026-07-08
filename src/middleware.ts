@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAdminArea = path.startsWith("/admin") && path !== "/admin/login";
   const isPlayerArea =
-    ["/dashboard", "/house", "/messages", "/announcements", "/profile"].some((p) =>
+    ["/dashboard", "/house", "/messages", "/announcements", "/profile", "/admin-directory", "/house-announcements"].some((p) =>
       path.startsWith(p)
     );
 
@@ -68,6 +68,8 @@ export const config = {
     "/messages/:path*",
     "/announcements/:path*",
     "/profile/:path*",
+    "/house-announcements/:path*",
+    "/admin-directory/:path*",
     "/admin/:path*",
   ],
 };

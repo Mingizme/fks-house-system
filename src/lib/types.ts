@@ -1,7 +1,22 @@
 export type UserType = "player" | "admin";
 export type AdminRole = "director" | "admin" | "judge" | "security" | "linguistic";
+export type AdminRank = "global_director" | "director" | "member";
 export type HouseRole = "master" | "vice";
 export type HouseSlug = "arctic-wolves" | "inferno-phoenix" | "noble-lions" | "ironclad-rhinos";
+
+export interface Department {
+  id: string;
+  key: string;
+  name: string;
+  director_title: string;
+  member_title: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export type HouseScoreVisibility = "visible" | "hidden";
+export type HouseMasterToggle = "allowed" | "blocked";
+export type LeaderboardVisibility = "public" | "masters_only";
 
 export interface House {
   id: string;
@@ -11,11 +26,57 @@ export interface House {
   icon: string;
   description: string | null;
   created_at: string;
+  score_visibility?: HouseScoreVisibility;
+  master_can_toggle_score?: HouseMasterToggle;
 }
 
 export interface HousePoints extends House {
   total_points: number;
   house_id: string;
+}
+
+export interface SystemSettings {
+  id: number;
+  leaderboard_visibility: LeaderboardVisibility;
+  updated_at: string;
+}
+
+export interface HouseMasterScoreBlock {
+  id: string;
+  house_id: string;
+  master_id: string;
+  blocked_by: string | null;
+  created_at: string;
+  master?: Pick<Profile, "display_name" | "avatar_emoji" | "username">;
+  blocked_by_admin?: Pick<Profile, "display_name">;
+}
+
+export interface MuteStatus {
+  muted_until: string | null;
+  muted_by: string | null;
+  mute_reason: string | null;
+  muted_by_name: string | null;
+}
+
+export interface AdminWithDepartment extends Profile {
+  department?: Department | null;
+}
+
+export interface AdminDirectoryEntry {
+  id: string;
+  display_name: string;
+  username: string;
+  avatar_emoji: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  user_type: UserType;
+  admin_role: AdminRole | null;
+  admin_rank: AdminRank | null;
+  department_id: string | null;
+  department?: Department | null;
+  house_id: string | null;
+  house_role: HouseRole | null;
+  created_at: string;
 }
 
 export interface Profile {
@@ -25,11 +86,16 @@ export interface Profile {
   display_name: string;
   user_type: UserType;
   admin_role: AdminRole | null;
+  admin_rank: AdminRank | null;
+  department_id: string | null;
   house_role: HouseRole | null;
   house_id: string | null;
   avatar_emoji: string | null;
   avatar_url: string | null;
   bio: string | null;
+  muted_until: string | null;
+  muted_by: string | null;
+  mute_reason: string | null;
   display_name_changed_at: string | null;
   created_at: string;
 }
@@ -123,6 +189,29 @@ export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
   security: "Security",
   linguistic: "Linguistic",
 };
+
+export const ADMIN_RANK_LABELS: Record<AdminRank, string> = {
+  global_director: "Global Director",
+  director: "Director",
+  member: "Member",
+};
+
+/**
+ * Tiêu đề chức danh hiển thị của một admin, dựa trên rank + department.
+ * - global_director: luôn là "Global Director" (cấp tối cao toàn hệ thống)
+ * - director: dùng department.director_title (đổi tên được, vd "Commanding Chief")
+ * - member: dùng department.member_title
+ */
+export function departmentTitle(
+  rank: AdminRank | null,
+  dept: Pick<Department, "director_title" | "member_title"> | null
+): string {
+  if (rank === "global_director") return ADMIN_RANK_LABELS.global_director;
+  if (!dept) return rank ? ADMIN_RANK_LABELS[rank] : "";
+  if (rank === "director") return dept.director_title;
+  if (rank === "member") return dept.member_title;
+  return "";
+}
 
 export const HOUSE_ROLE_LABELS: Record<HouseRole, string> = {
   master: "House Master",

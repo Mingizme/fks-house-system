@@ -1,13 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HouseCrest } from "@/components/HouseCrest";
-import { HouseChatBox } from "@/components/HouseChatBox";
-import { formatPoints } from "@/lib/utils";
+import { HouseTabs } from "@/components/HouseTabs";
+import { HouseChatLayout } from "@/components/HouseChatLayout";
+import { HousePointsBoard } from "@/components/HousePointsBoard";
 import { getServerTranslator } from "@/lib/i18n-server";
-import type { HouseSlug } from "@/lib/types";
+import type { HouseSlug, HouseScoreVisibility, HouseMasterToggle } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
-import { MemberPopover } from "@/components/MemberPopover";
-import { houseRoleKey } from "@/lib/utils";
 
 const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
   "arctic-wolves": "house.motto.arcticWolves",
@@ -24,7 +23,11 @@ export default async function HousePage({ params }: { params: { slug: string } }
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: house } = await supabase.from("houses").select("*").eq("slug", params.slug).single();
+  const { data: house } = await supabase
+    .from("houses")
+    .select("id, name, slug, color, icon, description, score_visibility, master_can_toggle_score")
+    .eq("slug", params.slug)
+    .single();
   if (!house) notFound();
 
   const { data: profile } = await supabase
@@ -42,9 +45,25 @@ export default async function HousePage({ params }: { params: { slug: string } }
   const messagesBasePath = isAdmin ? "/admin/messages" : "/messages";
   const profileBasePath = isAdmin ? "/admin/profile" : "/profile";
 
-  const [{ data: points }, { data: roster }, { data: recentTx }, { data: messages }] = await Promise.all([
+  const [
+    { data: points },
+    { data: leaderboard },
+    { data: roster },
+    { data: recentTx },
+    { data: messages },
+    { data: masterBlockRow },
+    { data: viewerMute },
+  ] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
-    supabase.from("profiles").select("id, display_name, avatar_emoji, house_role").eq("house_id", house.id).order("display_name"),
+    supabase
+      .from("house_points")
+      .select("*")
+      .order("total_points", { ascending: false }),
+    supabase
+      .from("profiles")
+      .select("id, display_name, avatar_emoji, avatar_url, house_role, username")
+      .eq("house_id", house.id)
+      .order("display_name"),
     supabase
       .from("point_transactions")
       .select("id, points, reason, created_at, admin:profiles(display_name, admin_role)")
@@ -57,7 +76,36 @@ export default async function HousePage({ params }: { params: { slug: string } }
       .eq("house_id", house.id)
       .order("created_at", { ascending: true })
       .limit(100),
+    isMember && profile?.house_role === "master"
+      ? supabase.from("house_master_score_blocks").select("id").eq("master_id", user.id).maybeSingle()
+      : Promise.resolve({ data: null } as any),
+    supabase.rpc("get_mute_status", { user_id: user.id }),
   ]);
+
+  const isMasterBlocked = !!masterBlockRow?.id;
+  const scoreVisibility: HouseScoreVisibility = (house.score_visibility as HouseScoreVisibility) ?? "visible";
+  const masterCanToggle: HouseMasterToggle = (house.master_can_toggle_score as HouseMasterToggle) ?? "allowed";
+  const totalPoints = points?.total_points ?? 0;
+
+  // Quyết định viewer có được xem điểm house không
+  // - admin: luôn xem
+  // - master của house này, bị block: không
+  // - thành viên house, score_visibility = hidden: không
+  let viewerCanSeeScore = true;
+  if (isAdmin) viewerCanSeeScore = true;
+  else if (isMember && profile?.house_role === "master" && isMasterBlocked) viewerCanSeeScore = false;
+  else if (isMember && scoreVisibility === "hidden") viewerCanSeeScore = false;
+
+  // Có bị mute không? (viewer là member)
+  const viewerMuted =
+    !isAdmin && !!viewerMute?.data && !!(viewerMute.data as any)?.muted_until
+      ? new Date((viewerMute.data as any).muted_until) > new Date()
+      : false;
+
+  // Xác định quyền xem leaderboard (chỉ để ẩn/hiện tab leaderboard)
+  const hideLeaderboard = false; // server check sẽ chặn, nhưng tab luôn hiện vì admin/Factory case
+
+  void recentTx;
 
   return (
     <main className="p-8 max-w-6xl mx-auto">
@@ -71,66 +119,62 @@ export default async function HousePage({ params }: { params: { slug: string } }
         </div>
         <div className="ml-auto text-right">
           <p className="text-xs text-ink-muted font-mono">{t("house.totalPoints")}</p>
-          <p className="font-mono text-4xl font-bold">{(points?.total_points ?? 0).toLocaleString()}</p>
+          {viewerCanSeeScore ? (
+            <p className="font-mono text-4xl font-bold">{totalPoints.toLocaleString()}</p>
+          ) : (
+            <p className="font-mono text-4xl font-bold text-ink-faint">•••</p>
+          )}
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <h2 className="font-display font-bold text-lg mb-3">{t("house.groupChat")}</h2>
-          <HouseChatBox
+      <HouseTabs
+        defaultTab="chat"
+        hideLeaderboard={hideLeaderboard}
+        chatSlot={
+          <HouseChatLayout
             houseId={house.id}
             currentUserId={user.id}
+            currentDisplayName={profile?.house_role ?? ""}
+            currentAvatarEmoji={null}
             initialMessages={(messages as any) ?? []}
+            totalPoints={totalPoints}
+            scoreVisibility={scoreVisibility}
+            masterCanToggleScore={masterCanToggle}
+            viewerCanSeeScore={viewerCanSeeScore}
+            roster={(roster as any) ?? []}
             profileBasePath={profileBasePath}
+            messagesBasePath={messagesBasePath}
             canModerate={canModerate}
+            editableName="player"
           />
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <h2 className="font-display font-bold text-lg mb-3">{t("house.membersWithCount", { count: roster?.length ?? 0 })}</h2>
-            <div className="rounded-xl2 border border-ink-border bg-ink-surface p-2 max-h-64 overflow-y-auto space-y-0.5">
-              {(roster ?? []).map((p) => {
-                const roleKey = houseRoleKey(p.house_role);
-                return (
-                  <MemberPopover
-                    key={p.id}
-                    memberId={p.id}
-                    displayName={p.display_name}
-                    avatarEmoji={p.avatar_emoji}
-                    roleLabel={roleKey ? t(roleKey) : null}
-                    messagesBasePath={messagesBasePath}
-                    profileBasePath={profileBasePath}
-                    currentUserId={user.id}
-                  />
-                );
-              })}
-              {(roster ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">{t("house.noMembers")}</p>}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="font-display font-bold text-lg mb-3">{t("house.recentPointHistory")}</h2>
-            <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border">
-              {(recentTx ?? []).map((tx: any) => (
-                <div key={tx.id} className="p-3 flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm truncate">{tx.reason}</p>
-                    <p className="text-xs text-ink-faint font-mono">
-                      {t("common.by", { name: tx.admin?.display_name ?? "" })}
-                    </p>
+        }
+        leaderboardSlot={
+          <div className="space-y-6">
+            <HousePointsBoard initial={(leaderboard as any) ?? []} linkPrefix="/house" />
+            <div>
+              <h2 className="font-display font-bold text-lg mb-3">{t("house.recentPointHistory")}</h2>
+              <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border">
+                {(recentTx ?? []).map((tx: any) => (
+                  <div key={tx.id} className="p-3 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm truncate">{tx.reason}</p>
+                      <p className="text-xs text-ink-faint font-mono">
+                        {t("common.by", { name: tx.admin?.display_name ?? "" })}
+                      </p>
+                    </div>
+                    <span className={`font-mono text-sm font-bold shrink-0 ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
+                      {tx.points >= 0 ? `+${tx.points}` : tx.points}
+                    </span>
                   </div>
-                  <span className={`font-mono text-sm font-bold shrink-0 ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
-                    {formatPoints(tx.points)}
-                  </span>
-                </div>
-              ))}
-              {(recentTx ?? []).length === 0 && <p className="text-sm text-ink-muted p-3">{t("house.noPointTransactions")}</p>}
+                ))}
+                {(recentTx ?? []).length === 0 && (
+                  <p className="text-sm text-ink-muted p-3">{t("house.noPointTransactions")}</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
     </main>
   );
 }

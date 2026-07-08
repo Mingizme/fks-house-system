@@ -17,6 +17,10 @@ interface MemberPopoverProps {
   profileBasePath: string;
   /** Current user id; hide "message self" */
   currentUserId: string;
+  /** Optional extra tail slot (e.g. AdminMuteControl) */
+  extraSlot?: React.ReactNode;
+  /** Optional presence dot id (omit to disable presence indicator) */
+  presenceDot?: boolean;
 }
 
 export function MemberPopover({
@@ -27,6 +31,8 @@ export function MemberPopover({
   messagesBasePath,
   profileBasePath,
   currentUserId,
+  extraSlot,
+  presenceDot,
 }: MemberPopoverProps) {
   const [open, setOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -107,6 +113,7 @@ export function MemberPopover({
                   {t("member.directMessage")}
                 </Link>
               )}
+              {extraSlot && <div className="px-1.5 pt-1.5 border-t border-ink-border">{extraSlot}</div>}
             </div>
           </div>,
           document.body
@@ -128,9 +135,29 @@ export function MemberPopover({
             {roleLabel}
           </span>
         )}
+        {presenceDot && <PresenceDotOverlay memberId={memberId} />}
       </button>
 
       {menu}
     </div>
   );
+}
+
+/**
+ * Wrapper chịu lỗi khi PresenceProvider chưa được wrap (return null).
+ */
+function PresenceDotOverlay({ memberId }: { memberId: string }) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { usePresence } = require("@/components/PresenceProvider");
+    const { isOnline }: { isOnline: (id: string) => boolean } = usePresence();
+    const online = isOnline(memberId);
+    return (
+      <span
+        className={`ml-1 h-2 w-2 rounded-full inline-block shrink-0 ${online ? "bg-success" : "bg-ink-faint"}`}
+      />
+    );
+  } catch {
+    return null;
+  }
 }

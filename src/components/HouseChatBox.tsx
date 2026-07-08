@@ -24,6 +24,10 @@ interface Props {
   initialMessages: HouseMessage[];
   profileBasePath: string;
   canModerate?: boolean;
+  /** Optional mute banner inserted above the input when the viewer is muted */
+  muteBanner?: React.ReactNode;
+  /** viewer bị mute → input disabled */
+  viewerMuted?: boolean;
 }
 
 function groupReactions(reactionsList: any[]) {
@@ -47,7 +51,7 @@ function groupReactions(reactionsList: any[]) {
   return grouped;
 }
 
-export function HouseChatBox({ houseId, currentUserId, initialMessages, profileBasePath, canModerate }: Props) {
+export function HouseChatBox({ houseId, currentUserId, initialMessages, profileBasePath, canModerate, muteBanner, viewerMuted }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
   const [messages, setMessages] = useState<HouseMessage[]>(initialMessages);
@@ -173,6 +177,10 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
     const content = text.trim();
     if (!content && !mediaUrl) return;
     if (sending) return;
+    if (viewerMuted) {
+      showError(t("chat.mutedCannotSend"));
+      return;
+    }
     setSending(true);
     setText("");
     const replyToId = replyingTo?.id || null;
@@ -191,7 +199,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
 
     if (insertError) {
       if (content) setText(content);
-      showError("Could not send message. Please try again.");
+      showError(insertError.message || "Could not send message. Please try again.");
     }
     setSending(false);
   }
@@ -356,17 +364,20 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
         </div>
       )}
 
+      {muteBanner}
+
       <ChatInput
         value={text}
         onChange={setText}
         onSend={send}
-        placeholder={t("messages.housePlaceholder")}
+        placeholder={viewerMuted ? t("chat.mutedCannotSend") : t("messages.housePlaceholder")}
         sendLabel={t("common.send")}
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
         editingMessage={editingMessage}
         onCancelEdit={handleCancelEdit}
         onSaveEdit={handleSaveEdit}
+        disabled={viewerMuted}
       />
 
       {pickerMounted && activePicker && createPortal(
