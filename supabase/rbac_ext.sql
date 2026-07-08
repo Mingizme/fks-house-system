@@ -240,8 +240,10 @@ grant execute on function admin_unblock_master_score(uuid) to authenticated;
 -- =========================================================
 
 do $$ begin
-  create type leaderboard_visibility as enum ('public', 'masters_only');
+  create type leaderboard_visibility as enum ('public', 'masters_only', 'admin_only');
 exception when duplicate_object then null; end $$;
+
+alter type leaderboard_visibility add value if not exists 'admin_only';
 
 -- Bảng cài đặt hệ thống (singleton row — chỉ 1 row)
 create table if not exists system_settings (
@@ -291,8 +293,8 @@ as $$
   select case
     when is_admin() then true
     when not exists (select 1 from system_settings where id = 1) then true
-    when (select leaderboard_visibility from system_settings where id = 1) = 'public' then true
-    when (select leaderboard_visibility from system_settings where id = 1) = 'masters_only'
+    when (select leaderboard_visibility::text from system_settings where id = 1) = 'public' then true
+    when (select leaderboard_visibility::text from system_settings where id = 1) = 'masters_only'
       and exists (select 1 from profiles where id = auth.uid() and house_role = 'master') then true
     else false
   end;

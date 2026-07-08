@@ -160,5 +160,6 @@ export function canViewLeaderboard(
   if (isAdmin(actor)) return true;
   if (visibility === "public") return true;
   if (visibility === "masters_only") return isHouseMaster(leader);
+  if (visibility === "admin_only") return false;
   return false;
 }

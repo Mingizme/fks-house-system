@@ -16,7 +16,7 @@ export interface Department {
 
 export type HouseScoreVisibility = "visible" | "hidden";
 export type HouseMasterToggle = "allowed" | "blocked";
-export type LeaderboardVisibility = "public" | "masters_only";
+export type LeaderboardVisibility = "public" | "masters_only" | "admin_only";
 
 export interface House {
   id: string;

@@ -35,7 +35,7 @@ export function LeaderboardVisibilitySection({ current, canAdmin }: Props) {
         <h2 className="font-display font-bold text-lg">{t("permissions.leaderboardSection")}</h2>
       </div>
 
-      <div className="flex gap-2">
+      <div className="grid gap-2 sm:grid-cols-3">
         <button
           type="button"
           onClick={() => set("public")}
@@ -59,6 +59,18 @@ export function LeaderboardVisibilitySection({ current, canAdmin }: Props) {
           } disabled:opacity-50`}
         >
           👑 {t("permissions.leaderboardMastersOnly")}
+        </button>
+        <button
+          type="button"
+          onClick={() => set("admin_only")}
+          disabled={!canAdmin || busy || current === "admin_only"}
+          className={`flex-1 rounded-lg border px-4 py-3 text-sm transition-colors ${
+            current === "admin_only"
+              ? "bg-command/15 border-command text-command font-semibold"
+              : "border-ink-border text-ink-muted hover:border-command/50"
+          } disabled:opacity-50`}
+        >
+          🔒 {t("permissions.leaderboardAdminOnly")}
         </button>
       </div>
     </section>
