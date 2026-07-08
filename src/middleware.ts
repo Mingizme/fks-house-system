@@ -31,7 +31,11 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAdminArea = path.startsWith("/admin") && path !== "/admin/login";
+  // /admin-directory (player) phải KHÔNG bị coi là admin area —
+  // path.startsWith("/admin") sẽ match nhầm /admin-directory.
+  // /admin/* (kể cả /admin/admin-directory) vẫn là admin area.
+  const isAdminArea =
+    (path.startsWith("/admin/") || path === "/admin") && path !== "/admin/login";
   const isPlayerArea =
     ["/dashboard", "/house", "/messages", "/announcements", "/profile", "/admin-directory", "/house-announcements"].some((p) =>
       path.startsWith(p)
