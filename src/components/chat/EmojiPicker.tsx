@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useI18n } from "@/components/I18nProvider";
 
 const EMOJI_CATEGORIES = [
   { name: "Smileys", emojis: ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","😊","😇","🥰","😍","🤩","😘","😗","😚","😙","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🥵","🥶","🥴","😵","🤯","🤠","🥳","🥸","😎","🤓","🧐"] },
@@ -24,6 +25,7 @@ export default function EmojiPicker({
   onClose,
   positionClass = "absolute bottom-full mb-2"
 }: EmojiPickerProps) {
+  const { t } = useI18n();
   const [search, setSearch] = useState("");
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +61,7 @@ export default function EmojiPicker({
       <div className="p-2 border-b border-ink-border">
         <input
           type="text"
-          placeholder="Search emoji..."
+          placeholder={t("chat.searchEmoji")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-lg bg-ink-surface border border-ink-border px-3 py-1.5 text-sm outline-none focus:border-command transition-colors placeholder:text-ink-muted"
@@ -71,7 +73,7 @@ export default function EmojiPicker({
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-ink-border">
         {filteredCategories.length === 0 && (
           <p className="text-center text-ink-muted text-sm py-6">
-            No emojis found
+            {t("chat.noEmojisFound")}
           </p>
         )}
         {filteredCategories.map((category) => (

@@ -173,6 +173,15 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
     setTimeout(() => setError(null), 3000);
   }
 
+  function formatReplyContent(message: Pick<HouseMessage, "content" | "media_url" | "media_type">) {
+    if (!message.media_url) return message.content;
+    const mediaLabel =
+      message.media_type === "video"
+        ? `🎥 ${t("chat.mediaVideo")}`
+        : `📷 ${t("chat.mediaImage")}`;
+    return message.content ? `${mediaLabel}: ${message.content}` : mediaLabel;
+  }
+
   async function send(mediaUrl?: string | null, mediaType?: "image" | "video" | null) {
     const content = text.trim();
     if (!content && !mediaUrl) return;
@@ -199,7 +208,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
 
     if (insertError) {
       if (content) setText(content);
-      showError(insertError.message || "Could not send message. Please try again.");
+      showError(t("chat.sendFailed"));
     }
     setSending(false);
   }
@@ -208,10 +217,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
     const msg = messages.find((m) => m.id === messageId);
     if (!msg) return;
     const senderInfo = msg.sender as SenderInfo | undefined;
-    const content = msg.media_url 
-      ? (msg.media_type === "video" ? `🎥 Video${msg.content ? `: ${msg.content}` : ""}` : `📷 Ảnh${msg.content ? `: ${msg.content}` : ""}`)
-      : msg.content;
-    setReplyingTo({ id: msg.id, content, senderName: senderInfo?.display_name || "Unknown" });
+    setReplyingTo({ id: msg.id, content: formatReplyContent(msg), senderName: senderInfo?.display_name || "Unknown" });
   };
 
   const handleStartEdit = (messageId: string, content: string) => {
@@ -240,7 +246,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
       .eq("id", msgId);
 
     if (err) {
-      showError("Could not edit message. Please try again.");
+      showError(t("chat.editFailed"));
     } else {
       setMessages((prev) =>
         prev.map((m) =>
@@ -260,7 +266,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
       .eq("id", messageId);
 
     if (err) {
-      showError("Could not delete message. Please try again.");
+      showError(t("chat.deleteFailed"));
     } else {
       setMessages((prev) =>
         prev.map((m) =>
@@ -281,7 +287,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
       });
 
     if (err && err.code !== "23505") {
-      showError("Action failed.");
+      showError(t("chat.actionFailed"));
     } else {
       refetchReactions();
     }
@@ -297,7 +303,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
       .eq("message_id", messageId);
 
     if (err) {
-      showError("Action failed.");
+      showError(t("chat.actionFailed"));
     } else {
       refetchReactions();
     }
@@ -315,11 +321,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
           const msgReactions = reactions[m.id] || [];
           const replyMsg = m.reply_to_id ? messages.find((r) => r.id === m.reply_to_id) : null;
           const replySender = replyMsg?.sender as SenderInfo | undefined;
-          const replyContent = replyMsg
-            ? (replyMsg.media_url
-                ? (replyMsg.media_type === "video" ? `🎥 Video${replyMsg.content ? `: ${replyMsg.content}` : ""}` : `📷 Ảnh${replyMsg.content ? `: ${replyMsg.content}` : ""}`)
-                : replyMsg.content)
-            : "";
+          const replyContent = replyMsg ? formatReplyContent(replyMsg) : "";
           const roleLabel = senderInfo?.house_role
             ? t(senderInfo.house_role === "master" ? "role.houseMaster" : "role.viceMaster")
             : senderInfo?.user_type === "admin"

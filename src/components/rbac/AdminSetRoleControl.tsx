@@ -18,10 +18,13 @@ interface Props {
   canSetRole: boolean;
 }
 
-const RANKS: Array<{ value: AdminRank; label: string }> = [
-  { value: "global_director", label: "Global Director" },
-  { value: "director", label: "Director" },
-  { value: "member", label: "Member" },
+const RANKS: Array<{
+  value: AdminRank;
+  labelKey: "permissions.rankGlobalDirector" | "permissions.rankDirector" | "permissions.rankMember";
+}> = [
+  { value: "global_director", labelKey: "permissions.rankGlobalDirector" },
+  { value: "director", labelKey: "permissions.rankDirector" },
+  { value: "member", labelKey: "permissions.rankMember" },
 ];
 
 /**
@@ -72,7 +75,7 @@ export function AdminSetRoleControl({
   }
 
   async function demoteToPlayer() {
-    if (!confirm(`Hạ ${targetName} xuống Player?`)) return;
+    if (!confirm(t("permissions.confirmDemote", { name: targetName }))) return;
     setSaving(true);
     setMsg(null);
     setErr(null);
@@ -96,14 +99,14 @@ export function AdminSetRoleControl({
         <span className="text-sm font-medium truncate flex-1">{targetName}</span>
         {isPlayer && (
           <span className="text-[10px] font-mono text-success bg-success/10 border border-success/30 rounded px-1.5 py-0.5">
-            PLAYER
+            {t("permissions.playerBadge")}
           </span>
         )}
       </div>
 
       <div className="flex gap-2">
         <label className="flex-1">
-          <span className="text-[10px] font-mono text-ink-muted uppercase block mb-1">Department</span>
+          <span className="text-[10px] font-mono text-ink-muted uppercase block mb-1">{t("permissions.department")}</span>
           <select
             value={deptKey}
             onChange={(e) => setDeptKey(e.target.value)}
@@ -118,7 +121,7 @@ export function AdminSetRoleControl({
           </select>
         </label>
         <label className="flex-1">
-          <span className="text-[10px] font-mono text-ink-muted uppercase block mb-1">Rank</span>
+          <span className="text-[10px] font-mono text-ink-muted uppercase block mb-1">{t("permissions.role")}</span>
           <select
             value={rank}
             onChange={(e) => setRank(e.target.value as AdminRank)}
@@ -127,7 +130,7 @@ export function AdminSetRoleControl({
           >
             {RANKS.map((r) => (
               <option key={r.value} value={r.value}>
-                {r.label}
+                {t(r.labelKey)}
               </option>
             ))}
           </select>
@@ -141,7 +144,7 @@ export function AdminSetRoleControl({
           disabled={saving}
           className="flex-1 rounded-md bg-command hover:bg-command/85 disabled:opacity-50 px-3 py-1.5 text-xs font-semibold transition-colors"
         >
-          {saving ? t("common.saving") : `🏠 ${isPlayer ? "Phong làm Admin" : "Áp dụng"}`}
+          {saving ? t("common.saving") : `🏠 ${isPlayer ? t("permissions.promoteToAdmin") : t("permissions.applyRole")}`}
         </button>
         {!isPlayer && (
           <button
@@ -150,7 +153,7 @@ export function AdminSetRoleControl({
             disabled={saving}
             className="rounded-md border border-danger/40 text-danger hover:bg-danger/10 disabled:opacity-50 px-3 py-1.5 text-xs font-semibold transition-colors"
           >
-            ↓ Player
+            {`↓ ${t("permissions.playerBadge")}`}
           </button>
         )}
       </div>

@@ -198,7 +198,7 @@ export function AdminDirectoryClient({
             <section className="rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
               <div className="px-4 py-3 border-b border-ink-border flex items-center justify-between">
                 <div>
-                  <p className="font-display font-bold">Players</p>
+                  <p className="font-display font-bold">{t("permissions.playersSection")}</p>
                   <p className="text-[11px] text-ink-muted font-mono">
                     {t("permissions.playersSectionHint")}
                   </p>
@@ -229,7 +229,7 @@ export function AdminDirectoryClient({
                         </div>
                         <div className="text-right shrink-0">
                           <span className="text-[10px] font-mono text-success bg-success/10 border border-success/30 rounded px-1.5 py-0.5">
-                            PLAYER
+                            {t("permissions.playerBadge")}
                           </span>
                           <p className="text-[10px] text-ink-faint mt-1">
                             {online ? t("adminDirectory.onlineNow") : t("adminDirectory.offlineNow")}

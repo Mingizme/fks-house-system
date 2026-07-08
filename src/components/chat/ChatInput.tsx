@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, KeyboardEvent, useEffect } from "react";
 import EmojiPicker from "./EmojiPicker";
 import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/components/I18nProvider";
 
 interface ChatInputProps {
   value: string;
@@ -23,7 +24,7 @@ export default function ChatInput({
   onChange,
   onSend,
   disabled = false,
-  placeholder = "Nhập tin nhắn...",
+  placeholder,
   sendLabel,
   replyingTo,
   onCancelReply,
@@ -32,6 +33,7 @@ export default function ChatInput({
   onSaveEdit,
 }: ChatInputProps) {
   const supabase = createClient();
+  const { t } = useI18n();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<{ url: string; type: "image" | "video" } | null>(null);
@@ -41,6 +43,7 @@ export default function ChatInput({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const effectivePlaceholder = placeholder ?? t("messages.placeholder");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -81,7 +84,7 @@ export default function ChatInput({
 
     // Check size (50MB max)
     if (file.size > 52428800) {
-      setErrorMsg("File quá lớn. Giới hạn tối đa là 50MB.");
+      setErrorMsg(t("chat.fileTooLarge"));
       return;
     }
 
@@ -134,7 +137,7 @@ export default function ChatInput({
         mediaType = selectedFile.type.startsWith("video/") ? "video" : "image";
       } catch (err: any) {
         console.error("Upload error:", err);
-        setErrorMsg("Không thể tải tệp lên. Vui lòng thử lại.");
+        setErrorMsg(t("chat.uploadFailed"));
         setUploading(false);
         return;
       }
@@ -194,7 +197,7 @@ export default function ChatInput({
             type="button"
             onClick={onCancelReply}
             className="ml-2 p-1 rounded hover:bg-ink-border transition-colors text-ink-muted hover:text-ink-text flex-shrink-0 cursor-pointer"
-            title="Cancel reply"
+            title={t("chat.cancelReply")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -220,14 +223,14 @@ export default function ChatInput({
           <div className="flex items-center gap-2">
             <span className="text-sm">✏️</span>
             <span className="text-xs font-semibold text-command">
-              Editing message
+              {t("chat.editingMessage")}
             </span>
           </div>
           <button
             type="button"
             onClick={onCancelEdit}
             className="ml-2 p-1 rounded hover:bg-ink-border transition-colors text-ink-muted hover:text-ink-text cursor-pointer"
-            title="Cancel edit"
+            title={t("chat.cancelEdit")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -254,7 +257,7 @@ export default function ChatInput({
             {mediaPreview.type === "image" ? (
               <img
                 src={mediaPreview.url}
-                alt="Upload preview"
+                alt={t("chat.attachmentAlt")}
                 className="w-16 h-16 object-cover rounded-lg border border-ink-border bg-black/10"
               />
             ) : (
@@ -276,7 +279,7 @@ export default function ChatInput({
             type="button"
             onClick={removeFile}
             className="p-1 rounded-full bg-ink-surface border border-ink-border text-ink-muted hover:text-ink-text hover:bg-ink-border cursor-pointer transition-colors"
-            title="Gỡ bỏ"
+            title={t("chat.removeAttachment")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -325,7 +328,7 @@ export default function ChatInput({
           type="button"
           onClick={triggerFileSelect}
           className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-ink-text font-bold text-base cursor-pointer disabled:opacity-40 transition-colors"
-          title="Đính kèm ảnh/video"
+          title={t("chat.attachMedia")}
           disabled={disabled || uploading || isEditing}
         >
           +
@@ -338,7 +341,7 @@ export default function ChatInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={uploading ? "Đang tải tệp lên..." : placeholder}
+          placeholder={uploading ? t("chat.uploadingFile") : effectivePlaceholder}
           disabled={disabled || uploading}
           className="flex-1 bg-transparent border-0 outline-none text-sm placeholder:text-ink-muted disabled:opacity-50 focus:ring-0 focus:outline-none"
         />
@@ -371,6 +374,8 @@ export default function ChatInput({
           type="button"
           onClick={handleSendClick}
           disabled={disabled || uploading || (!value.trim() && !selectedFile)}
+          aria-label={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
+          title={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
           className="p-1.5 rounded-lg text-command hover:bg-command/10 disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed flex items-center justify-center"
         >
           {uploading ? (

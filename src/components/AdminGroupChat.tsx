@@ -166,6 +166,15 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     setTimeout(() => setError(null), 3000);
   }
 
+  function formatReplyContent(message: Pick<AdminMessage, "content" | "media_url" | "media_type">) {
+    if (!message.media_url) return message.content;
+    const mediaLabel =
+      message.media_type === "video"
+        ? `🎥 ${t("chat.mediaVideo")}`
+        : `📷 ${t("chat.mediaImage")}`;
+    return message.content ? `${mediaLabel}: ${message.content}` : mediaLabel;
+  }
+
   async function send(mediaUrl?: string | null, mediaType?: "image" | "video" | null) {
     const content = text.trim();
     if (!content && !mediaUrl) return;
@@ -189,7 +198,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
 
     if (insertError) {
       if (content) setText(content);
-      showError("Could not send message. Please try again.");
+      showError(t("chat.sendFailed"));
     } else if (data) {
       const sender = profileCache.current.get(currentUserId);
       setMessages((prev) => {
@@ -204,10 +213,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg) return;
     const senderInfo = msg.sender as SenderInfo | undefined;
-    const content = msg.media_url 
-      ? (msg.media_type === "video" ? `🎥 Video${msg.content ? `: ${msg.content}` : ""}` : `📷 Ảnh${msg.content ? `: ${msg.content}` : ""}`)
-      : msg.content;
-    setReplyingTo({ id: msg.id, content, senderName: senderInfo?.display_name || "Admin" });
+    setReplyingTo({ id: msg.id, content: formatReplyContent(msg), senderName: senderInfo?.display_name || "Admin" });
   };
 
   const handleStartEdit = (messageId: string, content: string) => {
@@ -236,7 +242,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
       .eq("id", msgId);
 
     if (err) {
-      showError("Could not edit message. Please try again.");
+      showError(t("chat.editFailed"));
     } else {
       setMessages((prev) =>
         prev.map((m) =>
@@ -256,7 +262,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
       .eq("id", messageId);
 
     if (err) {
-      showError("Could not delete message. Please try again.");
+      showError(t("chat.deleteFailed"));
     } else {
       setMessages((prev) =>
         prev.map((m) =>
@@ -277,7 +283,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
       });
 
     if (err && err.code !== "23505") {
-      showError("Action failed.");
+      showError(t("chat.actionFailed"));
     } else {
       refetchReactions();
     }
@@ -293,7 +299,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
       .eq("message_id", messageId);
 
     if (err) {
-      showError("Action failed.");
+      showError(t("chat.actionFailed"));
     } else {
       refetchReactions();
     }
@@ -319,11 +325,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
           const msgReactions = reactions[m.id] || [];
           const replyMsg = m.reply_to_id ? messages.find((r) => r.id === m.reply_to_id) : null;
           const replySender = replyMsg?.sender as SenderInfo | undefined;
-          const replyContent = replyMsg 
-            ? (replyMsg.media_url 
-                ? (replyMsg.media_type === "video" ? `🎥 Video${replyMsg.content ? `: ${replyMsg.content}` : ""}` : `📷 Ảnh${replyMsg.content ? `: ${replyMsg.content}` : ""}`)
-                : replyMsg.content)
-            : "";
+          const replyContent = replyMsg ? formatReplyContent(replyMsg) : "";
           return (
             <ChatMessage
               key={m.id}

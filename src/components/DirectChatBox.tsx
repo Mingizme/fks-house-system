@@ -149,6 +149,15 @@ export function DirectChatBox({
     setTimeout(() => setError(null), 3000);
   }
 
+  function formatReplyContent(message: Pick<DirectMessage, "content" | "media_url" | "media_type">) {
+    if (!message.media_url) return message.content;
+    const mediaLabel =
+      message.media_type === "video"
+        ? `🎥 ${t("chat.mediaVideo")}`
+        : `📷 ${t("chat.mediaImage")}`;
+    return message.content ? `${mediaLabel}: ${message.content}` : mediaLabel;
+  }
+
   async function send(mediaUrl?: string | null, mediaType?: "image" | "video" | null) {
     const content = text.trim();
     if (!content && !mediaUrl) return;
@@ -174,7 +183,7 @@ export function DirectChatBox({
 
     if (insertError) {
       if (content) setText(content);
-      showError("Could not send message. Please try again.");
+      showError(t("chat.sendFailed"));
     } else if (data) {
       setMessages((prev) => [...prev, data as DirectMessage]);
     }
@@ -184,11 +193,8 @@ export function DirectChatBox({
   const handleReply = (messageId: string) => {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg) return;
-    const senderName = msg.sender_id === currentUserId ? "You" : otherUser.display_name;
-    const content = msg.media_url 
-      ? (msg.media_type === "video" ? `🎥 Video${msg.content ? `: ${msg.content}` : ""}` : `📷 Ảnh${msg.content ? `: ${msg.content}` : ""}`)
-      : msg.content;
-    setReplyingTo({ id: msg.id, content, senderName });
+    const senderName = msg.sender_id === currentUserId ? t("common.you") : otherUser.display_name;
+    setReplyingTo({ id: msg.id, content: formatReplyContent(msg), senderName });
   };
 
   const handleStartEdit = (messageId: string, content: string) => {
@@ -217,7 +223,7 @@ export function DirectChatBox({
       .eq("id", msgId);
 
     if (err) {
-      showError("Could not edit message. Please try again.");
+      showError(t("chat.editFailed"));
     } else {
       setMessages((prev) =>
         prev.map((m) =>
@@ -237,7 +243,7 @@ export function DirectChatBox({
       .eq("id", messageId);
 
     if (err) {
-      showError("Could not delete message. Please try again.");
+      showError(t("chat.deleteFailed"));
     } else {
       setMessages((prev) =>
         prev.map((m) =>
@@ -258,7 +264,7 @@ export function DirectChatBox({
       });
 
     if (err && err.code !== "23505") { // Ignore unique constraint violation
-      showError("Action failed.");
+      showError(t("chat.actionFailed"));
     } else {
       refetchReactions();
     }
@@ -274,7 +280,7 @@ export function DirectChatBox({
       .eq("message_id", messageId);
 
     if (err) {
-      showError("Action failed.");
+      showError(t("chat.actionFailed"));
     } else {
       refetchReactions();
     }
@@ -294,7 +300,7 @@ export function DirectChatBox({
       }
     } catch {
       setBlocked(prevBlocked);
-      showError("Action failed. Please try again.");
+      showError(t("chat.actionFailed"));
     }
   }
 
@@ -305,7 +311,7 @@ export function DirectChatBox({
           <Link
             href={profileBasePath.startsWith("/admin") ? "/admin/messages" : "/messages"}
             className="text-ink-muted hover:text-ink-text text-lg pr-1"
-            title="Quay lại"
+            title={t("common.back")}
           >
             ←
           </Link>
@@ -343,11 +349,7 @@ export function DirectChatBox({
           const mine = m.sender_id === currentUserId;
           const msgReactions = reactions[m.id] || [];
           const replyMsg = m.reply_to_id ? messages.find((r) => r.id === m.reply_to_id) : null;
-          const replyContent = replyMsg 
-            ? (replyMsg.media_url 
-                ? (replyMsg.media_type === "video" ? `🎥 Video${replyMsg.content ? `: ${replyMsg.content}` : ""}` : `📷 Ảnh${replyMsg.content ? `: ${replyMsg.content}` : ""}`)
-                : replyMsg.content)
-            : "";
+          const replyContent = replyMsg ? formatReplyContent(replyMsg) : "";
           return (
             <ChatMessage
               key={m.id}
@@ -361,7 +363,7 @@ export function DirectChatBox({
               timestamp={m.created_at}
               editedAt={m.edited_at}
               deletedAt={m.deleted_at}
-              replyTo={replyMsg ? { id: replyMsg.id, content: replyContent, senderName: replyMsg.sender_id === currentUserId ? "You" : otherUser.display_name } : null}
+              replyTo={replyMsg ? { id: replyMsg.id, content: replyContent, senderName: replyMsg.sender_id === currentUserId ? t("common.you") : otherUser.display_name } : null}
               reactions={msgReactions}
               profileBasePath={profileBasePath}
               showSender={false}

@@ -73,7 +73,7 @@ export default async function AdminAdminDirectoryPage() {
         <p className="text-ink-muted text-sm mt-1">{t("adminDirectory.subtitle")}</p>
         {canSetRole && (
           <p className="text-xs text-command font-mono mt-2">
-            ⚡ Bạn là Global Director — bấm vào bất kỳ ai để đổi Department/Rank hoặc phong Player lên Admin.
+            ⚡ {t("permissions.youAreGlobalDirector")}
           </p>
         )}
       </header>

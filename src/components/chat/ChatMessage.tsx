@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import EmojiPicker from "./EmojiPicker";
+import { useI18n } from "@/components/I18nProvider";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
@@ -62,6 +63,7 @@ export default function ChatMessage({
   onRemoveReact,
   onOpenFullPicker,
 }: ChatMessageProps) {
+  const { t } = useI18n();
   const [hovered, setHovered] = useState(false);
   const [showQuickReact, setShowQuickReact] = useState(false);
   const quickReactRef = useRef<HTMLDivElement>(null);
@@ -154,7 +156,7 @@ export default function ChatMessage({
     return (
       <div className={`flex ${isMine ? "justify-end" : "justify-start"} px-4 py-0.5`}>
         <div className="px-3 py-1.5 rounded-xl bg-ink-surface2/50 text-ink-muted text-sm italic">
-          Tin nhắn đã bị xóa
+          {t("chat.deleted")}
         </div>
       </div>
     );
@@ -220,7 +222,7 @@ export default function ChatMessage({
                   type="button"
                   onClick={() => setShowQuickReact(!showQuickReact)}
                   className="w-7 h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
-                  title="React"
+                  title={t("chat.react")}
                 >
                   😀
                 </button>
@@ -246,7 +248,7 @@ export default function ChatMessage({
                         onOpenFullPicker(id, rect);
                       }}
                       className="w-8 h-8 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-base text-ink-muted cursor-pointer"
-                      title="More emojis"
+                      title={t("chat.moreEmojis")}
                     >
                       +
                     </button>
@@ -259,7 +261,7 @@ export default function ChatMessage({
                 type="button"
                 onClick={() => onReply(id)}
                 className="w-7 h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
-                title="Reply"
+                title={t("chat.reply")}
               >
                 ↩️
               </button>
@@ -270,7 +272,7 @@ export default function ChatMessage({
                   type="button"
                   onClick={() => onEdit(id, content)}
                   className="w-7 h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
-                  title="Edit"
+                  title={t("chat.edit")}
                 >
                   ✏️
                 </button>
@@ -282,7 +284,7 @@ export default function ChatMessage({
                   type="button"
                   onClick={() => onDelete(id)}
                   className="w-7 h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
-                  title="Delete"
+                  title={t("chat.delete")}
                 >
                   🗑️
                 </button>
@@ -300,7 +302,7 @@ export default function ChatMessage({
           >
             {mediaUrl && mediaType === "image" && (
               <div className="mb-2 max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
-                <img src={mediaUrl} alt="Attachment" className="w-full h-auto object-cover max-h-60" />
+                <img src={mediaUrl} alt={t("chat.attachmentAlt")} className="w-full h-auto object-cover max-h-60" />
               </div>
             )}
             {mediaUrl && mediaType === "video" && (
@@ -311,7 +313,7 @@ export default function ChatMessage({
             {content}
             <span className="inline-flex items-center ml-2 gap-1 text-[10px] opacity-50 align-bottom">
               {formattedTime}
-              {editedAt && <span>(edited)</span>}
+              {editedAt && <span>{t("chat.edited")}</span>}
             </span>
           </div>
         </div>
