@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/I18nProvider";
 import { usePresence } from "@/components/PresenceProvider";
 import { PresenceDot } from "@/components/PresenceDot";
+import { AdminSetRoleControl } from "@/components/rbac/AdminSetRoleControl";
 import type { AdminDirectoryEntry, Department } from "@/lib/types";
 
 interface Props {
@@ -15,6 +16,8 @@ interface Props {
   messagesBasePath: string;
   profileBasePath: string;
   isPlayer?: boolean;
+  /** Viewer có quyền đổi role không (Global Director) */
+  canSetRole?: boolean;
 }
 
 /**
@@ -28,6 +31,7 @@ export function AdminDirectoryClient({
   messagesBasePath,
   profileBasePath,
   isPlayer: _isPlayer,
+  canSetRole = false,
 }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
@@ -186,6 +190,61 @@ export function AdminDirectoryClient({
           );
         })}
 
+        {/* Section Players (chỉ Global Director thấy): những user_type=player, không có department */}
+        {canSetRole && (() => {
+          const playersList = byDept.get("unassigned") ?? [];
+          if (playersList.length === 0) return null;
+          return (
+            <section className="rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
+              <div className="px-4 py-3 border-b border-ink-border flex items-center justify-between">
+                <div>
+                  <p className="font-display font-bold">Players</p>
+                  <p className="text-[11px] text-ink-muted font-mono">
+                    Bấm để phong lên Admin
+                  </p>
+                </div>
+                <span className="text-xs text-ink-faint font-mono">{playersList.length}</span>
+              </div>
+              <ul className="divide-y divide-ink-border">
+                {playersList.map((a) => {
+                  const online = isOnline(a.id);
+                  return (
+                    <li key={a.id}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAdmin(a)}
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-ink-surface2 transition-colors text-left"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden shrink-0">
+                          {a.avatar_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={a.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            a.avatar_emoji ?? "🙂"
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{a.display_name}</p>
+                          <p className="text-xs text-ink-faint font-mono truncate">@{a.username}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[10px] font-mono text-success bg-success/10 border border-success/30 rounded px-1.5 py-0.5">
+                            PLAYER
+                          </span>
+                          <p className="text-[10px] text-ink-faint mt-1">
+                            {online ? t("adminDirectory.onlineNow") : t("adminDirectory.offlineNow")}
+                          </p>
+                        </div>
+                        <PresenceDot userId={a.id} />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          );
+        })()}
+
         {filtered.length === 0 && (
           <p className="text-sm text-ink-muted text-center py-8">{t("adminDirectory.empty")}</p>
         )}
@@ -238,6 +297,19 @@ export function AdminDirectoryClient({
                 {t("adminDirectory.messageAdmin")}
               </Link>
             </div>
+
+            {canSetRole && (
+              <AdminSetRoleControl
+                targetId={selectedAdmin.id}
+                targetName={selectedAdmin.display_name}
+                targetEmoji={selectedAdmin.avatar_emoji}
+                departments={departments}
+                currentDeptKey={selectedAdmin.department?.key ?? "admin"}
+                currentRank={selectedAdmin.admin_rank}
+                isPlayer={selectedAdmin.user_type === "player"}
+                canSetRole={canSetRole}
+              />
+            )}
           </div>
         ) : (
           <div className="rounded-xl2 border border-dashed border-ink-border bg-ink-surface p-5 text-sm text-ink-muted">
