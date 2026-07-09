@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { HouseChatBox } from "@/components/HouseChatBox";
 import { HouseChatSidePanel, HouseChatMember } from "@/components/HouseChatSidePanel";
 import { useMuteStatus, MuteBanner } from "@/components/MuteControls";
-import type { HouseMessage, HouseScoreVisibility, HouseMasterToggle } from "@/lib/types";
+import type { HouseMessage } from "@/lib/types";
 
 interface Props {
   houseId: string;
@@ -12,10 +12,6 @@ interface Props {
   currentDisplayName: string;
   currentAvatarEmoji: string | null;
   initialMessages: HouseMessage[];
-  totalPoints: number;
-  scoreVisibility: HouseScoreVisibility | "visible" | undefined;
-  masterCanToggleScore: HouseMasterToggle | "allowed" | undefined;
-  viewerCanSeeScore: boolean;
   roster: HouseChatMember[];
   profileBasePath: string;
   messagesBasePath: string;
@@ -26,7 +22,7 @@ interface Props {
 /**
  * Bố cục "DM-like" cho House chat:
  *  - Khung chat tối giản bên trái (gần như DirectChatBox)
- *  - Panel bên phải: Điểm + danh sách thành viên (sắp xếp Master -> Vice -> Player)
+ *  - Panel bên phải: danh sách thành viên (sắp xếp Master -> Vice -> Player)
  *  - Hiển thị presence & mute banner
  */
 export function HouseChatLayout({
@@ -35,10 +31,6 @@ export function HouseChatLayout({
   currentDisplayName,
   currentAvatarEmoji,
   initialMessages,
-  totalPoints,
-  scoreVisibility,
-  masterCanToggleScore,
-  viewerCanSeeScore,
   roster,
   profileBasePath,
   messagesBasePath,
@@ -72,10 +64,6 @@ export function HouseChatLayout({
       <div className="hidden lg:block w-72 shrink-0 h-[calc(100vh-260px)] min-h-[480px]">
         <HouseChatSidePanel
           houseId={houseId}
-          totalPoints={totalPoints}
-          scoreVisibility={scoreVisibility}
-          masterCanToggleScore={masterCanToggleScore}
-          viewerCanSeeScore={viewerCanSeeScore}
           roster={roster}
           messagesBasePath={messagesBasePath}
           profileBasePath={profileBasePath}

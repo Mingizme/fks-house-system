@@ -5,7 +5,7 @@ import { HouseTabs } from "@/components/HouseTabs";
 import { HouseChatLayout } from "@/components/HouseChatLayout";
 import { HousePointsBoard } from "@/components/HousePointsBoard";
 import { getServerTranslator } from "@/lib/i18n-server";
-import type { HouseSlug, HouseScoreVisibility, HouseMasterToggle } from "@/lib/types";
+import type { HouseSlug, HouseScoreVisibility } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
 const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
@@ -90,7 +90,6 @@ export default async function HousePage({ params }: { params: { slug: string } }
 
   const isMasterBlocked = !!masterBlockRow?.id;
   const scoreVisibility: HouseScoreVisibility = (house.score_visibility as HouseScoreVisibility) ?? "visible";
-  const masterCanToggle: HouseMasterToggle = (house.master_can_toggle_score as HouseMasterToggle) ?? "allowed";
   const totalPoints = points?.total_points ?? 0;
 
   // Quyết định viewer có được xem điểm house không
@@ -143,10 +142,6 @@ export default async function HousePage({ params }: { params: { slug: string } }
             currentDisplayName={profile?.house_role ?? ""}
             currentAvatarEmoji={null}
             initialMessages={(messages as any) ?? []}
-            totalPoints={totalPoints}
-            scoreVisibility={scoreVisibility}
-            masterCanToggleScore={masterCanToggle}
-            viewerCanSeeScore={viewerCanSeeScore}
             roster={(roster as any) ?? []}
             profileBasePath={profileBasePath}
             messagesBasePath={messagesBasePath}

@@ -7,7 +7,7 @@ import { PresenceDot } from "@/components/PresenceDot";
 import { MemberPopover } from "@/components/MemberPopover";
 import { useI18n } from "@/components/I18nProvider";
 import { houseRoleKey } from "@/lib/utils";
-import type { HouseRole, HouseScoreVisibility, HouseMasterToggle } from "@/lib/types";
+import type { HouseRole } from "@/lib/types";
 
 export interface HouseChatMember {
   id: string;
@@ -20,22 +20,12 @@ export interface HouseChatMember {
 
 interface Props {
   houseId: string;
-  totalPoints: number;
-  scoreVisibility: HouseScoreVisibility | "visible" | undefined;
-  masterCanToggleScore: HouseMasterToggle | "allowed" | undefined;
-  viewerCanSeeScore: boolean;
   roster: HouseChatMember[];
   messagesBasePath: string;
   profileBasePath: string;
   currentUserId: string;
 }
 
-/**
- * Sắp xếp danh sách thành viên theo thứ tự ưu tiên:
- *  1. House Master
- *  2. Vice House Master
- *  3. Các Player thông thường (theo tên alphabet)
- */
 function sortRoster(members: HouseChatMember[]): HouseChatMember[] {
   const rank = (r: HouseRole | null) => (r === "master" ? 0 : r === "vice" ? 1 : 2);
   return [...members].sort((a, b) => {
@@ -48,10 +38,6 @@ function sortRoster(members: HouseChatMember[]): HouseChatMember[] {
 
 export function HouseChatSidePanel({
   houseId,
-  totalPoints,
-  scoreVisibility,
-  masterCanToggleScore,
-  viewerCanSeeScore,
   roster,
   messagesBasePath,
   profileBasePath,
@@ -62,7 +48,6 @@ export function HouseChatSidePanel({
   const { isOnline } = usePresence();
   const [liveRoster, setLiveRoster] = useState<HouseChatMember[]>(roster);
 
-  // Realtime: cập nhật roster khi profiles thay đổi (đổi house_role, role, rời house)
   useEffect(() => {
     setLiveRoster(sortRoster(roster));
   }, [roster]);
@@ -96,29 +81,6 @@ export function HouseChatSidePanel({
 
   return (
     <aside className="flex flex-col rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden h-full">
-      {/* Điểm số */}
-      <div className="p-4 border-b border-ink-border">
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-ink-muted font-mono uppercase tracking-wide">
-            {t("house.totalPoints")}
-          </p>
-          {scoreVisibility === "hidden" && (
-            <span title={t("house.scoreHiddenTooltip")} className="text-xs text-ink-faint">
-              🔒
-            </span>
-          )}
-        </div>
-        {viewerCanSeeScore ? (
-          <p className="font-mono text-3xl font-bold mt-1">{totalPoints.toLocaleString()}</p>
-        ) : (
-          <p className="font-mono text-3xl font-bold mt-1 text-ink-faint">•••</p>
-        )}
-        {masterCanToggleScore === "blocked" && (
-          <p className="text-[10px] text-ink-faint mt-1 font-mono">{t("house.masterToggleBlocked")}</p>
-        )}
-      </div>
-
-      {/* Danh sách thành viên */}
       <div className="flex-1 overflow-y-auto p-2 min-h-0">
         <div className="flex items-center justify-between px-2 py-1.5">
           <p className="text-xs font-mono text-ink-muted uppercase tracking-wide">

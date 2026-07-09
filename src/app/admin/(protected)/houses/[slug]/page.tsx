@@ -12,7 +12,7 @@ import { formatPoints, houseRoleKey } from "@/lib/utils";
 import { getServerTranslator } from "@/lib/i18n-server";
 import { canMute, canManage } from "@/lib/permissions";
 import type { ActorContext } from "@/lib/permissions";
-import type { AdminRank, HouseSlug, HouseScoreVisibility, HouseMasterToggle } from "@/lib/types";
+import type { AdminRank, HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
 const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
@@ -50,9 +50,6 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
     adminRank: me.admin_rank as AdminRank | null,
     departmentId: me.department_id,
   };
-
-  const scoreVisibility: HouseScoreVisibility = (house.score_visibility as HouseScoreVisibility) ?? "visible";
-  const masterCanToggle: HouseMasterToggle = (house.master_can_toggle_score as HouseMasterToggle) ?? "allowed";
 
   const [
     { data: pointsRow },
@@ -120,10 +117,6 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
               currentDisplayName="admin"
               currentAvatarEmoji={null}
               initialMessages={(messages as any) ?? []}
-              totalPoints={totalPoints}
-              scoreVisibility={scoreVisibility}
-              masterCanToggleScore={masterCanToggle}
-              viewerCanSeeScore={true}
               roster={(roster as any) ?? []}
               profileBasePath={profileBasePath}
               messagesBasePath={messagesBasePath}
