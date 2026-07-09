@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { useI18n } from "@/components/I18nProvider";
+import MediaLightbox from "@/components/chat/MediaLightbox";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
@@ -69,6 +70,7 @@ export default function ChatMessage({
   const { t } = useI18n();
   const [hovered, setHovered] = useState(false);
   const [showQuickReact, setShowQuickReact] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const quickReactRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -327,14 +329,25 @@ export default function ChatMessage({
             }`}
           >
             {mediaUrl && mediaType === "image" && (
-              <div className="mb-2 max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                className="mb-2 block max-w-sm cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
+              >
                 <img src={mediaUrl} alt={t("chat.attachmentAlt")} className="w-full h-auto object-cover max-h-60" />
-              </div>
+              </button>
             )}
             {mediaUrl && mediaType === "video" && (
-              <div className="mb-2 max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
-                <video src={mediaUrl} controls className="w-full h-auto max-h-60" />
-              </div>
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                className="relative mb-2 block max-w-sm cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
+              >
+                <video src={mediaUrl} muted playsInline className="w-full h-auto max-h-60 pointer-events-none" />
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-2xl text-white">▶</span>
+                </span>
+              </button>
             )}
             {content}
             <span className="inline-flex items-center ml-2 gap-1 text-[10px] opacity-50 align-bottom">
@@ -368,6 +381,15 @@ export default function ChatMessage({
           </div>
         )}
       </div>
+
+      {lightboxOpen && mediaUrl && mediaType && (
+        <MediaLightbox
+          url={mediaUrl}
+          type={mediaType}
+          alt={t("chat.attachmentAlt")}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }
