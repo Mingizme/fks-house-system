@@ -204,6 +204,7 @@ export const dictionaries = {
     "chat.editFailed": "Không thể chỉnh sửa tin nhắn. Vui lòng thử lại.",
     "chat.deleteFailed": "Không thể xóa tin nhắn. Vui lòng thử lại.",
     "chat.actionFailed": "Thao tác thất bại. Vui lòng thử lại.",
+    "chat.wordLimitReached": "Đã đạt giới hạn {limit} từ.",
 
     "profile.kicker": "CÀI ĐẶT",
     "profile.title": "Hồ sơ của bạn",
@@ -543,6 +544,7 @@ export const dictionaries = {
     "chat.editFailed": "Could not edit message. Please try again.",
     "chat.deleteFailed": "Could not delete message. Please try again.",
     "chat.actionFailed": "Action failed. Please try again.",
+    "chat.wordLimitReached": "Reached the {limit}-word limit.",
 
     "profile.kicker": "SETTINGS",
     "profile.title": "Your Profile",
@@ -882,6 +884,7 @@ export const dictionaries = {
     "chat.editFailed": "メッセージを編集できませんでした。もう一度お試しください。",
     "chat.deleteFailed": "メッセージを削除できませんでした。もう一度お試しください。",
     "chat.actionFailed": "操作に失敗しました。もう一度お試しください。",
+    "chat.wordLimitReached": "{limit}語の上限に達しました。",
 
     "profile.kicker": "設定",
     "profile.title": "あなたのプロフィール",
@@ -1217,6 +1220,7 @@ export const dictionaries = {
     "chat.editFailed": "แก้ไขข้อความไม่ได้ โปรดลองอีกครั้ง",
     "chat.deleteFailed": "ลบข้อความไม่ได้ โปรดลองอีกครั้ง",
     "chat.actionFailed": "การดำเนินการล้มเหลว โปรดลองอีกครั้ง",
+    "chat.wordLimitReached": "ถึงขีดจำกัด {limit} คำแล้ว",
 
     "profile.kicker": "ตั้งค่า",
     "profile.title": "โปรไฟล์ของคุณ",
@@ -1552,6 +1556,7 @@ export const dictionaries = {
     "chat.editFailed": "செய்தியைத் திருத்த முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
     "chat.deleteFailed": "செய்தியை நீக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
     "chat.actionFailed": "செயல் தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.",
+    "chat.wordLimitReached": "{limit} சொல் வரம்பை எட்டிவிட்டது.",
 
     "profile.kicker": "அமைப்புகள்",
     "profile.title": "உங்கள் சுயவிவரம்",
@@ -1887,6 +1892,7 @@ export const dictionaries = {
     "chat.editFailed": "메시지를 수정할 수 없습니다. 다시 시도해 주세요.",
     "chat.deleteFailed": "메시지를 삭제할 수 없습니다. 다시 시도해 주세요.",
     "chat.actionFailed": "작업에 실패했습니다. 다시 시도해 주세요.",
+    "chat.wordLimitReached": "{limit}단어 제한에 도달했습니다.",
 
     "profile.kicker": "설정",
     "profile.title": "내 프로필",

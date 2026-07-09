@@ -114,7 +114,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
   void recentTx;
 
   return (
-    <main className="p-8 max-w-6xl mx-auto">
+    <main className="w-full p-6 lg:p-8">
       <div className="flex items-center gap-4 mb-8">
         <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
         <div>
@@ -151,7 +151,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
             profileBasePath={profileBasePath}
             messagesBasePath={messagesBasePath}
             canModerate={canModerate}
-            editableName="player"
+            editableName={isAdmin ? "admin" : "player"}
           />
         }
         leaderboardSlot={

@@ -94,7 +94,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
   const totalPoints = pointsRow?.total_points ?? 0;
 
   return (
-    <main className="p-8 max-w-6xl mx-auto">
+    <main className="w-full p-6 lg:p-8">
       <div className="flex items-center gap-4 mb-8">
         <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
         <div>
@@ -208,4 +208,3 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
     </main>
   );
 }
-

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, KeyboardEvent, useEffect } from "react";
+import { useState, useRef, useCallback, KeyboardEvent, useEffect, useMemo } from "react";
 import EmojiPicker from "./EmojiPicker";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/I18nProvider";
@@ -17,6 +17,25 @@ interface ChatInputProps {
   editingMessage?: { id: string; content: string } | null;
   onCancelEdit?: () => void;
   onSaveEdit?: () => void;
+  maxWords?: number;
+}
+
+const MAX_TEXTAREA_HEIGHT = 160;
+
+function countWords(value: string) {
+  return value.trim().match(/\S+/g)?.length ?? 0;
+}
+
+function limitToWords(value: string, limit: number) {
+  const chunks = value.match(/\S+\s*/g);
+  if (!chunks || chunks.length <= limit) {
+    return { value, limited: false };
+  }
+
+  return {
+    value: chunks.slice(0, limit).join("").trimEnd(),
+    limited: true,
+  };
 }
 
 export default function ChatInput({
@@ -31,6 +50,7 @@ export default function ChatInput({
   editingMessage,
   onCancelEdit,
   onSaveEdit,
+  maxWords,
 }: ChatInputProps) {
   const supabase = createClient();
   const { t } = useI18n();
@@ -40,10 +60,21 @@ export default function ChatInput({
   const [uploading, setUploading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [wordLimitNotice, setWordLimitNotice] = useState(false);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const effectivePlaceholder = placeholder ?? t("messages.placeholder");
+  const activeWordLimit = typeof maxWords === "number" && maxWords > 0 ? maxWords : null;
+  const wordCount = useMemo(() => countWords(value), [value]);
+  const showWordCounter =
+    activeWordLimit !== null && (wordCount >= Math.floor(activeWordLimit * 0.8) || wordLimitNotice);
+  const activeError =
+    errorMsg ??
+    (wordLimitNotice && activeWordLimit !== null
+      ? t("chat.wordLimitReached", { limit: activeWordLimit })
+      : null);
+  const isEditing = !!editingMessage;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -53,28 +84,63 @@ export default function ChatInput({
     });
   }, [supabase]);
 
+  useEffect(() => {
+    if (activeWordLimit === null || wordCount < activeWordLimit) {
+      setWordLimitNotice(false);
+    }
+  }, [activeWordLimit, wordCount]);
+
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+
+    el.style.height = "auto";
+    const nextHeight = Math.min(el.scrollHeight, MAX_TEXTAREA_HEIGHT);
+    el.style.height = `${nextHeight}px`;
+    el.style.overflowY = el.scrollHeight > MAX_TEXTAREA_HEIGHT ? "auto" : "hidden";
+
+    if (el.scrollHeight > MAX_TEXTAREA_HEIGHT) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [value, replyingTo, isEditing, mediaPreview, activeError]);
+
+  const applyTextChange = useCallback(
+    (nextValue: string) => {
+      if (activeWordLimit === null) {
+        onChange(nextValue);
+        return nextValue;
+      }
+
+      const result = limitToWords(nextValue, activeWordLimit);
+      onChange(result.value);
+      setWordLimitNotice(result.limited);
+      return result.value;
+    },
+    [activeWordLimit, onChange]
+  );
+
   const handleEmojiSelect = useCallback(
     (emoji: string) => {
       if (!inputRef.current) {
-        onChange(value + emoji);
+        applyTextChange(value + emoji);
         return;
       }
 
       const start = inputRef.current.selectionStart ?? value.length;
       const end = inputRef.current.selectionEnd ?? value.length;
       const newValue = value.slice(0, start) + emoji + value.slice(end);
-      onChange(newValue);
+      const appliedValue = applyTextChange(newValue);
 
       // Restore cursor position after emoji insertion
       requestAnimationFrame(() => {
         if (inputRef.current) {
-          const pos = start + emoji.length;
+          const pos = Math.min(start + emoji.length, appliedValue.length);
           inputRef.current.setSelectionRange(pos, pos);
           inputRef.current.focus();
         }
       });
     },
-    [value, onChange]
+    [value, applyTextChange]
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,7 +218,7 @@ export default function ChatInput({
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (editingMessage && onSaveEdit) {
@@ -174,8 +240,6 @@ export default function ChatInput({
   const triggerFileSelect = () => {
     fileInputRef.current?.click();
   };
-
-  const isEditing = !!editingMessage;
 
   return (
     <div className="p-4 bg-ink-surface">
@@ -300,17 +364,26 @@ export default function ChatInput({
       )}
 
       {/* Error Message Bar */}
-      {errorMsg && (
+      {activeError && (
         <div className="bg-danger/10 border border-b-0 border-danger/20 rounded-t-xl px-3 py-1.5 flex items-center justify-between text-xs text-danger">
-          <span>{errorMsg}</span>
-          <button onClick={() => setErrorMsg(null)} className="hover:opacity-80">✕</button>
+          <span>{activeError}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setErrorMsg(null);
+              setWordLimitNotice(false);
+            }}
+            className="hover:opacity-80"
+          >
+            x
+          </button>
         </div>
       )}
 
       {/* Main Input Container styled like Discord */}
       <div 
-        className={`flex items-center gap-3 bg-ink-surface2/60 hover:bg-ink-surface2/80 border border-ink-border px-4 py-2.5 transition-colors ${
-          replyingTo || isEditing || mediaPreview || errorMsg ? "rounded-b-xl border-t-0" : "rounded-xl"
+        className={`flex items-end gap-3 bg-ink-surface2/60 hover:bg-ink-surface2/80 border border-ink-border px-4 py-2.5 transition-colors ${
+          replyingTo || isEditing || mediaPreview || activeError ? "rounded-b-xl border-t-0" : "rounded-xl"
         }`}
       >
         {/* Hidden File Input */}
@@ -327,31 +400,41 @@ export default function ChatInput({
         <button
           type="button"
           onClick={triggerFileSelect}
-          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-ink-text font-bold text-base cursor-pointer disabled:opacity-40 transition-colors"
+          className="mt-0.5 w-6 h-6 flex shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-ink-text font-bold text-base cursor-pointer disabled:opacity-40 transition-colors"
           title={t("chat.attachMedia")}
           disabled={disabled || uploading || isEditing}
         >
           +
         </button>
 
-        {/* Text Input (Discord style: borderless, full height inside pill) */}
-        <input
+        {/* Text input grows until max height, then scrolls like Discord. */}
+        <textarea
           ref={inputRef}
-          type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => applyTextChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={uploading ? t("chat.uploadingFile") : effectivePlaceholder}
           disabled={disabled || uploading}
-          className="flex-1 bg-transparent border-0 outline-none text-sm placeholder:text-ink-muted disabled:opacity-50 focus:ring-0 focus:outline-none"
+          rows={1}
+          className="min-h-[24px] max-h-[160px] flex-1 resize-none bg-transparent border-0 outline-none text-sm leading-6 placeholder:text-ink-muted disabled:opacity-50 focus:ring-0 focus:outline-none overflow-y-hidden"
         />
+
+        {showWordCounter && activeWordLimit !== null && (
+          <span
+            className={`pb-0.5 text-[10px] font-mono shrink-0 ${
+              wordCount >= activeWordLimit ? "text-danger" : "text-ink-muted"
+            }`}
+          >
+            {wordCount}/{activeWordLimit}
+          </span>
+        )}
 
         {/* Emoji picker toggle on the right side of the text input */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-lg cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-lg leading-none cursor-pointer disabled:opacity-40"
             title="Emoji"
             disabled={disabled || uploading}
           >
@@ -376,7 +459,7 @@ export default function ChatInput({
           disabled={disabled || uploading || (!value.trim() && !selectedFile)}
           aria-label={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
           title={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
-          className="p-1.5 rounded-lg text-command hover:bg-command/10 disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed flex items-center justify-center"
+          className="p-1.5 rounded-lg text-command hover:bg-command/10 disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed flex shrink-0 items-center justify-center"
         >
           {uploading ? (
             <svg className="animate-spin h-5 w-5 text-command" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

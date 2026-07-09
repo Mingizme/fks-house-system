@@ -45,7 +45,7 @@ export function HouseChatLayout({
   canModerate,
   editableName,
 }: Props) {
-  void editableName;
+  const maxWords = editableName === "admin" ? 2000 : 1000;
   const { isMuted, muteStatus } = useMuteStatus(currentUserId, houseId);
   const [visibilityTick, setVisibilityTick] = useState(0);
   const refetch = useCallback(() => setVisibilityTick((v) => v + 1), []);
@@ -53,7 +53,7 @@ export function HouseChatLayout({
   void refetch;
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-260px)] min-h-[480px]">
+    <div className="flex gap-4 h-[calc(100vh-220px)] min-h-[620px]">
       {/* Chat (DM-like) */}
       <div className="flex-1 min-w-0">
         <HouseChatBox
@@ -64,11 +64,12 @@ export function HouseChatLayout({
           canModerate={canModerate}
           viewerMuted={isMuted}
           muteBanner={<MuteBanner muteStatus={muteStatus} />}
+          maxWords={maxWords}
         />
       </div>
 
       {/* Side panel */}
-      <div className="hidden lg:block w-72 shrink-0">
+      <div className="hidden lg:block w-72 shrink-0 h-[calc(100vh-260px)] min-h-[480px]">
         <HouseChatSidePanel
           houseId={houseId}
           totalPoints={totalPoints}

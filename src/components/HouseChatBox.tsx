@@ -28,6 +28,7 @@ interface Props {
   muteBanner?: React.ReactNode;
   /** viewer bị mute → input disabled */
   viewerMuted?: boolean;
+  maxWords?: number;
 }
 
 function groupReactions(reactionsList: any[]) {
@@ -51,7 +52,16 @@ function groupReactions(reactionsList: any[]) {
   return grouped;
 }
 
-export function HouseChatBox({ houseId, currentUserId, initialMessages, profileBasePath, canModerate, muteBanner, viewerMuted }: Props) {
+export function HouseChatBox({
+  houseId,
+  currentUserId,
+  initialMessages,
+  profileBasePath,
+  canModerate,
+  muteBanner,
+  viewerMuted,
+  maxWords,
+}: Props) {
   const supabase = createClient();
   const { t } = useI18n();
   const [messages, setMessages] = useState<HouseMessage[]>(initialMessages);
@@ -176,6 +186,10 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [text]);
 
   function showError(msg: string) {
     setError(msg);
@@ -334,7 +348,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] min-h-[480px] rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
       <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-10 space-y-3" role="log" aria-live="polite">
         {messages.length === 0 && (
           <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noHouseMessages")}</p>
@@ -406,6 +420,7 @@ export function HouseChatBox({ houseId, currentUserId, initialMessages, profileB
         onCancelEdit={handleCancelEdit}
         onSaveEdit={handleSaveEdit}
         disabled={viewerMuted}
+        maxWords={maxWords}
       />
 
       {pickerMounted && activePicker && createPortal(
