@@ -18,7 +18,7 @@ export default async function AdminPointsPage() {
     .limit(100);
 
   return (
-    <main className="p-8 max-w-4xl mx-auto">
+    <main className="p-8 max-w-4xl mx-auto animate-fadeRise">
       <header className="mb-6">
         <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.pointsKicker")}</p>
         <h1 className="font-display font-bold text-3xl">{t("admin.pointsTitle")}</h1>

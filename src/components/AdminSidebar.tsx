@@ -56,8 +56,8 @@ export function AdminSidebar({
   return (
     <aside className="w-64 shrink-0 border-r border-ink-border bg-ink-surface/60 flex flex-col h-screen sticky top-0">
       <div className="p-5 border-b border-ink-border">
-        <div className="flex items-center gap-2 text-command font-display font-bold text-sm tracking-wide">
-          HOUSE SYSTEM
+        <div className="flex items-center gap-2 font-display font-bold text-sm tracking-[0.18em]">
+          <span className="text-gradient">FKS SYSTEM</span>
         </div>
         <span className="text-[10px] font-mono text-ink-faint">{t("common.adminPortal")}</span>
         <LanguageSwitcher className="mt-4" />
@@ -71,8 +71,8 @@ export function AdminSidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
-                active ? "bg-command/15 text-command font-semibold" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2"
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
+                active ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
               )}
             >
               <span className="w-4 text-center">{item.icon}</span>
@@ -89,8 +89,8 @@ export function AdminSidebar({
               key={h.slug}
               href={`/admin/houses/${h.slug}`}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-                active ? "bg-command/15 text-command font-semibold" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2"
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                active ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
               )}
             >
               <span className="w-4 text-center">{h.icon}</span>

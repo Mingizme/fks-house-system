@@ -79,24 +79,30 @@ export function HousePointsBoard({
           <Link
             key={h.house_id}
             href={`${linkPrefix}/${h.slug}`}
-            className="rounded-xl2 border border-ink-border bg-ink-surface p-5 hover:border-ink-faint transition-colors group"
+            className="rounded-xl2 glass-card gradient-border p-5 hover:-translate-y-1 hover:shadow-glow transition-all duration-200 group"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <HouseCrest color={h.color} icon={h.icon} />
                 <div>
                   <p className="font-display font-bold">{h.name}</p>
-                  <p className="text-xs text-ink-muted font-mono">{t("house.rank", { rank: i + 1 })}</p>
+                  <p className="text-xs text-ink-muted font-mono flex items-center gap-1.5">
+                    {i === 0 && !hidden && <span>👑</span>}
+                    {t("house.rank", { rank: i + 1 })}
+                  </p>
                 </div>
               </div>
-              <p className="font-mono text-2xl font-bold tabular-nums">
+              <p className="font-mono text-2xl font-bold tabular-nums group-hover:text-command transition-colors">
                 {hidden ? "•••" : points.toLocaleString()}
               </p>
             </div>
-            <div className="h-1.5 rounded-full bg-ink-surface2 overflow-hidden">
+            <div className="h-2 rounded-full bg-ink-surface2 overflow-hidden">
               <div
-                className={cn("h-full rounded-full transition-all duration-500", hidden ? "bg-ink-border" : BAR_CLASS[h.color])}
-                style={{ width: `${hidden ? 4 : Math.max(4, (points / max) * 100)}%` }}
+                className={cn("h-full rounded-full transition-all duration-700 ease-out", hidden ? "bg-ink-border" : BAR_CLASS[h.color])}
+                style={{
+                  width: `${hidden ? 4 : Math.max(4, (points / max) * 100)}%`,
+                  boxShadow: hidden ? undefined : "0 0 12px 0 currentColor",
+                }}
               />
             </div>
           </Link>

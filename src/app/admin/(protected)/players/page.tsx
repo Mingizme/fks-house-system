@@ -25,7 +25,7 @@ export default async function AdminPlayersPage() {
   const assigned = (players ?? []).filter((p) => p.house_id);
 
   return (
-    <main className="p-8 max-w-5xl mx-auto">
+    <main className="p-8 max-w-5xl mx-auto animate-fadeRise">
       <header className="mb-8">
         <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.playersKicker")}</p>
         <h1 className="font-display font-bold text-3xl">Player & House</h1>

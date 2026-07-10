@@ -92,17 +92,20 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
 
   return (
     <main className="w-full p-6 lg:p-8">
-      <div className="flex items-center gap-4 mb-8">
-        <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
-        <div>
-          <h1 className="font-display font-extrabold text-3xl">{house.name}</h1>
-          <p className="text-ink-muted text-sm">
-            {t(HOUSE_MOTTO_KEYS[house.slug as HouseSlug] ?? "house.motto.arcticWolves")}
-          </p>
-        </div>
-        <div className="ml-auto text-right">
-          <p className="text-xs text-ink-muted font-mono">{t("house.totalPoints")}</p>
-          <p className="font-mono text-4xl font-bold">{totalPoints.toLocaleString()}</p>
+      <div className="relative overflow-hidden rounded-xl2 glass-card p-6 mb-8 animate-fadeRise">
+        <div className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ backgroundColor: house.color === "phoenix" ? "rgba(255,92,57,0.18)" : "rgba(139,92,246,0.18)" }} />
+        <div className="relative flex items-center gap-4">
+          <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
+          <div>
+            <h1 className="font-display font-extrabold text-3xl">{house.name}</h1>
+            <p className="text-ink-muted text-sm">
+              {t(HOUSE_MOTTO_KEYS[house.slug as HouseSlug] ?? "house.motto.arcticWolves")}
+            </p>
+          </div>
+          <div className="ml-auto text-right">
+            <p className="text-xs text-ink-muted font-mono uppercase tracking-wider">{t("house.totalPoints")}</p>
+            <p className="font-mono text-4xl font-bold tabular-nums text-gradient">{totalPoints.toLocaleString()}</p>
+          </div>
         </div>
       </div>
 
@@ -131,7 +134,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
             <HousePointsBoard initial={(leaderboard as any) ?? []} linkPrefix="/admin/houses" />
             <div>
               <h2 className="font-display font-bold text-lg mb-3">{t("house.members")}</h2>
-              <div className="rounded-xl2 border border-ink-border bg-ink-surface p-2 max-h-64 overflow-y-auto space-y-0.5">
+              <div className="rounded-xl2 glass-card p-2 max-h-64 overflow-y-auto space-y-0.5">
                 {(roster ?? []).map((p: any) => {
                   const roleKey = houseRoleKey(p.house_role);
                   const target = {
@@ -176,7 +179,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
 
             <div>
               <h2 className="font-display font-bold text-lg mb-3">{t("house.pointHistory")}</h2>
-              <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border max-h-96 overflow-y-auto">
+              <div className="rounded-xl2 glass-card divide-y divide-ink-border/60 max-h-96 overflow-y-auto">
                 {(history ?? []).map((tx: any) => (
                   <div key={tx.id} className="p-3 flex items-start justify-between gap-2">
                     <div className="min-w-0">

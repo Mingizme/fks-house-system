@@ -32,7 +32,7 @@ export default async function AdminChatPage() {
   ]);
 
   return (
-    <main className="p-8 max-w-6xl mx-auto">
+    <main className="p-8 max-w-6xl mx-auto animate-fadeRise">
       <header className="mb-6">
         <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.groupChatKicker")}</p>
         <h1 className="font-display font-bold text-3xl">{t("nav.adminGroupChat")}</h1>

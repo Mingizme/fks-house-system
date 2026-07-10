@@ -80,7 +80,7 @@ export function HouseChatSidePanel({
   const onlineCount = sortedMembers.filter((m) => isOnline(m.id)).length;
 
   return (
-    <aside className="flex flex-col rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden h-full">
+    <aside className="flex flex-col rounded-xl2 glass-card overflow-hidden h-full">
       <div className="flex-1 overflow-y-auto p-2 min-h-0">
         <div className="flex items-center justify-between px-2 py-1.5">
           <p className="text-xs font-mono text-ink-muted uppercase tracking-wide">

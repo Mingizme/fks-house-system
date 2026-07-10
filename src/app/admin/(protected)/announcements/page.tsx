@@ -22,7 +22,7 @@ export default async function AdminAnnouncementsPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main className="p-8 max-w-3xl mx-auto">
+    <main className="p-8 max-w-3xl mx-auto animate-fadeRise">
       <header className="mb-6">
         <p className="text-ink-muted font-mono text-xs mb-1">{t("announcements.adminKicker")}</p>
         <h1 className="font-display font-bold text-3xl">{t("announcements.title")}</h1>

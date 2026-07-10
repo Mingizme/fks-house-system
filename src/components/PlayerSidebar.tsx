@@ -43,8 +43,8 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
   return (
     <aside className="w-64 shrink-0 border-r border-ink-border bg-ink-surface/60 flex flex-col h-screen sticky top-0">
       <div className="p-5 border-b border-ink-border">
-        <div className="flex items-center gap-2 text-command font-display font-bold text-sm tracking-wide">
-          HOUSE SYSTEM
+        <div className="flex items-center gap-2 font-display font-bold text-sm tracking-[0.18em]">
+          <span className="text-gradient">FKS SYSTEM</span>
         </div>
         <LanguageSwitcher className="mt-4" />
       </div>
@@ -52,7 +52,7 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
       {house ? (
         <Link
           href={`/house/${house.slug}`}
-          className="m-4 p-3 rounded-xl2 border border-ink-border bg-ink-surface2 flex items-center gap-3 hover:border-command/50 transition-colors"
+          className="m-4 p-3 rounded-xl2 border border-ink-border bg-ink-surface2/80 flex items-center gap-3 hover:border-command/50 hover:shadow-glow transition-all duration-200"
         >
           <HouseCrest color={house.color} icon={house.icon} size="sm" />
           <div className="min-w-0">
@@ -74,10 +74,10 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
                 active
-                  ? "bg-command/15 text-command font-semibold"
-                  : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2"
+                  ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]"
+                  : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
               )}
             >
               <span className="w-4 text-center">{item.icon}</span>

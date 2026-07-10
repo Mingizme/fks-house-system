@@ -382,7 +382,7 @@ export default function ChatInput({
 
       {/* Main Input Container styled like Discord */}
       <div 
-        className={`flex items-end gap-3 bg-ink-surface2/60 hover:bg-ink-surface2/80 border border-ink-border px-4 py-2.5 transition-colors ${
+        className={`flex items-end gap-3 bg-ink-surface2/60 hover:bg-ink-surface2/80 border border-ink-border focus-within:border-command/60 focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.12)] px-4 py-2.5 transition-all duration-200 ${
           replyingTo || isEditing || mediaPreview || activeError ? "rounded-b-xl border-t-0" : "rounded-xl"
         }`}
       >

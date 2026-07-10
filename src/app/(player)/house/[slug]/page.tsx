@@ -114,21 +114,24 @@ export default async function HousePage({ params }: { params: { slug: string } }
 
   return (
     <main className="w-full p-6 lg:p-8">
-      <div className="flex items-center gap-4 mb-8">
-        <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
-        <div>
-          <h1 className="font-display font-extrabold text-3xl">{house.name}</h1>
-          <p className="text-ink-muted text-sm">
-            {t(HOUSE_MOTTO_KEYS[house.slug as HouseSlug] ?? "house.motto.arcticWolves")}
-          </p>
-        </div>
-        <div className="ml-auto text-right">
-          <p className="text-xs text-ink-muted font-mono">{t("house.totalPoints")}</p>
-          {viewerCanSeeScore ? (
-            <p className="font-mono text-4xl font-bold">{totalPoints.toLocaleString()}</p>
-          ) : (
-            <p className="font-mono text-4xl font-bold text-ink-faint">•••</p>
-          )}
+      <div className="relative overflow-hidden rounded-xl2 glass-card p-6 mb-8 animate-fadeRise">
+        <div className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ backgroundColor: house.color === "phoenix" ? "rgba(255,92,57,0.18)" : "rgba(139,92,246,0.18)" }} />
+        <div className="relative flex items-center gap-4">
+          <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
+          <div>
+            <h1 className="font-display font-extrabold text-3xl">{house.name}</h1>
+            <p className="text-ink-muted text-sm">
+              {t(HOUSE_MOTTO_KEYS[house.slug as HouseSlug] ?? "house.motto.arcticWolves")}
+            </p>
+          </div>
+          <div className="ml-auto text-right">
+            <p className="text-xs text-ink-muted font-mono uppercase tracking-wider">{t("house.totalPoints")}</p>
+            {viewerCanSeeScore ? (
+              <p className="font-mono text-4xl font-bold tabular-nums text-gradient">{totalPoints.toLocaleString()}</p>
+            ) : (
+              <p className="font-mono text-4xl font-bold text-ink-faint">•••</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -158,9 +161,9 @@ export default async function HousePage({ params }: { params: { slug: string } }
             />
             <div>
               <h2 className="font-display font-bold text-lg mb-3">{t("house.recentPointHistory")}</h2>
-              <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border">
+              <div className="rounded-xl2 glass-card divide-y divide-ink-border/60">
                 {(recentTx ?? []).map((tx: any) => (
-                  <div key={tx.id} className="p-3 flex items-start justify-between gap-2">
+                  <div key={tx.id} className="p-3 flex items-start justify-between gap-2 hover:bg-white/[0.03] transition-colors first:rounded-t-xl2 last:rounded-b-xl2">
                     <div className="min-w-0">
                       <p className="text-sm truncate">{tx.reason}</p>
                       <p className="text-xs text-ink-faint font-mono">

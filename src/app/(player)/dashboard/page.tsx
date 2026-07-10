@@ -50,21 +50,27 @@ export default async function DashboardPage() {
   const house = profile?.house ? (Array.isArray(profile.house) ? profile.house[0] : profile.house) : null;
 
   return (
-    <main className="p-8 max-w-5xl mx-auto">
-      <header className="mb-8">
-        <p className="text-ink-muted font-mono text-xs mb-1">{t("dashboard.kicker")}</p>
-        <h1 className="font-display font-bold text-3xl">
-          {t("dashboard.greeting", { name: profile?.display_name?.split(" ").pop() ?? t("common.you") })}
-        </h1>
-        {!house && (
-          <p className="text-sm text-ink-muted mt-2 bg-ink-surface border border-ink-border rounded-lg px-4 py-2 inline-block">
-            {t("dashboard.notAssigned")}
-          </p>
-        )}
+    <main className="p-8 max-w-5xl mx-auto animate-fadeRise">
+      <header className="mb-8 relative overflow-hidden rounded-xl2 glass-card p-6">
+        <div className="absolute -top-16 -right-10 w-56 h-56 rounded-full bg-command/20 blur-3xl pointer-events-none" />
+        <div className="relative">
+          <p className="text-ink-muted font-mono text-xs mb-1 tracking-wider uppercase">{t("dashboard.kicker")}</p>
+          <h1 className="font-display font-bold text-3xl">
+            {t("dashboard.greeting", { name: profile?.display_name?.split(" ").pop() ?? t("common.you") })}
+          </h1>
+          {!house && (
+            <p className="text-sm text-ink-muted mt-3 bg-ink-surface2/70 border border-ink-border rounded-lg px-4 py-2 inline-block">
+              {t("dashboard.notAssigned")}
+            </p>
+          )}
+        </div>
       </header>
 
       <section className="mb-10">
-        <h2 className="font-display font-bold text-lg mb-4">{t("dashboard.leaderboard")}</h2>
+        <h2 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
+          <span className="inline-block w-1 h-5 rounded-full bg-command-gradient" />
+          {t("dashboard.leaderboard")}
+        </h2>
         {canViewLeaderboard ? (
           <HousePointsBoard initial={houses ?? []} hiddenHouseIds={hiddenHouseIds} />
         ) : (
@@ -76,7 +82,10 @@ export default async function DashboardPage() {
 
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display font-bold text-lg">{t("dashboard.latestAnnouncements")}</h2>
+          <h2 className="font-display font-bold text-lg flex items-center gap-2">
+            <span className="inline-block w-1 h-5 rounded-full bg-command-gradient" />
+            {t("dashboard.latestAnnouncements")}
+          </h2>
           <Link href="/announcements" className="text-sm text-command hover:underline">
             {t("dashboard.viewAll")}
           </Link>
@@ -86,7 +95,7 @@ export default async function DashboardPage() {
             <p className="text-sm text-ink-muted">{t("dashboard.noAnnouncements")}</p>
           )}
           {(announcements ?? []).map((a: any) => (
-            <div key={a.id} className="rounded-xl2 border border-ink-border bg-ink-surface p-4">
+            <div key={a.id} className="rounded-xl2 glass-card gradient-border p-4 transition-transform duration-200 hover:-translate-y-0.5">
               <div className="flex items-center justify-between mb-1">
                 <p className="font-semibold">{a.title}</p>
                 <p className="text-xs text-ink-faint font-mono">

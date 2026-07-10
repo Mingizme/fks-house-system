@@ -44,8 +44,11 @@ export function AddPointsForm({ houseId, adminId }: { houseId: string; adminId: 
   }
 
   return (
-    <div className="rounded-xl2 border border-ink-border bg-ink-surface p-5">
-      <p className="font-display font-bold mb-4">{t("points.formTitle")}</p>
+    <div className="rounded-xl2 glass-card p-5">
+      <p className="font-display font-bold mb-4 flex items-center gap-2">
+        <span className="inline-block w-1 h-4 rounded-full bg-command-gradient" />
+        {t("points.formTitle")}
+      </p>
       <div className="flex gap-3 mb-3">
         <input
           type="number"

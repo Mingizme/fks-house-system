@@ -79,7 +79,7 @@ export default async function PermissionSettingsPage() {
   const currentVisibility: LeaderboardVisibility = (settings?.leaderboard_visibility as LeaderboardVisibility) ?? "public";
 
   return (
-    <main className="p-8 max-w-5xl mx-auto space-y-8">
+    <main className="p-8 max-w-5xl mx-auto space-y-8 animate-fadeRise">
       <header>
         <p className="text-ink-muted font-mono text-xs mb-1">{t("permissions.kicker")}</p>
         <h1 className="font-display font-bold text-3xl">{t("permissions.title")}</h1>
