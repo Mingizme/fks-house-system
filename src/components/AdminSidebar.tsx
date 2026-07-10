@@ -11,7 +11,8 @@ import type { TranslationKey } from "@/lib/i18n";
 
 const NAV = [
   { href: "/admin", labelKey: "nav.overview", icon: "◆", exact: true },
-  { href: "/admin/players", labelKey: "nav.playerHouseManage", icon: "👥" },
+  { href: "/admin/players", labelKey: "nav.assignHouses", icon: "🏠", exact: true },
+  { href: "/admin/players/moderation", labelKey: "nav.playerModeration", icon: "🚫" },
   { href: "/admin/permissions", labelKey: "nav.permissions", icon: "🔐" },
   { href: "/admin/points", labelKey: "nav.pointsHistory", icon: "📊" },
   { href: "/admin/announcements", labelKey: "nav.announcements", icon: "📣" },

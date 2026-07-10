@@ -44,25 +44,44 @@ export function AdminDirectoryClient({
   const [query, setQuery] = useState("");
   const [selectedAdmin, setSelectedAdmin] = useState<AdminDirectoryEntry | null>(null);
 
+  async function refetchDirectory() {
+    const selectColumns =
+      "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, department:departments(id, key, name, director_title, member_title, sort_order, created_at), house_id, house_role, created_at";
+
+    const [{ data: adminRows }, { data: playerRows }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select(selectColumns)
+        .eq("user_type", "admin")
+        .order("display_name"),
+      canSetRole
+        ? supabase
+            .from("profiles")
+            .select(selectColumns)
+            .eq("user_type", "player")
+            .order("display_name")
+        : Promise.resolve({ data: null } as any),
+    ]);
+
+    const nextRows = canSetRole
+      ? [...(adminRows ?? []), ...(playerRows ?? [])]
+      : adminRows ?? [];
+
+    setAdmins(nextRows as unknown as AdminDirectoryEntry[]);
+    setSelectedAdmin((current) => {
+      if (!current) return null;
+      return (nextRows as any[]).find((row) => row.id === current.id) ?? current;
+    });
+  }
+
   // Realtime: cập nhật admin profiles (đổi department/rank/role)
   useEffect(() => {
     const channel = supabase
       .channel("admin-directory-watch")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "profiles", filter: "user_type=eq.admin" },
-        () => {
-          supabase
-            .from("profiles")
-            .select(
-              "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, department:departments(id, key, name, director_title, member_title, sort_order, created_at), house_id, house_role, created_at"
-            )
-            .eq("user_type", "admin")
-            .order("display_name")
-            .then(({ data }) => {
-              if (data) setAdmins((data as unknown as AdminDirectoryEntry[]) ?? []);
-            });
-        }
+        { event: "*", schema: "public", table: "profiles" },
+        () => void refetchDirectory()
       )
       .on(
         "postgres_changes",
@@ -76,7 +95,7 @@ export function AdminDirectoryClient({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase]);
+  }, [supabase, canSetRole]);
 
   const filtered = admins.filter((a) => {
     if (activeDept !== "all") {
