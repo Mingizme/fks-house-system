@@ -75,11 +75,16 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 bg-grain py-16">
-      <div className="w-full max-w-sm">
+    <main className="min-h-screen flex items-center justify-center px-6 bg-grain py-16 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none opacity-40 blur-3xl">
+        <div className="absolute -top-24 right-1/4 w-80 h-80 rounded-full bg-command/30 animate-floatSlow" />
+        <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-command-cyan/20 animate-floatSlow" style={{ animationDelay: "2s" }} />
+      </div>
+      <div className="w-full max-w-sm relative z-10 animate-fadeRise">
         <LanguageSwitcher className="mb-5" />
-        <Link href="/" className="text-ink-muted text-sm font-mono hover:text-ink-text">← {t("common.home")}</Link>
-        <h1 className="font-display font-bold text-3xl mt-4 mb-1">{t("auth.signupTitle")}</h1>
+        <Link href="/" className="text-ink-muted text-sm font-mono hover:text-ink-text transition-colors">← {t("common.home")}</Link>
+        <div className="glass-card rounded-xl2 p-7 mt-4">
+        <h1 className="font-display font-bold text-3xl mb-1">{t("auth.signupTitle")}</h1>
         <p className="text-ink-muted text-sm mb-8">
           {t("auth.signupSubtitle")}
         </p>
@@ -89,7 +94,7 @@ export default function SignupPage() {
             <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.email")}</label>
             <input
               type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg bg-ink-surface border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
+              className="w-full rounded-lg bg-ink-surface2/70 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
               placeholder="ban@example.com"
             />
           </div>
@@ -97,7 +102,7 @@ export default function SignupPage() {
             <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.username")}</label>
             <input
               type="text" required value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())}
-              className="w-full rounded-lg bg-ink-surface border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
+              className="w-full rounded-lg bg-ink-surface2/70 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
               placeholder={t("auth.usernamePlaceholder")}
             />
           </div>
@@ -105,7 +110,7 @@ export default function SignupPage() {
             <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.displayName")}</label>
             <input
               type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full rounded-lg bg-ink-surface border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
+              className="w-full rounded-lg bg-ink-surface2/70 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
               placeholder={t("auth.displayNamePlaceholder")}
             />
           </div>
@@ -113,7 +118,7 @@ export default function SignupPage() {
             <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("common.password")}</label>
             <input
               type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg bg-ink-surface border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
+              className="w-full rounded-lg bg-ink-surface2/70 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors"
               placeholder={t("auth.passwordPlaceholder")}
             />
           </div>
@@ -124,7 +129,7 @@ export default function SignupPage() {
 
           <button
             type="submit" disabled={loading}
-            className="w-full rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold py-2.5"
+            className="w-full rounded-lg bg-command disabled:opacity-50 font-semibold py-2.5"
           >
             {loading ? t("auth.creating") : t("auth.createAccount")}
           </button>
@@ -134,6 +139,7 @@ export default function SignupPage() {
           {t("auth.hasAccount")}{" "}
           <Link href="/login" className="text-command hover:underline">{t("auth.login")}</Link>
         </p>
+        </div>
       </div>
     </main>
   );

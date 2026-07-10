@@ -4,6 +4,7 @@
 
 :root {
   color-scheme: dark;
+  --grad-command: linear-gradient(120deg, #8B5CF6 0%, #6D5DF6 45%, #22D3EE 115%);
 }
 
 html {
@@ -12,15 +13,22 @@ html {
 }
 
 html, body {
-  background-color: #12141A;
-  color: #EDEEF2;
+  background-color: #0B0E16;
+  color: #ECEEF5;
 }
 
+/* Rich, non-black backdrop with subtle neon aura + fine grain */
 body {
   font-family: var(--font-inter), sans-serif;
   overflow-y: scroll;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  background-color: #0B0E16;
+  background-image:
+    radial-gradient(900px 600px at 12% -8%, rgba(139, 92, 246, 0.14), transparent 60%),
+    radial-gradient(1000px 680px at 108% 8%, rgba(34, 211, 238, 0.10), transparent 60%),
+    radial-gradient(800px 800px at 50% 120%, rgba(109, 93, 246, 0.08), transparent 60%);
+  background-attachment: fixed;
 }
 
 * {
@@ -36,18 +44,42 @@ textarea {
   touch-action: manipulation;
 }
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: #2D3140;
+  background-color: #2A3042;
   border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #3A4159;
+}
+
+/* Smooth by default: interactive elements ease their color/shape/shadow */
+a,
+button,
+[role="button"],
+input,
+select,
+textarea,
+summary {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity, filter;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+button:not(:disabled):active,
+[role="button"]:active,
+a:active {
+  transform: translateY(1px) scale(0.985);
 }
 
 :focus-visible {
-  outline: 2px solid #6C7BFF;
+  outline: 2px solid #8B5CF6;
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -56,13 +88,107 @@ textarea {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+  button:not(:disabled):active,
+  [role="button"]:active,
+  a:active { transform: none; }
 }
 
 .crest-ring {
-  background: conic-gradient(from 0deg, var(--ring-color, #6C7BFF), transparent 70%);
+  background: conic-gradient(from 0deg, var(--ring-color, #8B5CF6), transparent 70%);
 }
 
 .bg-grain {
   background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0);
   background-size: 22px 22px;
+}
+
+/* ============================================================
+   Premium overrides — repaint existing tokens app-wide.
+   These upgrade the look WITHOUT touching component markup.
+   ============================================================ */
+
+/* Every solid primary button (bg-command) becomes a neon gradient
+   with a soft glow + lift. Opacity variants (bg-command/15 etc.)
+   are untouched, so active-nav/soft states keep working. */
+.bg-command {
+  background-image: var(--grad-command);
+  background-size: 160% 160%;
+  background-color: #8B5CF6;
+  color: #fff;
+  box-shadow: 0 8px 22px -10px rgba(139, 92, 246, 0.7);
+}
+.bg-command:hover {
+  background-position: 100% 50%;
+  box-shadow: 0 12px 30px -8px rgba(139, 92, 246, 0.85);
+  filter: brightness(1.06);
+}
+.bg-command:disabled {
+  filter: saturate(0.7) brightness(0.9);
+  box-shadow: none;
+}
+
+/* Surfaces get a faint glassy depth so cards read as premium panels */
+.bg-ink-surface,
+.bg-ink-surface\/60,
+.bg-ink-surface\/70 {
+  backdrop-filter: blur(6px);
+}
+
+/* Inputs: refined focus ring using the accent, smoother than a hard border */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
+}
+
+/* ============================================================
+   Reusable premium utilities (opt-in on hero surfaces)
+   ============================================================ */
+
+.text-gradient {
+  background: var(--grad-command);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.glass-card {
+  background: linear-gradient(180deg, rgba(28, 33, 48, 0.75), rgba(20, 24, 36, 0.65));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 24px 60px -30px rgba(0, 0, 0, 0.85);
+}
+
+/* Animated gradient hairline border for feature cards */
+.gradient-border {
+  position: relative;
+  isolation: isolate;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(130deg, rgba(139, 92, 246, 0.6), rgba(34, 211, 238, 0.35), transparent 60%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 220ms ease;
+}
+.gradient-border:hover::before { opacity: 1; }
+
+/* Ghost/secondary button that lights up its border on hover */
+.btn-ghost {
+  border: 1px solid #282E40;
+  background: rgba(28, 33, 48, 0.5);
+  transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease, transform 160ms ease;
+}
+.btn-ghost:hover {
+  border-color: rgba(139, 92, 246, 0.6);
+  background: rgba(28, 33, 48, 0.85);
+  box-shadow: 0 8px 26px -14px rgba(139, 92, 246, 0.6);
 }
