@@ -1,15 +1,16 @@
-import { enUS, ja, ko, ta, th, vi } from "date-fns/locale";
+import { enUS, id as idLocale, ja, ko, ta, th, vi } from "date-fns/locale";
 import type { Locale } from "date-fns";
 
 export const LANGUAGE_COOKIE = "house_lang";
 
-export const SUPPORTED_LANGUAGES = ["vi", "en", "ja", "th", "ta", "ko"] as const;
+export const SUPPORTED_LANGUAGES = ["vi", "en", "id", "ja", "th", "ta", "ko"] as const;
 
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
 export const LANGUAGE_LABELS: Record<Language, string> = {
   vi: "Tiếng Việt",
   en: "English",
+  id: "Bahasa Indonesia",
   ja: "日本語",
   th: "ไทย",
   ta: "தமிழ்",
@@ -19,6 +20,7 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 export const LANGUAGE_SHORT_LABELS: Record<Language, string> = {
   vi: "VI",
   en: "EN",
+  id: "ID",
   ja: "JA",
   th: "TH",
   ta: "TA",
@@ -32,13 +34,14 @@ export function isLanguage(value: unknown): value is Language {
 export const DATE_LOCALES: Record<Language, Locale> = {
   vi,
   en: enUS,
+  id: idLocale,
   ja,
   th,
   ta,
   ko,
 };
 
-export const dictionaries = {
+const baseDictionaries = {
   vi: {
     "house.motto.arcticWolves": "Chúng ta không đuổi theo chiến thắng, chúng ta săn lấy nó.",
     "house.motto.ironcladRhinos": "Đứng vững, tiến công.",
@@ -2209,13 +2212,149 @@ export const dictionaries = {
     "permissions.rankMember": "Member",
     "permissions.playerBadge": "PLAYER",
   },
+} satisfies Record<Exclude<Language, "id">, Record<string, string>>;
+
+export const dictionaries = {
+  ...baseDictionaries,
+  id: {
+    ...baseDictionaries.en,
+    "meta.description": "Sistem manajemen House untuk skor, pengumuman, dan komunikasi realtime.",
+    "common.language": "Bahasa",
+    "common.home": "Beranda",
+    "common.back": "Kembali",
+    "common.password": "KATA SANDI",
+    "common.displayName": "NAMA TAMPILAN",
+    "common.icon": "IKON",
+    "common.send": "Kirim",
+    "common.logout": "Keluar",
+    "common.saveChanges": "Simpan perubahan",
+    "common.saving": "Menyimpan...",
+    "common.saved": "Tersimpan",
+    "common.you": "anda",
+    "common.by": "oleh {name}",
+    "common.byWithRole": "oleh {name} · {role}",
+    "common.adminPortal": "PORTAL ADMIN",
+
+    "home.status": "SISTEM ONLINE",
+    "home.tagline": "Berkontribusi kembali untuk komunitas roblox",
+    "home.playerLogin": "Masuk",
+    "home.playerSignup": "Buat Akun Player",
+    "home.adminGate": "Gerbang Admin →",
+
+    "auth.loginPlayerTitle": "Masuk",
+    "auth.loginPlayerSubtitle": "Masuk ke akun anda untuk melanjutkan.",
+    "auth.loginAdminTitle": "Login Admin",
+    "auth.invalidCredentials": "Email atau kata sandi salah.",
+    "auth.accountIsAdmin": "Ini adalah akun Admin. Silakan masuk melalui Portal Admin.",
+    "auth.noAdminPermission": "Akun ini tidak memiliki akses Admin.",
+    "auth.loggingIn": "Sedang masuk...",
+    "auth.verifying": "Memverifikasi...",
+    "auth.login": "Masuk",
+    "auth.enterSystem": "Masuk sistem",
+    "auth.noAccount": "Belum punya akun?",
+    "auth.hasAccount": "Sudah punya akun?",
+    "auth.createAccount": "Buat akun",
+    "auth.signupTitle": "Buat Akun Player",
+    "auth.signupSubtitle": "Akun baru belum masuk house sampai admin menempatkannya.",
+    "auth.passwordTooShort": "Kata sandi minimal 6 karakter.",
+    "auth.invalidUsername": "Username hanya boleh berisi huruf kecil, angka, dan _ (3-20 karakter).",
+    "auth.emailRegistered": "Email ini sudah terdaftar.",
+    "auth.creating": "Membuat...",
+    "auth.checkEmailTitle": "Periksa email anda",
+    "auth.checkEmailBefore": "Kami mengirim link konfirmasi ke",
+    "auth.checkEmailAfter": "Setelah konfirmasi, anda bisa masuk. Akun tetap belum ditempatkan sampai admin memasukkannya ke house.",
+    "auth.backToLogin": "Kembali ke login",
+    "auth.passwordPlaceholder": "Minimal 6 karakter",
+    "auth.adminManual": "Akun Admin dibuat manual oleh pengelola sistem.",
+    "auth.emailOrUsername": "EMAIL ATAU USERNAME",
+    "auth.forgotPassword": "Lupa kata sandi?",
+    "auth.forgotPasswordTitle": "Pulihkan kata sandi",
+    "auth.forgotPasswordSubtitle": "Masukkan email atau username. Jika akun ada, link reset akan dikirim.",
+    "auth.sendResetLink": "Kirim link reset",
+    "auth.sendingReset": "Mengirim...",
+    "auth.resetEmailSent": "Jika akun ada, link reset kata sandi sudah dikirim ke email terdaftar.",
+    "auth.resetPasswordTitle": "Buat kata sandi baru",
+    "auth.resetPasswordSubtitle": "Masukkan kata sandi baru setelah membuka link konfirmasi dari email.",
+    "auth.newPassword": "KATA SANDI BARU",
+    "auth.confirmPassword": "KONFIRMASI KATA SANDI",
+    "auth.passwordsDoNotMatch": "Kata sandi tidak sama.",
+    "auth.resetPasswordFailed": "Tidak dapat memperbarui kata sandi. Silakan buka ulang link email.",
+    "auth.passwordUpdated": "Kata sandi sudah diperbarui.",
+    "auth.updatePassword": "Perbarui kata sandi",
+
+    "nav.overview": "Ikhtisar",
+    "nav.announcements": "Pengumuman",
+    "nav.messages": "Pesan",
+    "nav.playerHouse": "HOUSE ANDA",
+    "nav.unassigned": "Anda belum ditempatkan ke house. Harap tunggu admin.",
+    "nav.playerHouseManage": "Player & House",
+    "nav.assignHouses": "Tetapkan House",
+    "nav.playerModeration": "Mute / Ban",
+    "nav.pointsHistory": "Riwayat Poin",
+    "nav.adminChat": "Chat Admin",
+    "nav.settings": "Pengaturan",
+    "nav.houseMonitor": "PEMANTAUAN HOUSE",
+    "nav.houseAnnouncements": "Pengumuman House",
+    "nav.adminGroupChat": "Chat Grup Admin",
+    "nav.adminMessages": "Pesan",
+    "nav.permissions": "Pengaturan Izin",
+    "nav.adminDirectory": "Direktori Admin",
+
+    "chat.chatBannedMessage": "Anda dilarang menggunakan chat.",
+    "chat.accountBannedMessage": "Akun anda telah diblokir.",
+    "chat.mutedMessage": "Anda sedang di-mute",
+    "chat.mutedCannotSend": "Anda tidak dapat mengirim pesan saat di-mute.",
+    "chat.mutedRemaining": "tersisa {duration}",
+    "chat.muteReason": "Alasan",
+    "chat.muteReasonPlaceholder": "Alasan mute (opsional)",
+    "chat.muteDurationLabel": "Durasi mute",
+    "chat.mutedSuccess": "Berhasil di-mute",
+    "chat.unmutedSuccess": "Mute dibuka",
+    "chat.muteUser": "Mute user",
+    "chat.unmuteUser": "Buka mute",
+
+    "moderation.chatBanned": "Chat diblokir",
+    "moderation.accountBanned": "Akun diblokir",
+    "moderation.ipBanned": "IP diblokir",
+    "moderation.banChat": "Blokir Chat",
+    "moderation.unbanChat": "Buka Blokir Chat",
+    "moderation.banAccount": "Blokir Akun",
+    "moderation.unbanAccount": "Buka Blokir Akun",
+    "moderation.banIp": "Blokir IP",
+    "moderation.unbanIp": "Buka Blokir IP",
+    "moderation.chatBannedSuccess": "Chat diblokir",
+    "moderation.chatUnbannedSuccess": "Blokir chat dibuka",
+    "moderation.accountBannedSuccess": "Akun diblokir",
+    "moderation.accountUnbannedSuccess": "Blokir akun dibuka",
+    "moderation.ipBannedSuccess": "IP diblokir",
+    "moderation.ipUnbannedSuccess": "Blokir IP dibuka",
+    "moderation.confirmAccountBan": "Blokir akun {name}?",
+    "moderation.confirmIpBan": "Blokir IP {ip}?",
+    "moderation.lastSeenIp": "IP terakhir: {ip}",
+    "moderation.noIp": "belum ada",
+
+    "permissions.youAreGlobalDirector": "Anda adalah Global Director — klik siapa saja untuk mengubah Department/Rank atau mempromosikan Player menjadi Admin.",
+    "permissions.playersSection": "Player",
+    "permissions.playersSectionHint": "Klik untuk promosi menjadi Admin",
+    "permissions.department": "Departemen",
+    "permissions.role": "Peran",
+    "permissions.applyRole": "Terapkan",
+    "permissions.promoteToAdmin": "Promosikan menjadi Admin",
+    "permissions.demoteToPlayer": "Turunkan menjadi Player",
+    "permissions.confirmDemote": "Turunkan {name} menjadi Player?",
+    "permissions.rankGlobalDirector": "Global Director",
+    "permissions.rankDirector": "Director",
+    "permissions.rankMember": "Member",
+    "permissions.playerBadge": "PLAYER",
+  },
 } satisfies Record<Language, Record<string, string>>;
 
-export type TranslationKey = keyof typeof dictionaries.vi;
+export type TranslationKey = keyof typeof baseDictionaries.vi;
 
 export function translate(language: Language, key: TranslationKey, vars?: Record<string, string | number>) {
   const dictionary = dictionaries[language] as Partial<Record<TranslationKey, string>>;
-  const template = dictionary[key] ?? dictionaries.vi[key] ?? key;
+  const englishDictionary = dictionaries.en as Partial<Record<TranslationKey, string>>;
+  const template = dictionary[key] ?? englishDictionary[key] ?? dictionaries.vi[key] ?? key;
   if (!vars) return template;
   return Object.entries(vars).reduce(
     (value, [name, replacement]) => value.replaceAll(`{${name}}`, String(replacement)),
