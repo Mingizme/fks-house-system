@@ -57,7 +57,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
     { data: roster },
     { data: history },
     { data: messages },
-    { data: masterBlockRow },
+    { data: ipBans },
   ] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
     supabase
@@ -66,7 +66,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
       .order("total_points", { ascending: false }),
     supabase
       .from("profiles")
-      .select("id, display_name, avatar_emoji, avatar_url, house_role, muted_until, mute_reason")
+      .select("id, display_name, avatar_emoji, avatar_url, house_role, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip")
       .eq("house_id", house.id)
       .order("display_name"),
     supabase
@@ -81,10 +81,8 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
       .eq("house_id", house.id)
       .order("created_at", { ascending: true })
       .limit(100),
-    Promise.resolve({ data: null } as any),
+    supabase.from("ip_bans").select("ip_address, reason, created_at").is("lifted_at", null),
   ]);
-
-  void masterBlockRow;
 
   const profileBasePath = "/admin/profile";
   const messagesBasePath = "/admin/messages";
@@ -144,6 +142,9 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
                     departmentId: null,
                   };
                   const muteAcceptable = canMute(actor, target);
+                  const activeIpBan = p.last_seen_ip
+                    ? (ipBans as any[] | null)?.find((ban) => ban.ip_address === p.last_seen_ip)
+                    : null;
                   return (
                     <MemberPopover
                       key={p.id}
@@ -164,6 +165,13 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
                             blocked={null}
                             mutedUntil={p.muted_until}
                             muteReason={p.mute_reason}
+                            chatBannedAt={p.chat_banned_at}
+                            chatBanReason={p.chat_ban_reason}
+                            accountBannedAt={p.account_banned_at}
+                            accountBanReason={p.account_ban_reason}
+                            lastSeenIp={p.last_seen_ip}
+                            ipBannedAt={activeIpBan?.created_at ?? null}
+                            ipBanReason={activeIpBan?.reason ?? null}
                             canMute={muteAcceptable}
                           />
                         ) : null

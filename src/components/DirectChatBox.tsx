@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { DirectMessage } from "@/lib/types";
 import { useI18n } from "@/components/I18nProvider";
+import { useMuteStatus, MuteBanner } from "@/components/MuteControls";
 import ChatMessage from "./chat/ChatMessage";
 import ChatInput from "./chat/ChatInput";
 import EmojiPicker from "./chat/EmojiPicker";
@@ -54,6 +55,7 @@ export function DirectChatBox({
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [blocked, setBlocked] = useState(initiallyBlocked);
+  const { isMuted: chatRestricted, muteStatus } = useMuteStatus(currentUserId, null);
   const [error, setError] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<{ id: string; content: string; senderName: string } | null>(null);
   const [editingMessage, setEditingMessage] = useState<{ id: string; content: string } | null>(null);
@@ -171,6 +173,10 @@ export function DirectChatBox({
     const content = text.trim();
     if (!content && !mediaUrl) return;
     if (sending || blocked) return;
+    if (chatRestricted) {
+      showError(t("chat.mutedCannotSend"));
+      return;
+    }
     setSending(true);
     setText("");
     const replyToId = replyingTo?.id || null;
@@ -413,12 +419,20 @@ export function DirectChatBox({
         </div>
       )}
 
+      <MuteBanner muteStatus={muteStatus} />
+
       <ChatInput
         value={text}
         onChange={setText}
         onSend={send}
-        disabled={blocked}
-        placeholder={blocked ? t("messages.blockedPlaceholder") : t("messages.placeholder")}
+        disabled={blocked || chatRestricted}
+        placeholder={
+          blocked
+            ? t("messages.blockedPlaceholder")
+            : chatRestricted
+            ? t("chat.mutedCannotSend")
+            : t("messages.placeholder")
+        }
         sendLabel={t("common.send")}
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}

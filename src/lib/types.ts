@@ -57,6 +57,14 @@ export interface MuteStatus {
   muted_by: string | null;
   mute_reason: string | null;
   muted_by_name: string | null;
+  chat_banned_at?: string | null;
+  chat_banned_by?: string | null;
+  chat_ban_reason?: string | null;
+  chat_banned_by_name?: string | null;
+  account_banned_at?: string | null;
+  account_banned_by?: string | null;
+  account_ban_reason?: string | null;
+  account_banned_by_name?: string | null;
 }
 
 export interface AdminWithDepartment extends Profile {
@@ -97,6 +105,14 @@ export interface Profile {
   muted_until: string | null;
   muted_by: string | null;
   mute_reason: string | null;
+  chat_banned_at: string | null;
+  chat_banned_by: string | null;
+  chat_ban_reason: string | null;
+  account_banned_at: string | null;
+  account_banned_by: string | null;
+  account_ban_reason: string | null;
+  last_seen_ip: string | null;
+  last_seen_at: string | null;
   display_name_changed_at: string | null;
   created_at: string;
 }

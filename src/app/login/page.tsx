@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -10,12 +10,19 @@ import { resolveLoginEmail } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const { t } = useI18n();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const banned = searchParams.get("banned");
+    if (banned === "account") setError(t("auth.accountBanned"));
+    if (banned === "ip") setError(t("auth.ipBanned"));
+  }, [searchParams, t]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,9 +45,16 @@ export default function LoginPage() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_type")
+      .select("user_type, account_banned_at")
       .eq("id", data.user.id)
       .single();
+
+    if (profile?.account_banned_at) {
+      await supabase.auth.signOut();
+      setError(t("auth.accountBanned"));
+      setLoading(false);
+      return;
+    }
 
     if (profile?.user_type === "admin") {
       router.push("/admin");

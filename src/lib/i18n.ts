@@ -74,6 +74,8 @@ export const dictionaries = {
     "auth.loginAdminTitle": "Đăng nhập Admin",
     "auth.loginAdminSubtitle": "Director · Admin · Judge · Security · Linguistic",
     "auth.invalidCredentials": "Email hoặc mật khẩu không đúng.",
+    "auth.accountBanned": "Tai khoan nay da bi ban. Vui long lien he admin.",
+    "auth.ipBanned": "Dia chi IP cua ban dang bi ban.",
     "auth.accountIsAdmin": "Tài khoản này là tài khoản Admin. Vui lòng đăng nhập tại Cổng Admin.",
     "auth.noAdminPermission": "Tài khoản này không có quyền Admin.",
     "auth.loggingIn": "Đang đăng nhập...",

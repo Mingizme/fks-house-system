@@ -9,6 +9,34 @@ export interface MuteStatus {
   muted_by: string | null;
   mute_reason: string | null;
   muted_by_name: string | null;
+  chat_banned_at?: string | null;
+  chat_banned_by?: string | null;
+  chat_ban_reason?: string | null;
+  chat_banned_by_name?: string | null;
+  account_banned_at?: string | null;
+  account_banned_by?: string | null;
+  account_ban_reason?: string | null;
+  account_banned_by_name?: string | null;
+}
+
+type ProfileModerationRow = Omit<
+  MuteStatus,
+  "muted_by_name" | "chat_banned_by_name" | "account_banned_by_name"
+>;
+
+function toRestrictionStatus(row: ProfileModerationRow | null): MuteStatus | null {
+  if (!row) return null;
+  const mutedActive = row.muted_until ? new Date(row.muted_until) > new Date() : false;
+  const chatBanned = !!row.chat_banned_at;
+  const accountBanned = !!row.account_banned_at;
+  if (!mutedActive && !chatBanned && !accountBanned) return null;
+
+  return {
+    ...row,
+    muted_by_name: null,
+    chat_banned_by_name: null,
+    account_banned_by_name: null,
+  };
 }
 
 /**
@@ -27,10 +55,15 @@ export function useMuteStatus(
   const refetch = useCallback(() => {
     if (!userId) return;
     supabase
-      .rpc("get_mute_status", { user_id: userId })
+      .from("profiles")
+      .select(
+        "muted_until, muted_by, mute_reason, chat_banned_at, chat_banned_by, chat_ban_reason, account_banned_at, account_banned_by, account_ban_reason"
+      )
+      .eq("id", userId)
+      .single()
       .then(({ data, error }) => {
-        if (!error && data && (data as any).muted_until) {
-          setMuteStatus(data as MuteStatus);
+        if (!error) {
+          setMuteStatus(toRestrictionStatus(data as ProfileModerationRow | null));
         } else {
           setMuteStatus(null);
         }
@@ -58,30 +91,7 @@ export function useMuteStatus(
         { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
         (payload: any) => {
           const newRow = payload.new;
-          const until = newRow?.muted_until;
-          if (until && new Date(until) > new Date()) {
-            setMuteStatus({
-              muted_until: until,
-              muted_by: newRow.muted_by,
-              mute_reason: newRow.mute_reason,
-              muted_by_name: null,
-            });
-            // Lấy tên muted_by_name
-            if (newRow.muted_by) {
-              supabase
-                .from("profiles")
-                .select("display_name")
-                .eq("id", newRow.muted_by)
-                .single()
-                .then(({ data }) => {
-                  setMuteStatus((prev) =>
-                    prev ? { ...prev, muted_by_name: data?.display_name ?? null } : prev
-                  );
-                });
-            }
-          } else {
-            setMuteStatus(null);
-          }
+          setMuteStatus(toRestrictionStatus(newRow as ProfileModerationRow | null));
         }
       )
       .subscribe();
@@ -93,7 +103,9 @@ export function useMuteStatus(
 
   // Kiểm tra còn hạn không (lazy)
   const isMuted =
-    muteStatus?.muted_until != null && new Date(muteStatus.muted_until) > new Date();
+    (muteStatus?.muted_until != null && new Date(muteStatus.muted_until) > new Date()) ||
+    !!muteStatus?.chat_banned_at ||
+    !!muteStatus?.account_banned_at;
 
   return { isMuted, muteStatus, refetch };
 }
@@ -115,21 +127,31 @@ function formatRemaining(until: string): string {
  */
 export function MuteBanner({ muteStatus }: { muteStatus: MuteStatus | null }) {
   const { t } = useI18n();
-  if (!muteStatus?.muted_until || new Date(muteStatus.muted_until) <= new Date()) return null;
+  const mutedActive = muteStatus?.muted_until ? new Date(muteStatus.muted_until) > new Date() : false;
+  const chatBanned = !!muteStatus?.chat_banned_at;
+  const accountBanned = !!muteStatus?.account_banned_at;
+  if (!mutedActive && !chatBanned && !accountBanned) return null;
 
-  const remaining = formatRemaining(muteStatus.muted_until);
-  const byName = muteStatus.muted_by_name ? t("common.by", { name: muteStatus.muted_by_name }) : "";
+  const remaining = muteStatus?.muted_until ? formatRemaining(muteStatus.muted_until) : "";
+  const byName = muteStatus?.muted_by_name ? t("common.by", { name: muteStatus.muted_by_name }) : "";
+  const reason =
+    muteStatus?.account_ban_reason ?? muteStatus?.chat_ban_reason ?? muteStatus?.mute_reason;
+  const title = accountBanned
+    ? t("chat.accountBannedMessage")
+    : chatBanned
+    ? t("chat.chatBannedMessage")
+    : `${t("chat.mutedMessage")} · ${t("chat.mutedRemaining", { duration: remaining })}`;
 
   return (
     <div className="px-3 py-2 bg-warning/10 border-b border-warning/30 flex items-center gap-2">
       <span className="text-base">🔕</span>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-warning">
-          {t("chat.mutedMessage")} · {t("chat.mutedRemaining", { duration: remaining })}
+          {title}
         </p>
-        {muteStatus.mute_reason && (
+        {reason && (
           <p className="text-[11px] text-ink-muted truncate">
-            {t("chat.muteReason")}: {muteStatus.mute_reason}
+            {t("chat.muteReason")}: {reason}
             {byName ? ` · ${byName}` : ""}
           </p>
         )}

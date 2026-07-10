@@ -1,6 +1,12 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function getClientIp(request: NextRequest) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0]?.trim() || null;
+  return request.headers.get("x-real-ip")?.trim() || null;
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
@@ -40,21 +46,49 @@ export async function middleware(request: NextRequest) {
     ["/dashboard", "/house", "/messages", "/announcements", "/profile", "/admin-directory", "/house-announcements"].some((p) =>
       path.startsWith(p)
     );
+  const isProtectedArea = isAdminArea || isPlayerArea;
+  const clientIp = getClientIp(request);
 
-  if (!user && (isAdminArea || isPlayerArea)) {
+  if (clientIp) {
+    const { data: ipBanned } = await supabase.rpc("is_ip_banned", { ip_text: clientIp });
+    if (ipBanned && (path !== "/login" || request.nextUrl.searchParams.get("banned") !== "ip")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("banned", "ip");
+      return NextResponse.redirect(url);
+    }
+  }
+
+  if (!user && isProtectedArea) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Verify admin role for admin routes — prevent players from accessing admin pages
-  if (user && isAdminArea) {
-    const { data: profile } = await supabase
+  let profile: { user_type: string; account_banned_at: string | null } | null = null;
+  if (user && isProtectedArea) {
+    if (clientIp) {
+      await supabase.rpc("record_profile_ip", { ip_text: clientIp });
+    }
+
+    const { data } = await supabase
       .from("profiles")
-      .select("user_type")
+      .select("user_type, account_banned_at")
       .eq("id", user.id)
       .single();
+    profile = data;
 
+    if (profile?.account_banned_at) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("banned", "account");
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Verify admin role for admin routes — prevent players from accessing admin pages
+  if (user && isAdminArea) {
     if (!profile || profile.user_type !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
@@ -75,5 +109,7 @@ export const config = {
     "/house-announcements/:path*",
     "/admin-directory/:path*",
     "/admin/:path*",
+    "/login",
+    "/signup",
   ],
 };

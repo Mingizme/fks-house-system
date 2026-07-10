@@ -44,6 +44,8 @@ begin
         muted_by = auth.uid(),
         mute_reason = coalesce(nullif(trim(reason), ''), mute_reason)
     where id = target_id;
+
+  perform log_moderation_event(target_id, 'mute', reason, until_ts);
 end;
 $$;
 
@@ -62,6 +64,8 @@ begin
         muted_by = null,
         mute_reason = null
     where id = target_id;
+
+  perform log_moderation_event(target_id, 'unmute');
 end;
 $$;
 
@@ -99,6 +103,379 @@ grant execute on function mute_user(uuid, int, text) to authenticated;
 grant execute on function unmute_user(uuid) to authenticated;
 grant execute on function is_currently_muted(uuid) to authenticated;
 grant execute on function get_mute_status(uuid) to authenticated;
+
+-- =========================================================
+-- PHAN 1B - CHAT BAN, ACCOUNT BAN, IP BAN + AUDIT
+-- =========================================================
+
+alter table profiles add column if not exists chat_banned_at timestamptz;
+alter table profiles add column if not exists chat_banned_by uuid references profiles(id) on delete set null;
+alter table profiles add column if not exists chat_ban_reason text;
+alter table profiles add column if not exists account_banned_at timestamptz;
+alter table profiles add column if not exists account_banned_by uuid references profiles(id) on delete set null;
+alter table profiles add column if not exists account_ban_reason text;
+alter table profiles add column if not exists last_seen_ip inet;
+alter table profiles add column if not exists last_seen_at timestamptz;
+
+create index if not exists idx_profiles_chat_banned_at on profiles(chat_banned_at) where chat_banned_at is not null;
+create index if not exists idx_profiles_account_banned_at on profiles(account_banned_at) where account_banned_at is not null;
+create index if not exists idx_profiles_last_seen_ip on profiles(last_seen_ip) where last_seen_ip is not null;
+
+create table if not exists moderation_events (
+  id uuid primary key default uuid_generate_v4(),
+  target_id uuid references profiles(id) on delete cascade not null,
+  actor_id uuid references profiles(id) on delete set null,
+  action text not null check (action in (
+    'mute',
+    'unmute',
+    'chat_ban',
+    'chat_unban',
+    'account_ban',
+    'account_unban',
+    'ip_ban',
+    'ip_unban'
+  )),
+  reason text,
+  expires_at timestamptz,
+  ip_address inet,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_moderation_events_target on moderation_events(target_id, created_at desc);
+
+alter table moderation_events enable row level security;
+
+drop policy if exists "moderation_events_select_admin" on moderation_events;
+create policy "moderation_events_select_admin" on moderation_events for select
+  to authenticated using (is_admin());
+
+create table if not exists ip_bans (
+  id uuid primary key default uuid_generate_v4(),
+  ip_address inet not null,
+  banned_by uuid references profiles(id) on delete set null,
+  reason text,
+  created_at timestamptz default now(),
+  lifted_at timestamptz,
+  lifted_by uuid references profiles(id) on delete set null
+);
+
+create unique index if not exists idx_ip_bans_active_unique
+  on ip_bans(ip_address) where lifted_at is null;
+create index if not exists idx_ip_bans_ip on ip_bans(ip_address);
+
+alter table ip_bans enable row level security;
+
+drop policy if exists "ip_bans_select_admin" on ip_bans;
+create policy "ip_bans_select_admin" on ip_bans for select
+  to authenticated using (is_admin());
+
+create or replace function log_moderation_event(
+  target_id uuid,
+  action text,
+  reason text default null,
+  expires_at timestamptz default null,
+  ip_address inet default null
+)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  insert into moderation_events (target_id, actor_id, action, reason, expires_at, ip_address)
+  values (target_id, auth.uid(), action, nullif(trim(reason), ''), expires_at, ip_address);
+end;
+$$;
+
+create or replace function is_account_banned(user_id uuid)
+returns boolean
+language sql security definer stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from profiles
+    where id = user_id
+      and account_banned_at is not null
+  );
+$$;
+
+create or replace function is_chat_restricted(user_id uuid)
+returns boolean
+language sql security definer stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from profiles
+    where id = user_id
+      and (
+        account_banned_at is not null
+        or chat_banned_at is not null
+        or (muted_until is not null and muted_until > now())
+      )
+  );
+$$;
+
+create or replace function get_chat_restriction_status(user_id uuid)
+returns table(
+  muted_until timestamptz,
+  muted_by uuid,
+  mute_reason text,
+  muted_by_name text,
+  chat_banned_at timestamptz,
+  chat_banned_by uuid,
+  chat_ban_reason text,
+  chat_banned_by_name text,
+  account_banned_at timestamptz,
+  account_banned_by uuid,
+  account_ban_reason text,
+  account_banned_by_name text
+)
+language sql security definer stable
+set search_path = public
+as $$
+  select
+    p.muted_until,
+    p.muted_by,
+    p.mute_reason,
+    muted_admin.display_name,
+    p.chat_banned_at,
+    p.chat_banned_by,
+    p.chat_ban_reason,
+    chat_admin.display_name,
+    p.account_banned_at,
+    p.account_banned_by,
+    p.account_ban_reason,
+    account_admin.display_name
+  from profiles p
+  left join profiles muted_admin on muted_admin.id = p.muted_by
+  left join profiles chat_admin on chat_admin.id = p.chat_banned_by
+  left join profiles account_admin on account_admin.id = p.account_banned_by
+  where p.id = user_id
+    and (
+      (p.muted_until is not null and p.muted_until > now())
+      or p.chat_banned_at is not null
+      or p.account_banned_at is not null
+    );
+$$;
+
+create or replace function ban_chat_user(target_id uuid, reason text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if not can_manage_admin(target_id) then
+    raise exception 'You do not have permission to ban this user from chat.';
+  end if;
+
+  update profiles
+    set chat_banned_at = now(),
+        chat_banned_by = auth.uid(),
+        chat_ban_reason = nullif(trim(reason), '')
+    where id = target_id;
+
+  perform log_moderation_event(target_id, 'chat_ban', reason);
+end;
+$$;
+
+create or replace function unban_chat_user(target_id uuid)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if not can_manage_admin(target_id) then
+    raise exception 'You do not have permission to unban this user from chat.';
+  end if;
+
+  update profiles
+    set chat_banned_at = null,
+        chat_banned_by = null,
+        chat_ban_reason = null
+    where id = target_id;
+
+  perform log_moderation_event(target_id, 'chat_unban');
+end;
+$$;
+
+create or replace function ban_account_user(target_id uuid, reason text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if not can_manage_admin(target_id) then
+    raise exception 'You do not have permission to ban this account.';
+  end if;
+
+  update profiles
+    set account_banned_at = now(),
+        account_banned_by = auth.uid(),
+        account_ban_reason = nullif(trim(reason), '')
+    where id = target_id;
+
+  perform log_moderation_event(target_id, 'account_ban', reason);
+end;
+$$;
+
+create or replace function unban_account_user(target_id uuid)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if not can_manage_admin(target_id) then
+    raise exception 'You do not have permission to unban this account.';
+  end if;
+
+  update profiles
+    set account_banned_at = null,
+        account_banned_by = null,
+        account_ban_reason = null
+    where id = target_id;
+
+  perform log_moderation_event(target_id, 'account_unban');
+end;
+$$;
+
+create or replace function ban_last_seen_ip(target_id uuid, reason text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  target_ip inet;
+begin
+  if not can_manage_admin(target_id) then
+    raise exception 'You do not have permission to ban this IP.';
+  end if;
+
+  select last_seen_ip into target_ip from profiles where id = target_id;
+  if target_ip is null then
+    raise exception 'This user does not have a recorded IP address yet.';
+  end if;
+
+  if exists (select 1 from ip_bans where ip_address = target_ip and lifted_at is null) then
+    update ip_bans
+      set reason = nullif(trim(reason), ''),
+          banned_by = auth.uid()
+      where ip_address = target_ip and lifted_at is null;
+  else
+    insert into ip_bans (ip_address, banned_by, reason)
+    values (target_ip, auth.uid(), nullif(trim(reason), ''));
+  end if;
+
+  perform log_moderation_event(target_id, 'ip_ban', reason, null, target_ip);
+end;
+$$;
+
+create or replace function unban_last_seen_ip(target_id uuid)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  target_ip inet;
+begin
+  if not can_manage_admin(target_id) then
+    raise exception 'You do not have permission to unban this IP.';
+  end if;
+
+  select last_seen_ip into target_ip from profiles where id = target_id;
+  if target_ip is null then
+    raise exception 'This user does not have a recorded IP address yet.';
+  end if;
+
+  update ip_bans
+    set lifted_at = now(),
+        lifted_by = auth.uid()
+    where ip_address = target_ip and lifted_at is null;
+
+  perform log_moderation_event(target_id, 'ip_unban', null, null, target_ip);
+end;
+$$;
+
+create or replace function record_profile_ip(ip_text text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null or nullif(trim(ip_text), '') is null then
+    return;
+  end if;
+
+  update profiles
+    set last_seen_ip = trim(ip_text)::inet,
+        last_seen_at = now()
+    where id = auth.uid();
+exception
+  when invalid_text_representation then
+    return;
+end;
+$$;
+
+create or replace function is_ip_banned(ip_text text)
+returns boolean
+language plpgsql security definer stable
+set search_path = public
+as $$
+declare
+  parsed_ip inet;
+begin
+  if nullif(trim(ip_text), '') is null then
+    return false;
+  end if;
+
+  parsed_ip := trim(ip_text)::inet;
+  return exists (
+    select 1 from ip_bans
+    where ip_address = parsed_ip
+      and lifted_at is null
+  );
+exception
+  when invalid_text_representation then
+    return false;
+end;
+$$;
+
+revoke execute on function log_moderation_event(uuid, text, text, timestamptz, inet) from public;
+revoke execute on function log_moderation_event(uuid, text, text, timestamptz, inet) from authenticated;
+grant execute on function is_account_banned(uuid) to authenticated;
+grant execute on function is_chat_restricted(uuid) to authenticated;
+grant execute on function get_chat_restriction_status(uuid) to authenticated;
+grant execute on function ban_chat_user(uuid, text) to authenticated;
+grant execute on function unban_chat_user(uuid) to authenticated;
+grant execute on function ban_account_user(uuid, text) to authenticated;
+grant execute on function unban_account_user(uuid) to authenticated;
+grant execute on function ban_last_seen_ip(uuid, text) to authenticated;
+grant execute on function unban_last_seen_ip(uuid) to authenticated;
+grant execute on function record_profile_ip(text) to authenticated;
+grant execute on function is_ip_banned(text) to anon, authenticated;
+
+-- Enforce moderation at the database boundary for every chat insert path.
+drop policy if exists "dm_insert_own" on direct_messages;
+create policy "dm_insert_own" on direct_messages for insert
+  to authenticated with check (
+    sender_id = auth.uid()
+    and not is_chat_restricted(auth.uid())
+    and not has_blocked(sender_id, recipient_id)
+    and (is_admin_chat = false or (is_admin() and exists(
+      select 1 from profiles p where p.id = recipient_id and p.user_type = 'admin'
+    )))
+  );
+
+drop policy if exists "house_msg_insert" on house_messages;
+create policy "house_msg_insert" on house_messages for insert
+  to authenticated with check (
+    sender_id = auth.uid()
+    and not is_chat_restricted(auth.uid())
+    and (is_admin() or house_id = my_house_id())
+  );
+
+drop policy if exists "Admins can insert admin messages" on admin_messages;
+create policy "Admins can insert admin messages"
+  on admin_messages for insert
+  to authenticated with check (is_admin() and auth.uid() = sender_id and not is_chat_restricted(auth.uid()));
 
 -- =========================================================
 -- PHẦN 2 — HOUSE SCORES VISIBILITY FLAGS
