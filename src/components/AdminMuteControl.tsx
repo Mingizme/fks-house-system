@@ -22,6 +22,7 @@ interface Props {
   ipBannedAt?: string | null;
   ipBanReason?: string | null;
   canMute: boolean;
+  variant?: "card" | "popover";
 }
 
 const DURATION_OPTIONS: Array<{ value: number; labelKey: TranslationKey }> = [
@@ -50,12 +51,14 @@ export function AdminMuteControl({
   ipBannedAt,
   ipBanReason,
   canMute,
+  variant = "card",
 }: Props) {
   const supabase = createClient();
   const router = useRouter();
   const { t } = useI18n();
   const [duration, setDuration] = useState<number>(60);
   const [reason, setReason] = useState("");
+  const [activePanel, setActivePanel] = useState<"mute" | "ban" | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -154,6 +157,141 @@ export function AdminMuteControl({
   const warningButton = `${actionButton} border-warning/40 text-warning hover:bg-warning/10`;
   const dangerButton = `${actionButton} border-danger/40 text-danger hover:bg-danger/10`;
   const successButton = `${actionButton} border-success/40 text-success hover:bg-success/10`;
+
+  if (variant === "popover") {
+    const panelButton =
+      "rounded-md border px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50";
+    const mutePanelOpen = activePanel === "mute";
+    const banPanelOpen = activePanel === "ban";
+    const hasBan = isChatBanned || isAccountBanned || isIpBanned;
+
+    return (
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setActivePanel(mutePanelOpen ? null : "mute")}
+            className={`${panelButton} ${
+              mutePanelOpen || isMuted
+                ? "border-warning/50 bg-warning/10 text-warning"
+                : "border-ink-border text-ink-text hover:bg-ink-surface2"
+            }`}
+          >
+            {isMuted ? t("chat.unmuteUser") : "Mute"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActivePanel(banPanelOpen ? null : "ban")}
+            className={`${panelButton} ${
+              banPanelOpen || hasBan
+                ? "border-danger/50 bg-danger/10 text-danger"
+                : "border-ink-border text-ink-text hover:bg-ink-surface2"
+            }`}
+          >
+            Ban
+          </button>
+        </div>
+
+        {mutePanelOpen && (
+          <div className="rounded-md border border-warning/30 bg-warning/5 p-2.5 space-y-2">
+            {isMuted && (
+              <p className="text-xs text-warning font-mono">
+                {t("chat.mutedMessage")} {mutedUntil && `- ${new Date(mutedUntil).toLocaleString()}`}
+              </p>
+            )}
+            {muteReason && <p className="text-[11px] text-ink-muted">{t("chat.muteReason")}: {muteReason}</p>}
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              disabled={loading}
+              maxLength={200}
+              placeholder={t("chat.muteReasonPlaceholder")}
+              className="w-full rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-xs outline-none focus:border-command"
+            />
+            <div className="flex gap-2">
+              <select
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                disabled={loading || isMuted}
+                aria-label={t("chat.muteDurationLabel")}
+                className="min-w-0 flex-1 rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-xs outline-none focus:border-command disabled:opacity-50"
+              >
+                {DURATION_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.labelKey)}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={isMuted ? doUnmute : doMute}
+                disabled={loading}
+                className={isMuted ? successButton : warningButton}
+              >
+                {loading ? t("common.saving") : isMuted ? t("chat.unmuteUser") : t("chat.muteUser")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {banPanelOpen && (
+          <div className="rounded-md border border-danger/30 bg-danger/5 p-2.5 space-y-2">
+            <div className="space-y-1">
+              {isChatBanned && <p className="text-xs text-danger font-mono">{t("moderation.chatBanned")}</p>}
+              {chatBanReason && <p className="text-[11px] text-ink-muted">{t("chat.muteReason")}: {chatBanReason}</p>}
+              {isAccountBanned && <p className="text-xs text-danger font-mono">{t("moderation.accountBanned")}</p>}
+              {accountBanReason && <p className="text-[11px] text-ink-muted">{t("chat.muteReason")}: {accountBanReason}</p>}
+              <p className="text-[10px] text-ink-faint font-mono">
+                {t("moderation.lastSeenIp", { ip: lastSeenIp ?? t("moderation.noIp") })}
+              </p>
+              {isIpBanned && <p className="text-xs text-danger font-mono">{t("moderation.ipBanned")}</p>}
+              {ipBanReason && <p className="text-[11px] text-ink-muted">{t("chat.muteReason")}: {ipBanReason}</p>}
+            </div>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              disabled={loading}
+              maxLength={200}
+              placeholder={t("chat.muteReasonPlaceholder")}
+              className="w-full rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-xs outline-none focus:border-command"
+            />
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                type="button"
+                onClick={isChatBanned ? doChatUnban : doChatBan}
+                disabled={loading}
+                className={isChatBanned ? successButton : dangerButton}
+              >
+                {isChatBanned ? t("moderation.unbanChat") : t("moderation.banChat")}
+              </button>
+              <button
+                type="button"
+                onClick={isAccountBanned ? doAccountUnban : doAccountBan}
+                disabled={loading}
+                className={isAccountBanned ? successButton : dangerButton}
+              >
+                {isAccountBanned ? t("moderation.unbanAccount") : t("moderation.banAccount")}
+              </button>
+              <button
+                type="button"
+                onClick={isIpBanned ? doIpUnban : doIpBan}
+                disabled={loading || !lastSeenIp}
+                className={isIpBanned ? successButton : dangerButton}
+              >
+                {isIpBanned ? t("moderation.unbanIp") : t("moderation.banIp")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {error && <p className="text-xs text-danger">{error}</p>}
+        {success && <p className="text-xs text-success">{success}</p>}
+        {blocked && <p className="text-[10px] text-ink-faint font-mono">{t("chat.mutedBlockedHint")}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg border border-ink-border bg-ink-surface2 p-3 space-y-2">

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { usePresence } from "@/components/PresenceProvider";
 import { PresenceDot } from "@/components/PresenceDot";
 import { MemberPopover } from "@/components/MemberPopover";
+import { AdminMuteControl } from "@/components/AdminMuteControl";
 import { useI18n } from "@/components/I18nProvider";
 import { houseRoleKey } from "@/lib/utils";
 import type { HouseRole } from "@/lib/types";
@@ -16,6 +17,19 @@ export interface HouseChatMember {
   avatar_url: string | null;
   house_role: HouseRole | null;
   username?: string;
+  muted_until?: string | null;
+  mute_reason?: string | null;
+  chat_banned_at?: string | null;
+  chat_ban_reason?: string | null;
+  account_banned_at?: string | null;
+  account_ban_reason?: string | null;
+  last_seen_ip?: string | null;
+}
+
+interface HouseChatIpBan {
+  ip_address: string;
+  reason: string | null;
+  created_at: string;
 }
 
 interface Props {
@@ -24,7 +38,12 @@ interface Props {
   messagesBasePath: string;
   profileBasePath: string;
   currentUserId: string;
+  canModerateMembers?: boolean;
+  activeIpBans?: HouseChatIpBan[];
 }
+
+const ROSTER_SELECT_WITH_MODERATION =
+  "id, display_name, avatar_emoji, avatar_url, house_role, username, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip";
 
 function sortRoster(members: HouseChatMember[]): HouseChatMember[] {
   const rank = (r: HouseRole | null) => (r === "master" ? 0 : r === "vice" ? 1 : 2);
@@ -42,6 +61,8 @@ export function HouseChatSidePanel({
   messagesBasePath,
   profileBasePath,
   currentUserId,
+  canModerateMembers,
+  activeIpBans = [],
 }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
@@ -61,7 +82,7 @@ export function HouseChatSidePanel({
         () => {
           supabase
             .from("profiles")
-            .select("id, display_name, avatar_emoji, avatar_url, house_role, username")
+            .select(ROSTER_SELECT_WITH_MODERATION)
             .eq("house_id", houseId)
             .order("display_name")
             .then(({ data }) => {
@@ -96,6 +117,9 @@ export function HouseChatSidePanel({
           {sortedMembers.map((m) => {
             const roleKey = houseRoleKey(m.house_role);
             const online = isOnline(m.id);
+            const activeIpBan = m.last_seen_ip
+              ? activeIpBans.find((ban) => ban.ip_address === m.last_seen_ip)
+              : null;
             return (
               <div key={m.id} className="relative">
                 <MemberPopover
@@ -106,6 +130,27 @@ export function HouseChatSidePanel({
                   messagesBasePath={messagesBasePath}
                   profileBasePath={profileBasePath}
                   currentUserId={currentUserId}
+                  extraSlot={
+                    canModerateMembers && m.id !== currentUserId ? (
+                      <AdminMuteControl
+                        targetId={m.id}
+                        targetName={m.display_name}
+                        targetEmoji={m.avatar_emoji}
+                        blocked={null}
+                        mutedUntil={m.muted_until}
+                        muteReason={m.mute_reason}
+                        chatBannedAt={m.chat_banned_at}
+                        chatBanReason={m.chat_ban_reason}
+                        accountBannedAt={m.account_banned_at}
+                        accountBanReason={m.account_ban_reason}
+                        lastSeenIp={m.last_seen_ip}
+                        ipBannedAt={activeIpBan?.created_at ?? null}
+                        ipBanReason={activeIpBan?.reason ?? null}
+                        canMute={true}
+                        variant="popover"
+                      />
+                    ) : null
+                  }
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
                   <PresenceDot userId={m.id} />

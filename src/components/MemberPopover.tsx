@@ -40,6 +40,7 @@ export function MemberPopover({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
+  const hasExtraSlot = Boolean(extraSlot);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -60,9 +61,9 @@ export function MemberPopover({
       if (!button) return;
 
       const rect = button.getBoundingClientRect();
-      const width = Math.max(220, rect.width);
+      const width = Math.min(window.innerWidth - 16, Math.max(hasExtraSlot ? 300 : 220, rect.width));
       const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
-      const estimatedHeight = 132;
+      const estimatedHeight = hasExtraSlot ? 420 : 132;
       const top =
         rect.bottom + estimatedHeight + 8 > window.innerHeight
           ? Math.max(8, rect.top - estimatedHeight - 6)
@@ -79,7 +80,7 @@ export function MemberPopover({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open]);
+  }, [open, hasExtraSlot]);
 
   const isSelf = memberId === currentUserId;
   const menu =
@@ -88,7 +89,7 @@ export function MemberPopover({
           <div
             ref={menuRef}
             style={menuPosition}
-            className="fixed z-50 rounded-xl border border-ink-border bg-ink-surface shadow-xl animate-in fade-in slide-in-from-top-2 duration-150"
+            className="fixed z-50 max-h-[calc(100vh-16px)] overflow-y-auto rounded-xl border border-ink-border bg-ink-surface shadow-xl animate-in fade-in slide-in-from-top-2 duration-150"
           >
             <div className="p-3 border-b border-ink-border">
               <p className="text-sm font-semibold truncate">{displayName}</p>

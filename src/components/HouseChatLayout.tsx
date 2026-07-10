@@ -16,6 +16,8 @@ interface Props {
   profileBasePath: string;
   messagesBasePath: string;
   canModerate?: boolean;
+  canModerateMembers?: boolean;
+  activeIpBans?: Array<{ ip_address: string; reason: string | null; created_at: string }>;
   editableName: string;
 }
 
@@ -35,6 +37,8 @@ export function HouseChatLayout({
   profileBasePath,
   messagesBasePath,
   canModerate,
+  canModerateMembers,
+  activeIpBans,
   editableName,
 }: Props) {
   const maxWords = editableName === "admin" ? 2000 : 1000;
@@ -68,6 +72,8 @@ export function HouseChatLayout({
           messagesBasePath={messagesBasePath}
           profileBasePath={profileBasePath}
           currentUserId={currentUserId}
+          canModerateMembers={canModerateMembers}
+          activeIpBans={activeIpBans}
         />
       </div>
     </div>

@@ -6,13 +6,10 @@ import { HouseChatLayout } from "@/components/HouseChatLayout";
 import { AddPointsForm } from "@/components/AddPointsForm";
 import { HousePointsBoard } from "@/components/HousePointsBoard";
 import { HouseLeadershipSelect } from "@/components/HouseLeadershipSelect";
-import { AdminMuteControl } from "@/components/AdminMuteControl";
 import { MemberPopover } from "@/components/MemberPopover";
 import { formatPoints, houseRoleKey } from "@/lib/utils";
 import { getServerTranslator } from "@/lib/i18n-server";
-import { canMute } from "@/lib/permissions";
-import type { ActorContext } from "@/lib/permissions";
-import type { AdminRank, HouseSlug } from "@/lib/types";
+import type { HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
 const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
@@ -98,12 +95,6 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
     .eq("id", user.id)
     .single();
   if (!me || me.user_type !== "admin") redirect("/admin");
-  const actor: ActorContext = {
-    id: me.id,
-    userType: me.user_type,
-    adminRank: me.admin_rank as AdminRank | null,
-    departmentId: me.department_id,
-  };
 
   const [
     { data: pointsRow },
@@ -172,48 +163,10 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
               profileBasePath={profileBasePath}
               messagesBasePath={messagesBasePath}
               canModerate={true}
+              canModerateMembers={true}
+              activeIpBans={(ipBans as any) ?? []}
               editableName="admin"
             />
-            <div>
-              <h2 className="font-display font-bold text-lg mb-3">Moderation</h2>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {(roster ?? []).map((p: any) => {
-                  const target = {
-                    id: p.id,
-                    userType: "player" as const,
-                    adminRank: null,
-                    departmentId: null,
-                  };
-                  const muteAcceptable = canMute(actor, target);
-                  const activeIpBan = p.last_seen_ip
-                    ? (ipBans as any[] | null)?.find((ban) => ban.ip_address === p.last_seen_ip)
-                    : null;
-
-                  return (
-                    <AdminMuteControl
-                      key={p.id}
-                      targetId={p.id}
-                      targetName={p.display_name}
-                      targetEmoji={p.avatar_emoji}
-                      blocked={null}
-                      mutedUntil={p.muted_until}
-                      muteReason={p.mute_reason}
-                      chatBannedAt={p.chat_banned_at}
-                      chatBanReason={p.chat_ban_reason}
-                      accountBannedAt={p.account_banned_at}
-                      accountBanReason={p.account_ban_reason}
-                      lastSeenIp={p.last_seen_ip}
-                      ipBannedAt={activeIpBan?.created_at ?? null}
-                      ipBanReason={activeIpBan?.reason ?? null}
-                      canMute={muteAcceptable}
-                    />
-                  );
-                })}
-                {(roster ?? []).length === 0 && (
-                  <p className="text-sm text-ink-muted p-3">{t("house.noMembers")}</p>
-                )}
-              </div>
-            </div>
             <HouseLeadershipSelect roster={(roster as any) ?? []} />
           </div>
         }
@@ -225,16 +178,6 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
               <div className="rounded-xl2 glass-card p-2 max-h-64 overflow-y-auto space-y-0.5">
                 {(roster ?? []).map((p: any) => {
                   const roleKey = houseRoleKey(p.house_role);
-                  const target = {
-                    id: p.id,
-                    userType: "player" as const,
-                    adminRank: null,
-                    departmentId: null,
-                  };
-                  const muteAcceptable = canMute(actor, target);
-                  const activeIpBan = p.last_seen_ip
-                    ? (ipBans as any[] | null)?.find((ban) => ban.ip_address === p.last_seen_ip)
-                    : null;
                   return (
                     <MemberPopover
                       key={p.id}
@@ -246,26 +189,6 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
                       profileBasePath={profileBasePath}
                       currentUserId={user.id}
                       presenceDot
-                      extraSlot={
-                        muteAcceptable ? (
-                          <AdminMuteControl
-                            targetId={p.id}
-                            targetName={p.display_name}
-                            targetEmoji={p.avatar_emoji}
-                            blocked={null}
-                            mutedUntil={p.muted_until}
-                            muteReason={p.mute_reason}
-                            chatBannedAt={p.chat_banned_at}
-                            chatBanReason={p.chat_ban_reason}
-                            accountBannedAt={p.account_banned_at}
-                            accountBanReason={p.account_ban_reason}
-                            lastSeenIp={p.last_seen_ip}
-                            ipBannedAt={activeIpBan?.created_at ?? null}
-                            ipBanReason={activeIpBan?.reason ?? null}
-                            canMute={muteAcceptable}
-                          />
-                        ) : null
-                      }
                     />
                   );
                 })}
