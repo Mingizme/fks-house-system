@@ -7,6 +7,8 @@ export const SUPPORTED_LANGUAGES = ["vi", "en", "id", "ja", "th", "ta", "ko"] as
 
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
+export const DEFAULT_LANGUAGE: Language = "en";
+
 export const LANGUAGE_LABELS: Record<Language, string> = {
   vi: "Tiếng Việt",
   en: "English",

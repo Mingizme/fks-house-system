@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type MouseEvent as ReactMouseEvent } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { format } from "date-fns";
 import { useI18n } from "@/components/I18nProvider";
 import MediaLightbox from "@/components/chat/MediaLightbox";
+import EmojiPicker from "@/components/chat/EmojiPicker";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
@@ -70,9 +72,12 @@ export default function ChatMessage({
   const { t } = useI18n();
   const [hovered, setHovered] = useState(false);
   const [showQuickReact, setShowQuickReact] = useState(false);
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
+  const [showSheetEmojiPicker, setShowSheetEmojiPicker] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const quickReactRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const closeHover = useCallback(() => {
     setHovered(false);
@@ -105,16 +110,58 @@ export default function ChatMessage({
     }, 150);
   };
 
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  }, []);
+
+  const closeActionSheet = useCallback(() => {
+    setActionSheetOpen(false);
+    setShowSheetEmojiPicker(false);
+  }, []);
+
+  const openActionSheet = useCallback(() => {
+    setShowQuickReact(false);
+    closeHover();
+    setShowSheetEmojiPicker(false);
+    setActionSheetOpen(true);
+  }, [closeHover]);
+
+  const handleTouchStart = () => {
+    clearLongPressTimer();
+    longPressTimeoutRef.current = setTimeout(openActionSheet, 520);
+  };
+
+  const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+      event.preventDefault();
+      clearLongPressTimer();
+      openActionSheet();
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
+      clearLongPressTimer();
       if (cancelActiveHover === closeHover) {
         cancelActiveHover = null;
       }
     };
-  }, [closeHover]);
+  }, [clearLongPressTimer, closeHover]);
+
+  useEffect(() => {
+    if (!actionSheetOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [actionSheetOpen]);
 
   const isMine = senderId === currentUserId;
   const isDeleted = !!deletedAt;
@@ -154,6 +201,26 @@ export default function ChatMessage({
   const handleQuickReact = (emoji: string) => {
     onReact(id, emoji);
     setShowQuickReact(false);
+  };
+
+  const handleSheetReact = (emoji: string) => {
+    onReact(id, emoji);
+    closeActionSheet();
+  };
+
+  const handleSheetReply = () => {
+    onReply(id);
+    closeActionSheet();
+  };
+
+  const handleSheetEdit = () => {
+    onEdit(id, content);
+    closeActionSheet();
+  };
+
+  const handleSheetDelete = () => {
+    closeActionSheet();
+    onDelete(id);
   };
 
   // Deleted message
@@ -234,10 +301,17 @@ export default function ChatMessage({
         )}
 
         {/* Message bubble with hover actions */}
-        <div className="relative flex flex-col">
+        <div
+          className="relative flex flex-col"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={clearLongPressTimer}
+          onTouchCancel={clearLongPressTimer}
+          onTouchMove={clearLongPressTimer}
+          onContextMenu={handleContextMenu}
+        >
           {/* Action bar */}
           <div
-            className={`order-2 mt-1 flex items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest backdrop-blur animate-in fade-in duration-100 sm:absolute sm:top-0 sm:order-none sm:mt-0 sm:z-[99] ${
+            className={`hidden items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest backdrop-blur animate-in fade-in duration-100 sm:absolute sm:top-0 sm:z-[99] ${
               hovered || showQuickReact ? "sm:flex" : "sm:hidden"
             } ${
               isMine
@@ -392,6 +466,95 @@ export default function ChatMessage({
           onClose={() => setLightboxOpen(false)}
         />
       )}
+
+      {actionSheetOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/65 px-3 pb-3 pt-16 backdrop-blur-sm sm:hidden"
+            onClick={closeActionSheet}
+          >
+            <div
+              className="max-h-[85svh] w-full max-w-sm overflow-y-auto rounded-2xl border border-ink-border bg-ink-surface shadow-crest"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="border-b border-ink-border p-3">
+                <p className="text-xs font-semibold text-ink-muted">
+                  {senderName ?? t("common.you")} · {formattedTime}
+                </p>
+                <p className="mt-1 line-clamp-2 whitespace-pre-wrap break-words text-sm text-ink-text">
+                  {content || (mediaType === "video" ? t("chat.mediaVideo") : t("chat.mediaImage"))}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-6 gap-1 border-b border-ink-border p-2">
+                {QUICK_REACTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => handleSheetReact(emoji)}
+                    className="flex h-11 items-center justify-center rounded-xl bg-ink-surface2 text-xl transition-colors hover:bg-ink-border"
+                    title={emoji}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 p-3">
+                <button
+                  type="button"
+                  onClick={handleSheetReply}
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-ink-border bg-ink-surface2 px-3 text-sm font-medium"
+                >
+                  <span>↩️</span>
+                  {t("chat.reply")}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSheetEmojiPicker((value) => !value)}
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-ink-border bg-ink-surface2 px-3 text-sm font-medium"
+                >
+                  <span>😀</span>
+                  {t("chat.moreEmojis")}
+                </button>
+
+                {isMine && (
+                  <button
+                    type="button"
+                    onClick={handleSheetEdit}
+                    className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-ink-border bg-ink-surface2 px-3 text-sm font-medium"
+                  >
+                    <span>✏️</span>
+                    {t("chat.edit")}
+                  </button>
+                )}
+
+                {(isMine || canModerate) && (
+                  <button
+                    type="button"
+                    onClick={handleSheetDelete}
+                    className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-danger/40 bg-danger/10 px-3 text-sm font-medium text-danger"
+                  >
+                    <span>🗑️</span>
+                    {t("chat.delete")}
+                  </button>
+                )}
+              </div>
+
+              {showSheetEmojiPicker && (
+                <div className="border-t border-ink-border p-2">
+                  <EmojiPicker
+                    positionClass="relative mx-auto"
+                    onSelect={handleSheetReact}
+                    onClose={() => setShowSheetEmojiPicker(false)}
+                  />
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
