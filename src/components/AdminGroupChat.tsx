@@ -330,7 +330,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
   };
 
   return (
-    <div className="rounded-xl2 glass-card flex flex-col h-[calc(100vh-280px)] min-h-[480px]">
+    <div className="rounded-xl2 glass-card flex flex-col h-full min-h-0 overflow-hidden">
       {error && (
         <div className="mx-4 mt-2 text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-1.5">
           {error}

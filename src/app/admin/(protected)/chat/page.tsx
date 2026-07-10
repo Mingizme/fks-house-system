@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AdminGroupChat } from "@/components/AdminGroupChat";
-import { MemberPopover } from "@/components/MemberPopover";
+import { AdminChatSidePanel } from "@/components/AdminChatSidePanel";
 import { getServerTranslator } from "@/lib/i18n-server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -18,7 +18,7 @@ export default async function AdminChatPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const [{ data: messages }, { data: admins }] = await Promise.all([
+  const [{ data: messages }, { data: admins }, { data: departments }] = await Promise.all([
     supabase
       .from("admin_messages")
       .select("id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role)")
@@ -26,9 +26,13 @@ export default async function AdminChatPage() {
       .limit(200),
     supabase
       .from("profiles")
-      .select("id, display_name, avatar_emoji, admin_role")
+      .select("id, display_name, avatar_emoji, avatar_url, admin_rank, department_id, username, department:departments(id, name, director_title, member_title, sort_order)")
       .eq("user_type", "admin")
       .order("display_name"),
+    supabase
+      .from("departments")
+      .select("id, key, name, director_title, member_title, sort_order, created_at")
+      .order("sort_order"),
   ]);
 
   return (
@@ -38,31 +42,22 @@ export default async function AdminChatPage() {
         <h1 className="font-display font-bold text-3xl">{t("nav.adminGroupChat")}</h1>
       </header>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="flex gap-4 h-[calc(100vh-210px)] min-h-[620px]">
+        <div className="flex-1 min-w-0">
           <AdminGroupChat
             currentUserId={user.id}
             initialMessages={(messages as any) ?? []}
           />
         </div>
 
-        <div>
-          <h2 className="font-display font-bold text-lg mb-3">
-            Admin ({admins?.length ?? 0})
-          </h2>
-          <div className="rounded-xl2 border border-ink-border bg-ink-surface p-2 max-h-[400px] overflow-y-auto">
-            {(admins ?? []).map((a) => (
-              <MemberPopover
-                key={a.id}
-                memberId={a.id}
-                displayName={`${a.display_name}${a.admin_role ? ` · ${a.admin_role}` : ""}`}
-                avatarEmoji={a.avatar_emoji}
-                messagesBasePath="/admin/messages"
-                profileBasePath="/admin/profile"
-                currentUserId={user.id}
-              />
-            ))}
-          </div>
+        <div className="hidden lg:block w-72 shrink-0">
+          <AdminChatSidePanel
+            admins={(admins as any) ?? []}
+            departments={(departments as any) ?? []}
+            messagesBasePath="/admin/messages"
+            profileBasePath="/admin/profile"
+            currentUserId={user.id}
+          />
         </div>
       </div>
     </main>
