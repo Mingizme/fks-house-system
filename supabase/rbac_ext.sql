@@ -394,15 +394,14 @@ begin
     raise exception 'This user does not have a recorded IP address yet.';
   end if;
 
-  if exists (select 1 from ip_bans where ip_address = target_ip and lifted_at is null) then
-    update ip_bans
-      set reason = nullif(trim(reason), ''),
-          banned_by = auth.uid()
-      where ip_address = target_ip and lifted_at is null;
-  else
-    insert into ip_bans (ip_address, banned_by, reason)
-    values (target_ip, auth.uid(), nullif(trim(reason), ''));
-  end if;
+  insert into ip_bans (ip_address, banned_by, reason)
+  values (target_ip, auth.uid(), nullif(trim(reason), ''))
+  on conflict (ip_address) where lifted_at is null
+  do update set lifted_at = null,
+                lifted_by = null,
+                banned_by = excluded.banned_by,
+                created_at = now(),
+                reason = coalesce(nullif(excluded.reason, ''), ip_bans.reason);
 
   perform log_moderation_event(target_id, 'ip_ban', reason, null, target_ip);
 end;
