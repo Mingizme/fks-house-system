@@ -7,6 +7,11 @@ function getClientIp(request: NextRequest) {
   return request.headers.get("x-real-ip")?.trim() || null;
 }
 
+type AuthProfile = {
+  user_type: string;
+  account_banned_at: string | null;
+};
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
@@ -50,8 +55,8 @@ export async function middleware(request: NextRequest) {
   const clientIp = getClientIp(request);
 
   if (clientIp) {
-    const { data: ipBanned } = await supabase.rpc("is_ip_banned", { ip_text: clientIp });
-    if (ipBanned && (path !== "/login" || request.nextUrl.searchParams.get("banned") !== "ip")) {
+    const { data: ipBanned, error: ipBanError } = await supabase.rpc("is_ip_banned", { ip_text: clientIp });
+    if (!ipBanError && ipBanned) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("banned", "ip");
@@ -65,18 +70,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  let profile: { user_type: string; account_banned_at: string | null } | null = null;
+  let profile: AuthProfile | null = null;
   if (user && isProtectedArea) {
     if (clientIp) {
       await supabase.rpc("record_profile_ip", { ip_text: clientIp });
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("user_type, account_banned_at")
       .eq("id", user.id)
       .single();
     profile = data;
+
+    if (error) {
+      const { data: legacyProfile } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", user.id)
+        .single();
+      profile = legacyProfile ? { user_type: legacyProfile.user_type, account_banned_at: null } : null;
+    }
 
     if (profile?.account_banned_at) {
       await supabase.auth.signOut();
@@ -109,7 +123,5 @@ export const config = {
     "/house-announcements/:path*",
     "/admin-directory/:path*",
     "/admin/:path*",
-    "/login",
-    "/signup",
   ],
 };

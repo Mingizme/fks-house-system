@@ -22,6 +22,64 @@ const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
   "ironclad-rhinos": "house.motto.ironcladRhinos",
 };
 
+type SupabaseServerClient = ReturnType<typeof createClient>;
+
+const HOUSE_SELECT_WITH_SCORE =
+  "id, name, slug, color, icon, description, score_visibility, master_can_toggle_score";
+const HOUSE_SELECT_BASE = "id, name, slug, color, icon, description";
+const ROSTER_SELECT_WITH_MODERATION =
+  "id, display_name, avatar_emoji, avatar_url, house_role, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip";
+const ROSTER_SELECT_WITH_MUTE =
+  "id, display_name, avatar_emoji, avatar_url, house_role, muted_until, mute_reason";
+const ROSTER_SELECT_BASE = "id, display_name, avatar_emoji, avatar_url, house_role";
+
+async function getHouseBySlug(supabase: SupabaseServerClient, slug: string) {
+  const withScore = await supabase
+    .from("houses")
+    .select(HOUSE_SELECT_WITH_SCORE)
+    .eq("slug", slug)
+    .single();
+  if (!withScore.error) return withScore.data;
+
+  const base = await supabase
+    .from("houses")
+    .select(HOUSE_SELECT_BASE)
+    .eq("slug", slug)
+    .single();
+  return base.data;
+}
+
+async function getHouseRoster(supabase: SupabaseServerClient, houseId: string) {
+  const withModeration = await supabase
+    .from("profiles")
+    .select(ROSTER_SELECT_WITH_MODERATION)
+    .eq("house_id", houseId)
+    .order("display_name");
+  if (!withModeration.error) return withModeration.data ?? [];
+
+  const withMute = await supabase
+    .from("profiles")
+    .select(ROSTER_SELECT_WITH_MUTE)
+    .eq("house_id", houseId)
+    .order("display_name");
+  if (!withMute.error) return withMute.data ?? [];
+
+  const base = await supabase
+    .from("profiles")
+    .select(ROSTER_SELECT_BASE)
+    .eq("house_id", houseId)
+    .order("display_name");
+  return base.data ?? [];
+}
+
+async function getActiveIpBans(supabase: SupabaseServerClient) {
+  const { data, error } = await supabase
+    .from("ip_bans")
+    .select("ip_address, reason, created_at")
+    .is("lifted_at", null);
+  return error ? [] : data ?? [];
+}
+
 export default async function AdminHousePage({ params }: { params: { slug: string } }) {
   const { t } = getServerTranslator();
   const supabase = createClient();
@@ -30,11 +88,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const { data: house } = await supabase
-    .from("houses")
-    .select("id, name, slug, color, icon, description, score_visibility, master_can_toggle_score")
-    .eq("slug", params.slug)
-    .single();
+  const house = await getHouseBySlug(supabase, params.slug);
   if (!house) notFound();
 
   // Lấy actor để quyết định UI mute
@@ -54,21 +108,17 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
   const [
     { data: pointsRow },
     { data: leaderboard },
-    { data: roster },
+    roster,
     { data: history },
     { data: messages },
-    { data: ipBans },
+    ipBans,
   ] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
     supabase
       .from("house_points")
       .select("*")
       .order("total_points", { ascending: false }),
-    supabase
-      .from("profiles")
-      .select("id, display_name, avatar_emoji, avatar_url, house_role, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip")
-      .eq("house_id", house.id)
-      .order("display_name"),
+    getHouseRoster(supabase, house.id),
     supabase
       .from("point_transactions")
       .select("id, points, reason, created_at, admin:profiles(display_name, admin_role)")
@@ -81,7 +131,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
       .eq("house_id", house.id)
       .order("created_at", { ascending: true })
       .limit(100),
-    supabase.from("ip_bans").select("ip_address, reason, created_at").is("lifted_at", null),
+    getActiveIpBans(supabase),
   ]);
 
   const profileBasePath = "/admin/profile";

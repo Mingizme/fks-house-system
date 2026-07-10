@@ -13,6 +13,46 @@ export const metadata: Metadata = {
   description: "Assign players to houses and manage player accounts.",
 };
 
+type SupabaseServerClient = ReturnType<typeof createClient>;
+
+const PLAYER_SELECT_WITH_MODERATION =
+  "id, display_name, username, avatar_emoji, avatar_url, house_id, created_at, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip";
+const PLAYER_SELECT_WITH_MUTE =
+  "id, display_name, username, avatar_emoji, avatar_url, house_id, created_at, muted_until, mute_reason";
+const PLAYER_SELECT_BASE =
+  "id, display_name, username, avatar_emoji, avatar_url, house_id, created_at";
+
+async function getPlayers(supabase: SupabaseServerClient) {
+  const withModeration = await supabase
+    .from("profiles")
+    .select(PLAYER_SELECT_WITH_MODERATION)
+    .eq("user_type", "player")
+    .order("created_at", { ascending: false });
+  if (!withModeration.error) return withModeration.data ?? [];
+
+  const withMute = await supabase
+    .from("profiles")
+    .select(PLAYER_SELECT_WITH_MUTE)
+    .eq("user_type", "player")
+    .order("created_at", { ascending: false });
+  if (!withMute.error) return withMute.data ?? [];
+
+  const base = await supabase
+    .from("profiles")
+    .select(PLAYER_SELECT_BASE)
+    .eq("user_type", "player")
+    .order("created_at", { ascending: false });
+  return base.data ?? [];
+}
+
+async function getActiveIpBans(supabase: SupabaseServerClient) {
+  const { data, error } = await supabase
+    .from("ip_bans")
+    .select("ip_address, reason, created_at")
+    .is("lifted_at", null);
+  return error ? [] : data ?? [];
+}
+
 export default async function AdminPlayersPage() {
   const { t } = getServerTranslator();
   const supabase = createClient();
@@ -35,16 +75,10 @@ export default async function AdminPlayersPage() {
     departmentId: me.department_id,
   };
 
-  const [{ data: players }, { data: houses }, { data: ipBans }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select(
-        "id, display_name, username, avatar_emoji, avatar_url, house_id, created_at, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip"
-      )
-      .eq("user_type", "player")
-      .order("created_at", { ascending: false }),
+  const [players, { data: houses }, ipBans] = await Promise.all([
+    getPlayers(supabase),
     supabase.from("houses").select("*").order("name"),
-    supabase.from("ip_bans").select("ip_address, reason, created_at").is("lifted_at", null),
+    getActiveIpBans(supabase),
   ]);
 
   const unassigned = (players ?? []).filter((p) => !p.house_id);
@@ -56,7 +90,7 @@ export default async function AdminPlayersPage() {
         <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.playersKicker")}</p>
         <h1 className="font-display font-bold text-3xl">Player & House</h1>
         <p className="text-ink-muted text-sm mt-1">
-          {t("admin.playersSummary", { total: players?.length ?? 0, unassigned: unassigned.length })}
+          {t("admin.playersSummary", { total: players.length, unassigned: unassigned.length })}
         </p>
       </header>
 
@@ -72,7 +106,7 @@ export default async function AdminPlayersPage() {
                 player={p}
                 houses={houses ?? []}
                 actor={actor}
-                ipBans={(ipBans as any[]) ?? []}
+                ipBans={ipBans as any[]}
               />
             ))}
           </div>
@@ -88,7 +122,7 @@ export default async function AdminPlayersPage() {
               player={p}
               houses={houses ?? []}
               actor={actor}
-              ipBans={(ipBans as any[]) ?? []}
+              ipBans={ipBans as any[]}
             />
           ))}
           {assigned.length === 0 && <p className="text-sm text-ink-muted p-4">{t("admin.noAssigned")}</p>}

@@ -43,11 +43,22 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: profile } = await supabase
+    const { data: profileWithBan, error: profileWithBanError } = await supabase
       .from("profiles")
       .select("user_type, account_banned_at")
       .eq("id", data.user.id)
       .single();
+    let profile: { user_type: string; account_banned_at: string | null } | null =
+      profileWithBan as { user_type: string; account_banned_at: string | null } | null;
+
+    if (profileWithBanError) {
+      const { data: legacyProfile } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", data.user.id)
+        .single();
+      profile = legacyProfile ? { user_type: legacyProfile.user_type, account_banned_at: null } : null;
+    }
 
     if (profile?.account_banned_at) {
       await supabase.auth.signOut();

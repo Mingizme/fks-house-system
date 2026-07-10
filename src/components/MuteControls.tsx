@@ -61,11 +61,18 @@ export function useMuteStatus(
       )
       .eq("id", userId)
       .single()
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (!error) {
           setMuteStatus(toRestrictionStatus(data as ProfileModerationRow | null));
         } else {
-          setMuteStatus(null);
+          const { data: legacyData, error: legacyError } = await supabase
+            .from("profiles")
+            .select("muted_until, muted_by, mute_reason")
+            .eq("id", userId)
+            .single();
+          setMuteStatus(
+            legacyError ? null : toRestrictionStatus(legacyData as ProfileModerationRow | null)
+          );
         }
       });
   }, [supabase, userId]);
