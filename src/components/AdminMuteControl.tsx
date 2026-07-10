@@ -67,7 +67,7 @@ export function AdminMuteControl({
   const isAccountBanned = !!accountBannedAt;
   const isIpBanned = !!ipBannedAt;
 
-  async function runAction(action: () => Promise<{ error: any }>, successMessage: string) {
+  async function runAction(action: () => PromiseLike<{ error: any }>, successMessage: string) {
     setLoading(true);
     setError(null);
     setSuccess(null);

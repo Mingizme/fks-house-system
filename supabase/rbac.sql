@@ -147,20 +147,18 @@ begin
   select user_type, admin_rank, department_id into target
     from profiles where id = target_id;
 
-  -- Director: quản lý player, hoặc member NỘI BỘ department của mình
+  -- Mọi admin có thể quản lý player.
+  -- Nhánh này cũng hỗ trợ các admin cũ chưa được migrate admin_rank.
+  if target.user_type = 'player' then
+    return true;
+  end if;
+
+  -- Director: quản lý member NỘI BỘ department của mình
   if me.admin_rank = 'director' then
-    if target.user_type = 'player' then
-      return true;
-    end if;
     if target.admin_rank = 'member' and target.department_id = me.department_id then
       return true;
     end if;
     return false;
-  end if;
-
-  -- Member thường: chỉ quản lý được player (điều phối house), không quản lý admin khác
-  if me.admin_rank = 'member' and target.user_type = 'player' then
-    return true;
   end if;
 
   return false;

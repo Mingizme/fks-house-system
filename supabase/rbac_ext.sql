@@ -121,6 +121,46 @@ create index if not exists idx_profiles_chat_banned_at on profiles(chat_banned_a
 create index if not exists idx_profiles_account_banned_at on profiles(account_banned_at) where account_banned_at is not null;
 create index if not exists idx_profiles_last_seen_ip on profiles(last_seen_ip) where last_seen_ip is not null;
 
+-- Refresh moderation permission logic: every admin can moderate players.
+-- Higher-rank admin-to-admin rules still come from the existing RBAC model.
+create or replace function can_manage_admin(target_id uuid)
+returns boolean
+language plpgsql security definer stable
+set search_path = public
+as $$
+declare
+  me record;
+  target record;
+begin
+  if auth.uid() = target_id then
+    return false;
+  end if;
+
+  select user_type, admin_rank, department_id into me
+    from profiles where id = auth.uid();
+  if me.user_type <> 'admin' then
+    return false;
+  end if;
+
+  if me.admin_rank = 'global_director' then
+    return true;
+  end if;
+
+  select user_type, admin_rank, department_id into target
+    from profiles where id = target_id;
+
+  if target.user_type = 'player' then
+    return true;
+  end if;
+
+  if me.admin_rank = 'director' then
+    return target.admin_rank = 'member' and target.department_id = me.department_id;
+  end if;
+
+  return false;
+end;
+$$;
+
 create table if not exists moderation_events (
   id uuid primary key default uuid_generate_v4(),
   target_id uuid references profiles(id) on delete cascade not null,

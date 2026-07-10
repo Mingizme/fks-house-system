@@ -10,7 +10,7 @@ import { AdminMuteControl } from "@/components/AdminMuteControl";
 import { MemberPopover } from "@/components/MemberPopover";
 import { formatPoints, houseRoleKey } from "@/lib/utils";
 import { getServerTranslator } from "@/lib/i18n-server";
-import { canMute, canManage } from "@/lib/permissions";
+import { canMute } from "@/lib/permissions";
 import type { ActorContext } from "@/lib/permissions";
 import type { AdminRank, HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
@@ -124,6 +124,46 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
               canModerate={true}
               editableName="admin"
             />
+            <div>
+              <h2 className="font-display font-bold text-lg mb-3">Moderation</h2>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {(roster ?? []).map((p: any) => {
+                  const target = {
+                    id: p.id,
+                    userType: "player" as const,
+                    adminRank: null,
+                    departmentId: null,
+                  };
+                  const muteAcceptable = canMute(actor, target);
+                  const activeIpBan = p.last_seen_ip
+                    ? (ipBans as any[] | null)?.find((ban) => ban.ip_address === p.last_seen_ip)
+                    : null;
+
+                  return (
+                    <AdminMuteControl
+                      key={p.id}
+                      targetId={p.id}
+                      targetName={p.display_name}
+                      targetEmoji={p.avatar_emoji}
+                      blocked={null}
+                      mutedUntil={p.muted_until}
+                      muteReason={p.mute_reason}
+                      chatBannedAt={p.chat_banned_at}
+                      chatBanReason={p.chat_ban_reason}
+                      accountBannedAt={p.account_banned_at}
+                      accountBanReason={p.account_ban_reason}
+                      lastSeenIp={p.last_seen_ip}
+                      ipBannedAt={activeIpBan?.created_at ?? null}
+                      ipBanReason={activeIpBan?.reason ?? null}
+                      canMute={muteAcceptable}
+                    />
+                  );
+                })}
+                {(roster ?? []).length === 0 && (
+                  <p className="text-sm text-ink-muted p-3">{t("house.noMembers")}</p>
+                )}
+              </div>
+            </div>
             <HouseLeadershipSelect roster={(roster as any) ?? []} />
           </div>
         }

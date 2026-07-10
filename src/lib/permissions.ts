@@ -52,8 +52,8 @@ export function isHouseLeader(ctx: HouseLeaderContext): boolean {
 /**
  * Phản chiếu logic can_manage_admin() ở DB (supabase/rbac.sql):
  *  - Global Director: quản lý được tất cả (trừ chính mình)
- *  - Director: quản lý player + member cùng department
- *  - Member: chỉ quản lý player
+ *  - Mọi admin: quản lý player
+ *  - Director: quản lý thêm member cùng department
  *  - Không ai tự quản lý bản thân
  */
 export function canManage(actor: ActorContext, target: TargetContext): boolean {
@@ -61,14 +61,10 @@ export function canManage(actor: ActorContext, target: TargetContext): boolean {
   if (actor.userType !== "admin") return false;
 
   if (actor.adminRank === "global_director") return true;
+  if (target.userType === "player") return true;
 
   if (actor.adminRank === "director") {
-    if (target.userType === "player") return true;
     return target.adminRank === "member" && target.departmentId === actor.departmentId;
-  }
-
-  if (actor.adminRank === "member") {
-    return target.userType === "player";
   }
 
   return false;
@@ -84,20 +80,16 @@ export function canRenameDepartments(actor: ActorContext): boolean {
   return isGlobalDirector(actor);
 }
 
-/** Có được phép mute/unmute target không (cùng luật can_manage). */
+/** Có được phép mute/unmute/ban target không (cùng luật can_manage). */
 export function canMute(actor: ActorContext, target: TargetContext): boolean {
   if (actor.id === target.id) return false;
   if (actor.userType !== "admin") return false;
 
   if (actor.adminRank === "global_director") return true;
+  if (target.userType === "player") return true;
 
   if (actor.adminRank === "director") {
-    if (target.userType === "player") return true;
     return target.adminRank === "member" && target.departmentId === actor.departmentId;
-  }
-
-  if (actor.adminRank === "member") {
-    return target.userType === "player";
   }
 
   return false;
