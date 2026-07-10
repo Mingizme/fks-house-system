@@ -182,7 +182,7 @@ export default function ChatMessage({
       }`}
     >
       <div 
-        className={`relative max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col px-3 py-2 -mx-3 -my-2 rounded-lg`}
+        className={`relative max-w-[88%] sm:max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col px-3 py-2 -mx-3 -my-2 rounded-lg`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -234,93 +234,95 @@ export default function ChatMessage({
         )}
 
         {/* Message bubble with hover actions */}
-        <div className="relative">
+        <div className="relative flex flex-col">
           {/* Action bar */}
-          {hovered && (
-            <div
-              className={`absolute top-0 z-[99] flex items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest backdrop-blur animate-in fade-in duration-100 ${
-                isMine ? "left-0 -translate-x-full -ml-2" : "right-0 translate-x-full ml-2"
-              }`}
-            >
-              {/* React button */}
-              <div className="relative" ref={quickReactRef}>
-                <button
-                  type="button"
-                  onClick={() => setShowQuickReact(!showQuickReact)}
-                  className="w-7 h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
-                  title={t("chat.react")}
-                >
-                  😀
-                </button>
-
-                {/* Quick react popup */}
-                {showQuickReact && (
-                  <div className={`absolute bottom-full mb-1 ${isMine ? "right-0" : "left-0"} flex items-center gap-0.5 bg-ink-surface border border-ink-border rounded-lg shadow-lg p-1 z-20 animate-in fade-in duration-100`}>
-                    {QUICK_REACTIONS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => handleQuickReact(emoji)}
-                        className="w-8 h-8 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-base cursor-pointer"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        setShowQuickReact(false);
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        onOpenFullPicker(id, rect);
-                      }}
-                      className="w-8 h-8 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-base text-ink-muted cursor-pointer"
-                      title={t("chat.moreEmojis")}
-                    >
-                      +
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Reply button */}
+          <div
+            className={`order-2 mt-1 flex items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest backdrop-blur animate-in fade-in duration-100 sm:absolute sm:top-0 sm:order-none sm:mt-0 sm:z-[99] ${
+              hovered || showQuickReact ? "sm:flex" : "sm:hidden"
+            } ${
+              isMine
+                ? "self-end sm:left-0 sm:-ml-2 sm:-translate-x-full"
+                : "self-start sm:right-0 sm:ml-2 sm:translate-x-full"
+            }`}
+          >
+            {/* React button */}
+            <div className="relative" ref={quickReactRef}>
               <button
                 type="button"
-                onClick={() => onReply(id)}
-                className="w-7 h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
-                title={t("chat.reply")}
+                onClick={() => setShowQuickReact(!showQuickReact)}
+                className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
+                title={t("chat.react")}
               >
-                ↩️
+                😀
               </button>
 
-              {/* Edit button (own messages only) */}
-              {isMine && (
-                <button
-                  type="button"
-                  onClick={() => onEdit(id, content)}
-                  className="w-7 h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
-                  title={t("chat.edit")}
-                >
-                  ✏️
-                </button>
-              )}
-
-              {/* Delete button (own messages, or house leader moderating) */}
-              {(isMine || canModerate) && (
-                <button
-                  type="button"
-                  onClick={() => onDelete(id)}
-                  className="w-7 h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
-                  title={t("chat.delete")}
-                >
-                  🗑️
-                </button>
+              {/* Quick react popup */}
+              {showQuickReact && (
+                <div className={`absolute bottom-full mb-1 ${isMine ? "right-0" : "left-0"} flex max-w-[calc(100vw-2rem)] items-center gap-0.5 overflow-x-auto bg-ink-surface border border-ink-border rounded-lg shadow-lg p-1 z-20 animate-in fade-in duration-100`}>
+                  {QUICK_REACTIONS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => handleQuickReact(emoji)}
+                      className="w-8 h-8 flex shrink-0 items-center justify-center rounded hover:bg-ink-border transition-colors text-base cursor-pointer"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      setShowQuickReact(false);
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      onOpenFullPicker(id, rect);
+                    }}
+                    className="w-8 h-8 flex shrink-0 items-center justify-center rounded hover:bg-ink-border transition-colors text-base text-ink-muted cursor-pointer"
+                    title={t("chat.moreEmojis")}
+                  >
+                    +
+                  </button>
+                </div>
               )}
             </div>
-          )}
+
+            {/* Reply button */}
+            <button
+              type="button"
+              onClick={() => onReply(id)}
+              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
+              title={t("chat.reply")}
+            >
+              ↩️
+            </button>
+
+            {/* Edit button (own messages only) */}
+            {isMine && (
+              <button
+                type="button"
+                onClick={() => onEdit(id, content)}
+                className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
+                title={t("chat.edit")}
+              >
+                ✏️
+              </button>
+            )}
+
+            {/* Delete button (own messages, or house leader moderating) */}
+            {(isMine || canModerate) && (
+              <button
+                type="button"
+                onClick={() => onDelete(id)}
+                className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
+                title={t("chat.delete")}
+              >
+                🗑️
+              </button>
+            )}
+          </div>
 
           {/* Bubble */}
           <div
-            className={`rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-300 ${
+            className={`order-1 rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-300 ${
               highlighted ? "ring-2 ring-command/70 ring-offset-2 ring-offset-ink-surface" : ""
             } ${
               isMine
@@ -332,7 +334,7 @@ export default function ChatMessage({
               <button
                 type="button"
                 onClick={() => setLightboxOpen(true)}
-                className="mb-2 block max-w-sm cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
+                className="mb-2 block max-w-[75vw] sm:max-w-sm cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
               >
                 <img src={mediaUrl} alt={t("chat.attachmentAlt")} className="w-full h-auto object-cover max-h-60" />
               </button>
@@ -341,7 +343,7 @@ export default function ChatMessage({
               <button
                 type="button"
                 onClick={() => setLightboxOpen(true)}
-                className="relative mb-2 block max-w-sm cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
+                className="relative mb-2 block max-w-[75vw] sm:max-w-sm cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
               >
                 <video src={mediaUrl} muted playsInline className="w-full h-auto max-h-60 pointer-events-none" />
                 <span className="absolute inset-0 flex items-center justify-center">

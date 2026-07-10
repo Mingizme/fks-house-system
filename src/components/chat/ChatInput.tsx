@@ -242,7 +242,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="p-4 bg-ink-surface">
+    <div className="bg-ink-surface p-3 sm:p-4">
       {/* Reply preview bar */}
       {replyingTo && (
         <div className="flex items-center justify-between bg-ink-surface2 border border-b-0 border-ink-border rounded-t-xl px-3 py-2">
@@ -316,8 +316,8 @@ export default function ChatInput({
 
       {/* Media Upload Preview Bar */}
       {mediaPreview && (
-        <div className="bg-ink-surface2 border border-b-0 border-ink-border rounded-t-xl p-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3 bg-ink-surface2 border border-b-0 border-ink-border rounded-t-xl p-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             {mediaPreview.type === "image" ? (
               <img
                 src={mediaPreview.url}
@@ -330,7 +330,7 @@ export default function ChatInput({
                 className="w-16 h-16 object-cover rounded-lg border border-ink-border bg-black/10"
               />
             )}
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold truncate text-ink-text">
                 {selectedFile?.name}
               </p>
@@ -366,7 +366,7 @@ export default function ChatInput({
       {/* Error Message Bar */}
       {activeError && (
         <div className="bg-danger/10 border border-b-0 border-danger/20 rounded-t-xl px-3 py-1.5 flex items-center justify-between text-xs text-danger">
-          <span>{activeError}</span>
+          <span className="min-w-0 truncate">{activeError}</span>
           <button
             type="button"
             onClick={() => {
@@ -382,7 +382,7 @@ export default function ChatInput({
 
       {/* Main Input Container styled like Discord */}
       <div 
-        className={`flex items-end gap-3 bg-ink-surface2/60 hover:bg-ink-surface2/80 border border-ink-border focus-within:border-command/60 focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.12)] px-4 py-2.5 transition-all duration-200 ${
+        className={`flex min-w-0 items-end gap-2 bg-ink-surface2/60 hover:bg-ink-surface2/80 border border-ink-border focus-within:border-command/60 focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.12)] px-3 py-2.5 transition-all duration-200 sm:gap-3 sm:px-4 ${
           replyingTo || isEditing || mediaPreview || activeError ? "rounded-b-xl border-t-0" : "rounded-xl"
         }`}
       >
@@ -400,7 +400,7 @@ export default function ChatInput({
         <button
           type="button"
           onClick={triggerFileSelect}
-          className="mt-0.5 w-6 h-6 flex shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-ink-text font-bold text-base cursor-pointer disabled:opacity-40 transition-colors"
+          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-ink-text font-bold text-base transition-colors hover:bg-white/20 cursor-pointer disabled:opacity-40"
           title={t("chat.attachMedia")}
           disabled={disabled || uploading || isEditing}
         >
@@ -416,7 +416,7 @@ export default function ChatInput({
           placeholder={uploading ? t("chat.uploadingFile") : effectivePlaceholder}
           disabled={disabled || uploading}
           rows={1}
-          className="min-h-[24px] max-h-[160px] flex-1 resize-none bg-transparent border-0 outline-none text-sm leading-6 placeholder:text-ink-muted disabled:opacity-50 focus:ring-0 focus:outline-none overflow-y-hidden"
+          className="min-h-[24px] max-h-[160px] min-w-0 flex-1 resize-none overflow-y-hidden bg-transparent border-0 text-sm leading-6 outline-none placeholder:text-ink-muted focus:ring-0 focus:outline-none disabled:opacity-50"
         />
 
         {showWordCounter && activeWordLimit !== null && (
@@ -434,7 +434,7 @@ export default function ChatInput({
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-lg leading-none cursor-pointer disabled:opacity-40"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg leading-none transition-colors hover:bg-white/10 cursor-pointer disabled:opacity-40"
             title="Emoji"
             disabled={disabled || uploading}
           >
@@ -459,7 +459,7 @@ export default function ChatInput({
           disabled={disabled || uploading || (!value.trim() && !selectedFile)}
           aria-label={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
           title={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
-          className="p-1.5 rounded-lg text-command hover:bg-command/10 disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed flex shrink-0 items-center justify-center"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-command transition-colors hover:bg-command/10 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
         >
           {uploading ? (
             <svg className="animate-spin h-5 w-5 text-command" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

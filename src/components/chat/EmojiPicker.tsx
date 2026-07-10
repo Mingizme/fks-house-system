@@ -55,7 +55,7 @@ export default function EmojiPicker({
   return (
     <div
       ref={pickerRef}
-      className={`${positionClass} w-[320px] max-h-[360px] flex flex-col bg-ink-surface2 border border-ink-border rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150`}
+      className={`${positionClass} w-[calc(100vw-1rem)] max-w-[320px] max-h-[70svh] sm:max-h-[360px] flex flex-col bg-ink-surface2 border border-ink-border rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150`}
     >
       {/* Search */}
       <div className="p-2 border-b border-ink-border">
@@ -65,7 +65,6 @@ export default function EmojiPicker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-lg bg-ink-surface border border-ink-border px-3 py-1.5 text-sm outline-none focus:border-command transition-colors placeholder:text-ink-muted"
-          autoFocus
         />
       </div>
 
@@ -87,7 +86,7 @@ export default function EmojiPicker({
                   key={`${category.name}-${idx}`}
                   type="button"
                   onClick={() => onSelect(emoji)}
-                  className="w-9 h-9 flex items-center justify-center text-lg rounded hover:bg-ink-border transition-colors cursor-pointer"
+                  className="flex aspect-square min-h-8 w-full items-center justify-center rounded text-lg transition-colors hover:bg-ink-border cursor-pointer"
                   title={emoji}
                 >
                   {emoji}

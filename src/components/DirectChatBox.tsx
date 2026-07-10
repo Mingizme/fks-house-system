@@ -335,8 +335,8 @@ export function DirectChatBox({
   }
 
   return (
-    <div className="flex flex-col h-full bg-ink-surface overflow-hidden">
-      <div className="p-4 border-b border-ink-border flex items-center justify-between gap-3 bg-ink-surface">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-ink-border bg-ink-surface px-3 py-3 sm:p-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href={profileBasePath.startsWith("/admin") ? "/admin/messages" : "/messages"}
@@ -373,7 +373,7 @@ export function DirectChatBox({
         </button>
       </div>
 
-      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-10 space-y-3" role="log" aria-live="polite">
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-6 sm:p-4 sm:pb-10 space-y-3" role="log" aria-live="polite">
         {messages.length === 0 && <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noDirectMessages")}</p>}
         {messages.map((m) => {
           const mine = m.sender_id === currentUserId;

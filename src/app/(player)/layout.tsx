@@ -29,14 +29,14 @@ export default async function PlayerLayout({ children }: { children: React.React
       avatarEmoji={profile.avatar_emoji}
       houseId={profile.house_id}
     >
-      <div className="flex">
+      <div className="flex min-h-screen flex-col lg:flex-row">
         <PlayerSidebar
           displayName={profile.display_name}
           avatarEmoji={profile.avatar_emoji ?? "🙂"}
           avatarUrl={profile.avatar_url}
           house={house ?? null}
         />
-        <div className="flex-1 min-w-0">{children}</div>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </div>
     </PresenceProvider>
   );

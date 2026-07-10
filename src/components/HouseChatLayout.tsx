@@ -45,9 +45,9 @@ export function HouseChatLayout({
   void refetch;
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-220px)] min-h-[620px]">
+    <div className="flex flex-col gap-4 xl:flex-row">
       {/* Chat (DM-like) */}
-      <div className="flex-1 min-w-0">
+      <div className="h-[70svh] min-h-[420px] min-w-0 flex-1 xl:h-[calc(100vh-220px)] xl:min-h-[620px]">
         <HouseChatBox
           houseId={houseId}
           currentUserId={currentUserId}
@@ -61,7 +61,7 @@ export function HouseChatLayout({
       </div>
 
       {/* Side panel */}
-      <div className="hidden lg:block w-72 shrink-0 h-[calc(100vh-260px)] min-h-[480px]">
+      <div className="h-[380px] w-full shrink-0 xl:h-[calc(100vh-260px)] xl:min-h-[480px] xl:w-72">
         <HouseChatSidePanel
           houseId={houseId}
           roster={roster}

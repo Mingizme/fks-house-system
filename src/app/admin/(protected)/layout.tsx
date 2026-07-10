@@ -26,14 +26,14 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
       avatarEmoji={profile.avatar_emoji}
       houseId={profile.house_id}
     >
-      <div className="flex">
+      <div className="flex min-h-screen flex-col lg:flex-row">
         <AdminSidebar
           displayName={profile.display_name}
           adminRole={profile.admin_role}
           avatarEmoji={profile.avatar_emoji ?? "🙂"}
           avatarUrl={profile.avatar_url}
         />
-        <div className="flex-1 min-w-0">{children}</div>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </div>
     </PresenceProvider>
   );

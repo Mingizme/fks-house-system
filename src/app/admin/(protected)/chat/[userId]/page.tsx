@@ -37,9 +37,9 @@ export default async function AdminChatThreadPage({ params }: { params: { userId
     .maybeSingle();
 
   return (
-    <main className="p-8 max-w-2xl mx-auto">
+    <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col p-8">
       <Link href="/admin/chat" className="text-ink-muted text-sm font-mono hover:text-ink-text">{t("messages.backAllAdmin")}</Link>
-      <div className="mt-4">
+      <div className="mt-4 min-h-[70svh] flex-1">
         <DirectChatBox
           currentUserId={user.id}
           otherUser={otherUser}

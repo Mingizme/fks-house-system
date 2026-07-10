@@ -337,7 +337,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
         </div>
       )}
 
-      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-10 space-y-3">
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-6 sm:p-4 sm:pb-10 space-y-3">
         {messages.length === 0 && (
           <p className="text-sm text-ink-muted text-center mt-8">
             {t("messages.noHouseMessages")}

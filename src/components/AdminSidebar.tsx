@@ -55,16 +55,16 @@ export function AdminSidebar({
   }
 
   return (
-    <aside className="w-64 shrink-0 border-r border-ink-border bg-ink-surface/60 flex flex-col h-screen sticky top-0">
-      <div className="p-5 border-b border-ink-border">
+    <aside className="w-full shrink-0 border-b border-ink-border bg-ink-surface/95 backdrop-blur lg:w-64 lg:border-b-0 lg:border-r lg:bg-ink-surface/60 flex flex-col lg:h-screen lg:sticky top-0 z-40">
+      <div className="p-3 sm:p-4 lg:p-5 border-b border-ink-border">
         <div className="flex items-center gap-2 font-display font-bold text-sm tracking-[0.18em]">
           <span className="text-gradient">FKS SYSTEM</span>
         </div>
         <span className="text-[10px] font-mono text-ink-faint">{t("common.adminPortal")}</span>
-        <LanguageSwitcher className="mt-4" />
+        <LanguageSwitcher className="mt-3 lg:mt-4" />
       </div>
 
-      <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto" aria-label="Admin navigation">
+      <nav className="flex gap-2 overflow-x-auto px-3 py-2 lg:block lg:flex-1 lg:space-y-1 lg:overflow-y-auto lg:overflow-x-visible lg:pt-4" aria-label="Admin navigation">
         {NAV.map((item) => {
           const active = item.exact ? pathname === item.href : pathname?.startsWith(item.href);
           return (
@@ -72,7 +72,7 @@ export function AdminSidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
+                "flex shrink-0 items-center gap-3 whitespace-nowrap px-3 py-2.5 rounded-lg text-sm transition-all duration-200 lg:shrink",
                 active ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
               )}
             >
@@ -82,7 +82,7 @@ export function AdminSidebar({
           );
         })}
 
-        <p className="text-[10px] font-mono text-ink-faint px-3 pt-5 pb-1">{t("nav.houseMonitor")}</p>
+        <p className="flex shrink-0 items-center px-3 text-[10px] font-mono text-ink-faint lg:block lg:px-3 lg:pt-5 lg:pb-1">{t("nav.houseMonitor")}</p>
         {HOUSES.map((h) => {
           const active = pathname === `/admin/houses/${h.slug}`;
           return (
@@ -90,7 +90,7 @@ export function AdminSidebar({
               key={h.slug}
               href={`/admin/houses/${h.slug}`}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                "flex shrink-0 items-center gap-3 whitespace-nowrap px-3 py-2 rounded-lg text-sm transition-all duration-200 lg:shrink",
                 active ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
               )}
             >
@@ -101,7 +101,7 @@ export function AdminSidebar({
         })}
       </nav>
 
-      <div className="p-4 border-t border-ink-border flex items-center gap-3">
+      <div className="p-3 lg:p-4 border-t border-ink-border flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden">
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

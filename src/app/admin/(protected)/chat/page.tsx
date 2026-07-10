@@ -42,15 +42,15 @@ export default async function AdminChatPage() {
         <h1 className="font-display font-bold text-3xl">{t("nav.adminGroupChat")}</h1>
       </header>
 
-      <div className="flex gap-4 h-[calc(100vh-210px)] min-h-[620px]">
-        <div className="flex-1 min-w-0">
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <div className="h-[70svh] min-h-[420px] min-w-0 flex-1 xl:h-[calc(100vh-210px)] xl:min-h-[620px]">
           <AdminGroupChat
             currentUserId={user.id}
             initialMessages={(messages as any) ?? []}
           />
         </div>
 
-        <div className="hidden lg:block w-72 shrink-0">
+        <div className="h-[380px] w-full shrink-0 xl:h-[calc(100vh-210px)] xl:min-h-[620px] xl:w-72">
           <AdminChatSidePanel
             admins={(admins as any) ?? []}
             departments={(departments as any) ?? []}
