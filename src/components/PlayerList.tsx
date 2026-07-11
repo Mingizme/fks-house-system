@@ -51,7 +51,7 @@ export function PlayerList({ players, houses, basePath, currentUserId }: Props) 
         aria-label={t("messages.searchPlayer")}
         className="w-full rounded-xl bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command transition-colors mb-3 lg:mb-5 lg:px-5 lg:py-3.5 lg:text-base"
       />
-      <div className="grid sm:grid-cols-2 gap-1.5 max-h-[400px] overflow-y-auto lg:max-h-[560px] lg:gap-3">
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-1.5 max-h-[400px] overflow-y-auto lg:max-h-[calc(100vh-280px)] lg:gap-3">
         {filtered.map((p) => {
           const house = p.house_id ? houseMap.get(p.house_id) : null;
           return (

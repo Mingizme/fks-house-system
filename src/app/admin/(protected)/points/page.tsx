@@ -18,10 +18,10 @@ export default async function AdminPointsPage() {
     .limit(100);
 
   return (
-    <main className="p-8 max-w-4xl mx-auto animate-fadeRise">
-      <header className="mb-6">
-        <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.pointsKicker")}</p>
-        <h1 className="font-display font-bold text-3xl">{t("admin.pointsTitle")}</h1>
+    <main className="p-8 lg:p-10 2xl:p-12 w-full max-w-[1800px] mx-auto animate-fadeRise">
+      <header className="mb-6 lg:mb-8">
+        <p className="text-ink-muted font-mono text-xs mb-1 lg:text-sm">{t("admin.pointsKicker")}</p>
+        <h1 className="font-display font-bold text-3xl lg:text-4xl">{t("admin.pointsTitle")}</h1>
         <p className="text-ink-muted text-sm mt-1">{t("admin.pointsSubtitle")}</p>
       </header>
       <PointsLedger initial={(history as any) ?? []} />

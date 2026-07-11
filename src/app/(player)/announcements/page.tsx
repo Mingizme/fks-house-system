@@ -17,10 +17,10 @@ export default async function PlayerAnnouncementsPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main className="p-8 max-w-3xl mx-auto">
-      <header className="mb-6">
-        <p className="text-ink-muted font-mono text-xs mb-1">{t("announcements.playerKicker")}</p>
-        <h1 className="font-display font-bold text-3xl">{t("announcements.title")}</h1>
+    <main className="p-8 lg:p-10 2xl:p-12 w-full max-w-[1800px] mx-auto">
+      <header className="mb-6 lg:mb-8">
+        <p className="text-ink-muted font-mono text-xs mb-1 lg:text-sm">{t("announcements.playerKicker")}</p>
+        <h1 className="font-display font-bold text-3xl lg:text-4xl">{t("announcements.title")}</h1>
       </header>
       <AnnouncementsFeed initial={(announcements as any) ?? []} />
     </main>

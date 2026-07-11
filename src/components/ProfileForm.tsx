@@ -150,8 +150,8 @@ export function ProfileForm({
   }
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5">
+    <div className="space-y-5 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.8fr)] lg:items-start lg:gap-6 lg:space-y-0">
+      <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 lg:p-6">
         <div className="flex items-center gap-4 mb-5">
           <div className="w-16 h-16 rounded-xl overflow-hidden bg-ink-surface2 border border-ink-border flex items-center justify-center text-2xl">
             {avatarUrl ? (
@@ -175,7 +175,7 @@ export function ProfileForm({
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               disabled={!canChangeDisplayName}
-              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors disabled:opacity-60"
+              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors disabled:opacity-60 lg:py-3 lg:text-base"
             />
             <p className="text-xs text-ink-faint mt-1.5">
               {canChangeDisplayName
@@ -193,7 +193,7 @@ export function ProfileForm({
               onChange={(e) => setBio(e.target.value)}
               maxLength={200}
               placeholder={t("profile.bioPlaceholder") || "Write something about yourself..."}
-              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors resize-none h-24 text-sm"
+              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors resize-none h-24 text-sm lg:h-32 lg:py-3 lg:text-base"
             />
             <p className="text-xs text-ink-faint mt-1.5 font-mono text-right">
               {bio.length}/200
@@ -254,7 +254,7 @@ export function ProfileForm({
         </div>
       </section>
 
-      <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5">
+      <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 lg:p-6">
         <h2 className="font-display font-bold text-xl mb-2">{t("profile.securityTitle")}</h2>
         <p className="text-sm text-ink-muted mb-4">{t("profile.securitySubtitle")}</p>
         <button
@@ -267,8 +267,8 @@ export function ProfileForm({
         </button>
       </section>
 
-      {message && <p className="text-sm text-success bg-success/10 border border-success/30 rounded-lg px-3 py-2">{message}</p>}
-      {error && <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">{error}</p>}
+      {message && <p className="text-sm text-success bg-success/10 border border-success/30 rounded-lg px-3 py-2 lg:col-span-2">{message}</p>}
+      {error && <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2 lg:col-span-2">{error}</p>}
     </div>
   );
 }

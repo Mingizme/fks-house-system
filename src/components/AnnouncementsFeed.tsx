@@ -46,16 +46,16 @@ export function AnnouncementsFeed({ initial }: { initial: Announcement[] }) {
   }
 
   return (
-    <div className="space-y-4" role="feed" aria-label={t("announcements.title")}>
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 2xl:grid-cols-3" role="feed" aria-label={t("announcements.title")}>
       {items.map((a) => (
-        <article key={a.id} className="rounded-xl2 border border-ink-border bg-ink-surface p-5">
+        <article key={a.id} className="rounded-xl2 border border-ink-border bg-ink-surface p-5 lg:p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-display font-bold text-lg">{a.title}</h3>
+            <h3 className="font-display font-bold text-lg lg:text-xl">{a.title}</h3>
             <span className="text-xs text-ink-faint font-mono shrink-0">
               {format(new Date(a.created_at), "d MMM, HH:mm", { locale: dateLocale })}
             </span>
           </div>
-          <p className="text-sm text-ink-muted whitespace-pre-wrap leading-relaxed">{a.content}</p>
+          <p className="text-sm text-ink-muted whitespace-pre-wrap leading-relaxed lg:text-base">{a.content}</p>
           <p className="text-xs text-command mt-3 font-mono">
             — {a.admin?.display_name} · {a.admin?.admin_role}
           </p>

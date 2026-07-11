@@ -294,10 +294,10 @@ export function AdminMuteControl({
   }
 
   return (
-    <div className="rounded-lg border border-ink-border bg-ink-surface2 p-3 space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="text-base">{targetEmoji ?? ":)"}</span>
-        <span className="text-sm font-medium truncate flex-1">{targetName}</span>
+    <div className="rounded-lg border border-ink-border bg-ink-surface2 p-3 space-y-2 lg:p-4 lg:space-y-3">
+      <div className="flex items-center gap-2 lg:gap-3">
+        <span className="text-base lg:text-lg">{targetEmoji ?? ":)"}</span>
+        <span className="text-sm font-medium truncate flex-1 lg:text-base">{targetName}</span>
         <PresenceDot userId={targetId} />
       </div>
 
@@ -326,7 +326,7 @@ export function AdminMuteControl({
         disabled={loading}
         maxLength={200}
         placeholder={t("chat.muteReasonPlaceholder")}
-        className="w-full rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-xs outline-none focus:border-command"
+        className="w-full rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-xs outline-none focus:border-command lg:px-3 lg:py-2 lg:text-sm"
       />
 
       <div className="flex gap-2">
@@ -335,7 +335,7 @@ export function AdminMuteControl({
           onChange={(e) => setDuration(Number(e.target.value))}
           disabled={loading || isMuted}
           aria-label={t("chat.muteDurationLabel")}
-          className="flex-1 rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-xs outline-none focus:border-command disabled:opacity-50"
+          className="flex-1 rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-xs outline-none focus:border-command disabled:opacity-50 lg:px-3 lg:py-2 lg:text-sm"
         >
           {DURATION_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>

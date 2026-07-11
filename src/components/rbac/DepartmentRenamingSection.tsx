@@ -22,9 +22,9 @@ export function DepartmentRenamingSection({ departments, canRename }: Props) {
   const { t } = useI18n();
 
   return (
-    <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4">
+    <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4 lg:p-6">
       <div>
-        <h2 className="font-display font-bold text-lg">{t("permissions.departmentsSection")}</h2>
+        <h2 className="font-display font-bold text-lg lg:text-xl">{t("permissions.departmentsSection")}</h2>
         <p className="text-xs text-ink-muted mt-1">{t("permissions.legend")}</p>
       </div>
 
@@ -86,8 +86,8 @@ function DepartmentRow({
   }
 
   return (
-    <div className="rounded-lg border border-ink-border bg-ink-surface2 p-3 space-y-2">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <div className="rounded-lg border border-ink-border bg-ink-surface2 p-3 space-y-2 lg:p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-3">
         <label className="block">
           <span className="text-[10px] font-mono text-ink-muted uppercase">{t("permissions.deptName")}</span>
           <input

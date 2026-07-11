@@ -70,7 +70,7 @@ export function HousePointsBoard({
   );
 
   return (
-    <div className="grid sm:grid-cols-2 gap-4">
+    <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
       {sorted.map((h, i) => {
         const hidden = isScoreHidden(h, hiddenSet);
         const points = pointsValue(h.total_points);
@@ -79,20 +79,20 @@ export function HousePointsBoard({
           <Link
             key={h.house_id}
             href={`${linkPrefix}/${h.slug}`}
-            className="rounded-xl2 glass-card gradient-border p-5 hover:-translate-y-1 hover:shadow-glow transition-all duration-200 group"
+            className="rounded-xl2 glass-card gradient-border p-5 lg:p-6 hover:-translate-y-1 hover:shadow-glow transition-all duration-200 group"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <HouseCrest color={h.color} icon={h.icon} />
                 <div>
-                  <p className="font-display font-bold">{h.name}</p>
+                  <p className="font-display font-bold lg:text-lg">{h.name}</p>
                   <p className="text-xs text-ink-muted font-mono flex items-center gap-1.5">
                     {i === 0 && !hidden && <span>👑</span>}
                     {t("house.rank", { rank: i + 1 })}
                   </p>
                 </div>
               </div>
-              <p className="font-mono text-2xl font-bold tabular-nums group-hover:text-command transition-colors">
+              <p className="font-mono text-2xl lg:text-3xl font-bold tabular-nums group-hover:text-command transition-colors">
                 {hidden ? "•••" : points.toLocaleString()}
               </p>
             </div>

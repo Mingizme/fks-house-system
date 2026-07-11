@@ -35,14 +35,14 @@ export function NewAnnouncementForm({ adminId }: { adminId: string }) {
   }
 
   return (
-    <div className="rounded-xl2 border border-ink-border bg-ink-surface p-5 mb-8">
-      <p className="font-display font-bold mb-4">{t("announcements.newTitle")}</p>
+    <div className="rounded-xl2 border border-ink-border bg-ink-surface p-5 mb-8 lg:mb-0 lg:p-6">
+      <p className="font-display font-bold mb-4 lg:text-xl">{t("announcements.newTitle")}</p>
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder={t("announcements.titlePlaceholder")}
         aria-label={t("announcements.titlePlaceholder")}
-        className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command mb-3"
+        className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command mb-3 lg:py-3 lg:text-base"
       />
       <textarea
         value={content}
@@ -50,13 +50,13 @@ export function NewAnnouncementForm({ adminId }: { adminId: string }) {
         placeholder={t("announcements.contentPlaceholder")}
         aria-label={t("announcements.contentPlaceholder")}
         rows={4}
-        className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command mb-3 resize-none"
+        className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 text-sm outline-none focus:border-command mb-3 resize-none lg:min-h-[180px] lg:py-3 lg:text-base"
       />
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
       <button
         onClick={submit}
         disabled={saving}
-        className="rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold px-5 py-2.5 text-sm"
+        className="rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold px-5 py-2.5 text-sm lg:px-6 lg:py-3 lg:text-base"
       >
         {saving ? t("announcements.posting") : t("announcements.post")}
       </button>

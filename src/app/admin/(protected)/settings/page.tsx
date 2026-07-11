@@ -18,10 +18,10 @@ export default async function AdminSettingsPage() {
     .single();
 
   return (
-    <main className="p-8 max-w-2xl mx-auto animate-fadeRise">
-      <header className="mb-6">
-        <p className="text-ink-muted font-mono text-xs mb-1">{t("profile.kicker")}</p>
-        <h1 className="font-display font-bold text-3xl">{t("profile.title")}</h1>
+    <main className="p-8 lg:p-10 2xl:p-12 w-full max-w-[1800px] mx-auto animate-fadeRise">
+      <header className="mb-6 lg:mb-8">
+        <p className="text-ink-muted font-mono text-xs mb-1 lg:text-sm">{t("profile.kicker")}</p>
+        <h1 className="font-display font-bold text-3xl lg:text-4xl">{t("profile.title")}</h1>
       </header>
       <ProfileForm profile={profile!} emojiOptions={EMOJIS} />
     </main>

@@ -125,20 +125,20 @@ export function AdminDirectoryClient({
   const deptOrder = departments.slice().sort((a, b) => a.sort_order - b.sort_order);
 
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-4">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,0.85fr)] xl:grid-cols-[minmax(0,2.4fr)_minmax(380px,0.9fr)] xl:gap-8">
+      <div className="space-y-4 lg:space-y-5">
         {/* Filter & search */}
         <div className="flex flex-wrap gap-2 items-center">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("messages.searchAdmin")}
-            className="flex-1 min-w-[200px] rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
+            className="flex-1 min-w-[200px] rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command lg:px-4 lg:py-3 lg:text-base"
           />
           <select
             value={activeDept}
             onChange={(e) => setActiveDept(e.target.value)}
-            className="rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
+            className="rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command lg:px-4 lg:py-3 lg:text-base"
           >
             <option value="all">{t("adminDirectory.department")}</option>
             {deptOrder.map((d) => (
@@ -158,7 +158,7 @@ export function AdminDirectoryClient({
               key={dept.id}
               className="rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden"
             >
-              <div className="px-4 py-3 border-b border-ink-border flex items-center justify-between">
+              <div className="px-4 py-3 border-b border-ink-border flex items-center justify-between lg:px-5 lg:py-4">
                 <div>
                   <p className="font-display font-bold">{dept.name}</p>
                   <p className="text-[11px] text-ink-muted font-mono">
@@ -181,9 +181,9 @@ export function AdminDirectoryClient({
                       <button
                         type="button"
                         onClick={() => setSelectedAdmin(a)}
-                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-ink-surface2 transition-colors text-left"
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-ink-surface2 transition-colors text-left lg:px-5 lg:py-4 lg:gap-4"
                       >
-                        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden shrink-0 lg:h-11 lg:w-11 lg:text-xl">
                           {a.avatar_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={a.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -192,7 +192,7 @@ export function AdminDirectoryClient({
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{a.display_name}</p>
+                          <p className="text-sm font-medium truncate lg:text-base">{a.display_name}</p>
                           <p className="text-xs text-ink-faint font-mono truncate">@{a.username}</p>
                         </div>
                         <div className="text-right shrink-0">
@@ -217,7 +217,7 @@ export function AdminDirectoryClient({
           if (playersList.length === 0) return null;
           return (
             <section className="rounded-xl2 border border-ink-border bg-ink-surface overflow-hidden">
-              <div className="px-4 py-3 border-b border-ink-border flex items-center justify-between">
+              <div className="px-4 py-3 border-b border-ink-border flex items-center justify-between lg:px-5 lg:py-4">
                 <div>
                   <p className="font-display font-bold">{t("permissions.playersSection")}</p>
                   <p className="text-[11px] text-ink-muted font-mono">
@@ -234,9 +234,9 @@ export function AdminDirectoryClient({
                       <button
                         type="button"
                         onClick={() => setSelectedAdmin(a)}
-                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-ink-surface2 transition-colors text-left"
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-ink-surface2 transition-colors text-left lg:px-5 lg:py-4 lg:gap-4"
                       >
-                        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden shrink-0 lg:h-11 lg:w-11 lg:text-xl">
                           {a.avatar_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={a.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -245,7 +245,7 @@ export function AdminDirectoryClient({
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{a.display_name}</p>
+                          <p className="text-sm font-medium truncate lg:text-base">{a.display_name}</p>
                           <p className="text-xs text-ink-faint font-mono truncate">@{a.username}</p>
                         </div>
                         <div className="text-right shrink-0">
@@ -272,11 +272,11 @@ export function AdminDirectoryClient({
       </div>
 
       {/* Detail panel */}
-      <aside className="lg:sticky lg:top-6 self-start">
+      <aside className="lg:sticky lg:top-8 self-start">
         {selectedAdmin ? (
-          <div className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4">
+          <div className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4 lg:p-6">
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-ink-surface2 flex items-center justify-center text-2xl overflow-hidden">
+              <div className="w-14 h-14 rounded-full bg-ink-surface2 flex items-center justify-center text-2xl overflow-hidden lg:h-16 lg:w-16">
                 {selectedAdmin.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={selectedAdmin.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -333,7 +333,7 @@ export function AdminDirectoryClient({
             )}
           </div>
         ) : (
-          <div className="rounded-xl2 border border-dashed border-ink-border bg-ink-surface p-5 text-sm text-ink-muted">
+          <div className="rounded-xl2 border border-dashed border-ink-border bg-ink-surface p-5 text-sm text-ink-muted lg:p-6">
             {t("adminDirectory.subtitle")}
           </div>
         )}

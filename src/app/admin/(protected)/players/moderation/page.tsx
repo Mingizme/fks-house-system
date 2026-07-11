@@ -80,14 +80,14 @@ export default async function PlayerModerationPage() {
   ]);
 
   return (
-    <main className="p-8 max-w-6xl mx-auto animate-fadeRise">
+    <main className="p-8 lg:p-10 2xl:p-12 w-full max-w-[1800px] mx-auto animate-fadeRise">
       <header className="mb-8">
-        <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.playersKicker")}</p>
-        <h1 className="font-display font-bold text-3xl">{t("nav.playerModeration")}</h1>
+        <p className="text-ink-muted font-mono text-xs mb-1 lg:text-sm">{t("admin.playersKicker")}</p>
+        <h1 className="font-display font-bold text-3xl lg:text-4xl">{t("nav.playerModeration")}</h1>
         <p className="text-ink-muted text-sm mt-1">{t("admin.moderationSummary", { total: players.length })}</p>
       </header>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 lg:gap-5">
         {players.map((player) => (
           <PlayerModerationCard
             key={player.id}

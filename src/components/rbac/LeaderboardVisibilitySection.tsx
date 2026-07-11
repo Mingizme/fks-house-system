@@ -30,12 +30,12 @@ export function LeaderboardVisibilitySection({ current, canAdmin }: Props) {
   }
 
   return (
-    <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4">
+    <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4 lg:p-6">
       <div>
-        <h2 className="font-display font-bold text-lg">{t("permissions.leaderboardSection")}</h2>
+        <h2 className="font-display font-bold text-lg lg:text-xl">{t("permissions.leaderboardSection")}</h2>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-3 lg:gap-3">
         <button
           type="button"
           onClick={() => set("public")}

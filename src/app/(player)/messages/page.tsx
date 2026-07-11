@@ -51,46 +51,57 @@ export default async function MessagesListPage() {
   ]);
 
   return (
-    <main className="p-6 lg:p-10 max-w-3xl lg:max-w-5xl mx-auto">
+    <main className="w-full max-w-[1800px] mx-auto p-6 lg:p-8 xl:p-10">
       <header className="mb-6 lg:mb-8">
         <p className="text-ink-muted font-mono text-xs mb-1 lg:text-sm">{t("messages.kicker")}</p>
         <h1 className="font-display font-bold text-3xl lg:text-4xl">{t("messages.title")}</h1>
       </header>
 
-      {/* Recent conversations */}
-      {conversations.length > 0 && (
-        <div className="mb-8 space-y-1 lg:mb-10 lg:space-y-3">
-          {conversations.map((c) => (
-            <Link
-              key={c.id}
-              href={`/messages/${c.id}`}
-              className="flex items-center gap-3 p-3 rounded-xl2 hover:bg-ink-surface border border-transparent hover:border-ink-border transition-colors lg:gap-4 lg:p-4"
-            >
-              <span className="w-10 h-10 rounded-full bg-ink-surface2 flex items-center justify-center text-lg shrink-0 lg:h-14 lg:w-14 lg:text-2xl">
-                {c.avatar_emoji ?? "🙂"}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium truncate lg:text-lg">{c.display_name}</p>
-                <p className="text-sm text-ink-muted truncate lg:text-base">{c.last.content}</p>
-              </div>
-              <span className="text-xs text-ink-faint font-mono shrink-0 lg:text-sm">
-                {format(new Date(c.last.created_at), "HH:mm")}
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div
+        className={
+          conversations.length > 0
+            ? "grid min-w-0 gap-8 xl:grid-cols-[minmax(300px,0.8fr)_minmax(0,1.7fr)] 2xl:grid-cols-[minmax(360px,0.7fr)_minmax(0,2fr)]"
+            : "min-w-0"
+        }
+      >
+        {/* Recent conversations */}
+        {conversations.length > 0 && (
+          <section className="min-w-0">
+            <h2 className="font-display font-bold text-lg mb-3 lg:mb-5 lg:text-2xl">{t("messages.recent")}</h2>
+            <div className="space-y-1 lg:max-h-[calc(100vh-220px)] lg:space-y-3 lg:overflow-y-auto lg:pr-2">
+              {conversations.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/messages/${c.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl2 hover:bg-ink-surface border border-transparent hover:border-ink-border transition-colors lg:gap-4 lg:p-4"
+                >
+                  <span className="w-10 h-10 rounded-full bg-ink-surface2 flex items-center justify-center text-lg shrink-0 lg:h-14 lg:w-14 lg:text-2xl">
+                    {c.avatar_emoji ?? "🙂"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate lg:text-lg">{c.display_name}</p>
+                    <p className="text-sm text-ink-muted truncate lg:text-base">{c.last.content}</p>
+                  </div>
+                  <span className="text-xs text-ink-faint font-mono shrink-0 lg:text-sm">
+                    {format(new Date(c.last.created_at), "HH:mm")}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* All Players section */}
-      <section>
-        <h2 className="font-display font-bold text-lg mb-3 lg:mb-5 lg:text-2xl">{t("messages.allPlayers")}</h2>
-        <PlayerList
-          players={(allProfiles ?? []) as any}
-          houses={(houses ?? []) as any}
-          basePath="/messages"
-          currentUserId={user!.id}
-        />
-      </section>
+        {/* All Players section */}
+        <section className="min-w-0">
+          <h2 className="font-display font-bold text-lg mb-3 lg:mb-5 lg:text-2xl">{t("messages.allPlayers")}</h2>
+          <PlayerList
+            players={(allProfiles ?? []) as any}
+            houses={(houses ?? []) as any}
+            basePath="/messages"
+            currentUserId={user!.id}
+          />
+        </section>
+      </div>
     </main>
   );
 }

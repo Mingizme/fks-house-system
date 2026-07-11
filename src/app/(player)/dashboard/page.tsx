@@ -50,12 +50,12 @@ export default async function DashboardPage() {
   const house = profile?.house ? (Array.isArray(profile.house) ? profile.house[0] : profile.house) : null;
 
   return (
-    <main className="p-8 max-w-5xl mx-auto animate-fadeRise">
-      <header className="mb-8 relative overflow-hidden rounded-xl2 glass-card p-6">
+    <main className="p-8 lg:p-10 2xl:p-12 w-full max-w-[1800px] mx-auto animate-fadeRise">
+      <header className="mb-8 relative overflow-hidden rounded-xl2 glass-card p-6 lg:p-8">
         <div className="absolute -top-16 -right-10 w-56 h-56 rounded-full bg-command/20 blur-3xl pointer-events-none" />
         <div className="relative">
-          <p className="text-ink-muted font-mono text-xs mb-1 tracking-wider uppercase">{t("dashboard.kicker")}</p>
-          <h1 className="font-display font-bold text-3xl">
+          <p className="text-ink-muted font-mono text-xs mb-1 tracking-wider uppercase lg:text-sm">{t("dashboard.kicker")}</p>
+          <h1 className="font-display font-bold text-3xl lg:text-4xl">
             {t("dashboard.greeting", { name: profile?.display_name?.split(" ").pop() ?? t("common.you") })}
           </h1>
           {!house && (
@@ -90,12 +90,12 @@ export default async function DashboardPage() {
             {t("dashboard.viewAll")}
           </Link>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-3 lg:grid lg:grid-cols-2 2xl:grid-cols-3 lg:gap-4 lg:space-y-0">
           {(announcements ?? []).length === 0 && (
             <p className="text-sm text-ink-muted">{t("dashboard.noAnnouncements")}</p>
           )}
           {(announcements ?? []).map((a: any) => (
-            <div key={a.id} className="rounded-xl2 glass-card gradient-border p-4 transition-transform duration-200 hover:-translate-y-0.5">
+            <div key={a.id} className="rounded-xl2 glass-card gradient-border p-4 lg:p-5 transition-transform duration-200 hover:-translate-y-0.5">
               <div className="flex items-center justify-between mb-1">
                 <p className="font-semibold">{a.title}</p>
                 <p className="text-xs text-ink-faint font-mono">

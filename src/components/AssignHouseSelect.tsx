@@ -36,13 +36,13 @@ export function AssignHouseSelect({
   }
 
   return (
-    <div className="inline-flex items-center gap-2">
+    <div className="inline-flex items-center gap-2 lg:w-full">
       <select
         value={value}
         onChange={onChange}
         disabled={saving}
         aria-label={t("admin.houseUnassignedOption")}
-        className={`rounded-lg bg-ink-surface2 border px-3 py-1.5 text-sm outline-none focus:border-command transition-colors disabled:opacity-50 ${
+        className={`rounded-lg bg-ink-surface2 border px-3 py-1.5 text-sm outline-none focus:border-command transition-colors disabled:opacity-50 lg:w-full lg:min-w-[280px] lg:px-4 lg:py-2.5 lg:text-base ${
           hasError ? "border-danger" : "border-ink-border"
         }`}
       >

@@ -37,19 +37,19 @@ export function PointsLedger({ initial }: { initial: PointTransaction[] }) {
   if (items.length === 0) return <p className="text-sm text-ink-muted">{t("points.empty")}</p>;
 
   return (
-    <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border">
+    <div className="rounded-xl2 border border-ink-border bg-ink-surface divide-y divide-ink-border lg:grid lg:grid-cols-2 lg:gap-4 lg:border-0 lg:bg-transparent lg:divide-y-0 2xl:grid-cols-3">
       {items.map((tx) => (
-        <div key={tx.id} className="p-4 flex items-center gap-3">
+        <div key={tx.id} className="p-4 flex items-center gap-3 lg:rounded-xl2 lg:border lg:border-ink-border lg:bg-ink-surface lg:p-5 lg:gap-4">
           {tx.house && <HouseCrest color={tx.house.color} icon={tx.house.icon} size="sm" />}
           <div className="min-w-0 flex-1">
-            <p className="text-sm">
+            <p className="text-sm lg:text-base">
               <span className="font-semibold">{tx.house?.name}</span> — {tx.reason}
             </p>
-            <p className="text-xs text-ink-faint font-mono">
+            <p className="text-xs text-ink-faint font-mono lg:text-sm">
               {tx.admin?.display_name} ({tx.admin?.admin_role}) · {format(new Date(tx.created_at), "d MMM HH:mm", { locale: dateLocale })}
             </p>
           </div>
-          <span className={`font-mono font-bold shrink-0 ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
+          <span className={`font-mono font-bold shrink-0 lg:text-lg ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
             {formatPoints(tx.points)}
           </span>
         </div>

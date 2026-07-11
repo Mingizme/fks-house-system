@@ -33,13 +33,13 @@ export function ScoreVisibilitySection({ houses, canAdminBlock, blockedMasters }
   const { t } = useI18n();
 
   return (
-    <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4">
+    <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4 lg:p-6">
       <div>
-        <h2 className="font-display font-bold text-lg">{t("permissions.scoreVisibilitySection")}</h2>
+        <h2 className="font-display font-bold text-lg lg:text-xl">{t("permissions.scoreVisibilitySection")}</h2>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm lg:text-base">
           <thead>
             <tr className="text-left text-[10px] font-mono text-ink-muted uppercase">
               <th className="py-2 pr-3">{t("permissions.scoreVisibilityHouse")}</th>
@@ -62,9 +62,9 @@ export function ScoreVisibilitySection({ houses, canAdminBlock, blockedMasters }
         {blockedMasters.length === 0 ? (
           <p className="text-xs text-ink-muted">{t("permissions.noBlockedMasters")}</p>
         ) : (
-          <ul className="rounded-lg border border-ink-border divide-y divide-ink-border overflow-hidden">
+          <ul className="rounded-lg border border-ink-border divide-y divide-ink-border overflow-hidden lg:grid lg:grid-cols-2 lg:divide-y-0 lg:gap-3 lg:border-0">
             {blockedMasters.map((b) => (
-              <li key={b.master_id} className="p-3 flex items-center gap-3 bg-ink-surface2">
+              <li key={b.master_id} className="p-3 flex items-center gap-3 bg-ink-surface2 lg:rounded-lg lg:border lg:border-ink-border">
                 <span className="text-base">{b.master_emoji ?? "🙂"}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate">{b.master_display_name ?? "—"}</p>
