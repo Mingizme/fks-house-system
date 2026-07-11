@@ -73,16 +73,16 @@ export function AdminSidebar({
   const navLinks = (onNav?: () => void, variant: "desktop" | "mobile" = "desktop") => {
     const mainLinkClass =
       variant === "desktop"
-        ? "flex min-h-16 items-center gap-6 rounded-xl px-6 py-4 text-xl font-semibold leading-8 transition-all duration-200"
+        ? "flex min-h-12 items-center gap-4 rounded-xl px-4 py-3.5 text-base leading-6 transition-all duration-200"
         : "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200";
     const houseLinkClass =
       variant === "desktop"
-        ? "flex min-h-16 items-center gap-6 rounded-xl px-6 py-4 text-xl font-semibold leading-8 transition-all duration-200"
+        ? "flex min-h-11 items-center gap-4 rounded-xl px-4 py-3 text-base leading-6 transition-all duration-200"
         : "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200";
-    const iconClass = variant === "desktop" ? "w-10 text-center text-3xl" : "w-4 text-center";
+    const iconClass = variant === "desktop" ? "w-6 text-center text-lg" : "w-4 text-center";
     const sectionClass =
       variant === "desktop"
-        ? "px-6 pt-8 pb-2 text-sm font-mono text-ink-faint"
+        ? "px-4 pt-6 pb-1.5 text-xs font-mono text-ink-faint"
         : "px-3 pt-5 pb-1 text-[10px] font-mono text-ink-faint";
 
     return (
@@ -129,7 +129,7 @@ export function AdminSidebar({
   return (
     <>
       {/* ===== Desktop sidebar (giữ nguyên) ===== */}
-      <aside className="hidden lg:flex w-96 shrink-0 border-r border-ink-border bg-ink-surface/60 flex-col h-screen sticky top-0 z-40">
+      <aside className="hidden lg:flex w-72 shrink-0 border-r border-ink-border bg-ink-surface/60 flex-col h-screen sticky top-0 z-40">
         <div className="p-5 border-b border-ink-border">
           <div className="flex items-center gap-2 font-display font-bold text-sm tracking-[0.18em]">
             <span className="text-gradient">FKS SYSTEM</span>
@@ -138,7 +138,7 @@ export function AdminSidebar({
           <LanguageSwitcher className="mt-4" />
         </div>
 
-        <nav className="flex-1 space-y-4 px-6 pt-6 overflow-y-auto" aria-label="Admin navigation">
+        <nav className="flex-1 space-y-2 px-4 pt-4 overflow-y-auto" aria-label="Admin navigation">
           {navLinks()}
         </nav>
 

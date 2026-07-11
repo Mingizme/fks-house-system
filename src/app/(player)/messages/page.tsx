@@ -51,29 +51,29 @@ export default async function MessagesListPage() {
   ]);
 
   return (
-    <main className="p-8 max-w-3xl mx-auto">
-      <header className="mb-6">
-        <p className="text-ink-muted font-mono text-xs mb-1">{t("messages.kicker")}</p>
-        <h1 className="font-display font-bold text-3xl">{t("messages.title")}</h1>
+    <main className="p-6 lg:p-10 max-w-3xl lg:max-w-5xl mx-auto">
+      <header className="mb-6 lg:mb-8">
+        <p className="text-ink-muted font-mono text-xs mb-1 lg:text-sm">{t("messages.kicker")}</p>
+        <h1 className="font-display font-bold text-3xl lg:text-4xl">{t("messages.title")}</h1>
       </header>
 
       {/* Recent conversations */}
       {conversations.length > 0 && (
-        <div className="mb-8 space-y-1">
+        <div className="mb-8 space-y-1 lg:mb-10 lg:space-y-3">
           {conversations.map((c) => (
             <Link
               key={c.id}
               href={`/messages/${c.id}`}
-              className="flex items-center gap-3 p-3 rounded-xl2 hover:bg-ink-surface border border-transparent hover:border-ink-border transition-colors"
+              className="flex items-center gap-3 p-3 rounded-xl2 hover:bg-ink-surface border border-transparent hover:border-ink-border transition-colors lg:gap-4 lg:p-4"
             >
-              <span className="w-10 h-10 rounded-full bg-ink-surface2 flex items-center justify-center text-lg shrink-0">
+              <span className="w-10 h-10 rounded-full bg-ink-surface2 flex items-center justify-center text-lg shrink-0 lg:h-14 lg:w-14 lg:text-2xl">
                 {c.avatar_emoji ?? "🙂"}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-medium truncate">{c.display_name}</p>
-                <p className="text-sm text-ink-muted truncate">{c.last.content}</p>
+                <p className="font-medium truncate lg:text-lg">{c.display_name}</p>
+                <p className="text-sm text-ink-muted truncate lg:text-base">{c.last.content}</p>
               </div>
-              <span className="text-xs text-ink-faint font-mono shrink-0">
+              <span className="text-xs text-ink-faint font-mono shrink-0 lg:text-sm">
                 {format(new Date(c.last.created_at), "HH:mm")}
               </span>
             </Link>
@@ -83,7 +83,7 @@ export default async function MessagesListPage() {
 
       {/* All Players section */}
       <section>
-        <h2 className="font-display font-bold text-lg mb-3">{t("messages.allPlayers")}</h2>
+        <h2 className="font-display font-bold text-lg mb-3 lg:mb-5 lg:text-2xl">{t("messages.allPlayers")}</h2>
         <PlayerList
           players={(allProfiles ?? []) as any}
           houses={(houses ?? []) as any}

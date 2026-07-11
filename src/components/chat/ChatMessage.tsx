@@ -244,7 +244,7 @@ export default function ChatMessage({
           highlighted ? "bg-command/10" : ""
         }`}
       >
-        <div className={`px-3 py-1.5 rounded-xl bg-ink-surface2/50 text-ink-muted text-sm italic transition-shadow duration-300 ${
+        <div className={`px-3 py-1.5 rounded-xl bg-ink-surface2/50 text-ink-muted text-sm italic transition-shadow duration-300 lg:px-4 lg:py-2 lg:text-base ${
           highlighted ? "ring-2 ring-command/70" : ""
         }`}>
           {t("chat.deleted")}
@@ -256,18 +256,18 @@ export default function ChatMessage({
   return (
     <div
       data-chat-message-id={id}
-      className={`group flex ${isMine ? "justify-end" : "justify-start"} scroll-mt-24 px-4 py-0.5 transition-colors duration-300 ${
+      className={`group flex ${isMine ? "justify-end" : "justify-start"} scroll-mt-24 px-4 py-0.5 transition-colors duration-300 lg:px-6 lg:py-1 ${
         highlighted ? "bg-command/10" : ""
       }`}
     >
       <div 
-        className={`relative max-w-[88%] sm:max-w-[70%] ${isMine ? "items-end" : "items-start"} flex flex-col px-3 py-2 -mx-3 -my-2 rounded-lg`}
+        className={`relative max-w-[88%] sm:max-w-[70%] lg:max-w-[68%] ${isMine ? "items-end" : "items-start"} flex flex-col px-3 py-2 -mx-3 -my-2 rounded-lg`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {/* Sender name */}
         {showSender && !isMine && senderName && (
-          <div className="text-xs font-semibold text-ink-muted mb-0.5 px-1">
+          <div className="text-xs font-semibold text-ink-muted mb-0.5 px-1 lg:text-sm">
             {profileBasePath ? (
               <Link
                 href={`${profileBasePath}/${senderId}`}
@@ -276,7 +276,7 @@ export default function ChatMessage({
                 {senderEmoji && <span className="mr-1">{senderEmoji}</span>}
                 {senderName}
                 {senderRole && (
-                  <span className="ml-1 text-[10px] font-normal opacity-60">
+                  <span className="ml-1 text-[10px] font-normal opacity-60 lg:text-xs">
                     ({senderRole})
                   </span>
                 )}
@@ -286,7 +286,7 @@ export default function ChatMessage({
                 {senderEmoji && <span className="mr-1">{senderEmoji}</span>}
                 {senderName}
                 {senderRole && (
-                  <span className="ml-1 text-[10px] font-normal opacity-60">
+                  <span className="ml-1 text-[10px] font-normal opacity-60 lg:text-xs">
                     ({senderRole})
                   </span>
                 )}
@@ -300,7 +300,7 @@ export default function ChatMessage({
           <button
             type="button"
             onClick={() => onJumpToMessage?.(replyTo.id)}
-            className={`mb-1 max-w-full rounded-md border-l-2 border-command/50 px-2 py-1 text-left text-xs text-ink-muted transition-colors ${
+            className={`mb-1 max-w-full rounded-md border-l-2 border-command/50 px-2 py-1 text-left text-xs text-ink-muted transition-colors lg:px-3 lg:py-1.5 lg:text-sm ${
               onJumpToMessage ? "cursor-pointer hover:bg-ink-surface2/80 hover:text-ink-text" : "cursor-default"
             }`}
             title={replyTo.content}
@@ -323,7 +323,7 @@ export default function ChatMessage({
         >
           {/* Action bar */}
           <div
-            className={`hidden items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest backdrop-blur animate-in fade-in duration-100 sm:absolute sm:top-0 sm:z-[99] ${
+            className={`hidden items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest backdrop-blur animate-in fade-in duration-100 lg:gap-1 lg:p-1 sm:absolute sm:top-0 sm:z-[99] ${
               hovered || showQuickReact ? "sm:flex" : "sm:hidden"
             } ${
               isMine
@@ -336,7 +336,7 @@ export default function ChatMessage({
               <button
                 type="button"
                 onClick={() => setShowQuickReact(!showQuickReact)}
-                className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
+                className="w-8 h-8 sm:w-7 sm:h-7 lg:h-8 lg:w-8 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
                 title={t("chat.react")}
               >
                 😀
@@ -375,7 +375,7 @@ export default function ChatMessage({
             <button
               type="button"
               onClick={() => onReply(id)}
-              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
+              className="w-8 h-8 sm:w-7 sm:h-7 lg:h-8 lg:w-8 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
               title={t("chat.reply")}
             >
               ↩️
@@ -386,7 +386,7 @@ export default function ChatMessage({
               <button
                 type="button"
                 onClick={() => onEdit(id, content)}
-                className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
+                className="w-8 h-8 sm:w-7 sm:h-7 lg:h-8 lg:w-8 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
                 title={t("chat.edit")}
               >
                 ✏️
@@ -398,7 +398,7 @@ export default function ChatMessage({
               <button
                 type="button"
                 onClick={() => onDelete(id)}
-                className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
+                className="w-8 h-8 sm:w-7 sm:h-7 lg:h-8 lg:w-8 flex items-center justify-center rounded hover:bg-ink-border transition-colors text-sm cursor-pointer"
                 title={t("chat.delete")}
               >
                 🗑️
@@ -408,7 +408,7 @@ export default function ChatMessage({
 
           {/* Bubble */}
           <div
-            className={`order-1 select-none rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-300 sm:select-text ${
+            className={`order-1 select-none rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-300 lg:px-5 lg:py-3 lg:text-base lg:leading-7 sm:select-text ${
               highlighted ? "ring-2 ring-command/70 ring-offset-2 ring-offset-ink-surface" : ""
             } ${
               isMine
@@ -420,18 +420,18 @@ export default function ChatMessage({
               <button
                 type="button"
                 onClick={() => setLightboxOpen(true)}
-                className="mb-2 block max-w-[75vw] sm:max-w-sm cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
+                className="mb-2 block max-w-[75vw] sm:max-w-sm lg:max-w-md cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
               >
-                <img src={mediaUrl} alt={t("chat.attachmentAlt")} className="w-full h-auto object-cover max-h-60" />
+                <img src={mediaUrl} alt={t("chat.attachmentAlt")} className="w-full h-auto object-cover max-h-60 lg:max-h-80" />
               </button>
             )}
             {mediaUrl && mediaType === "video" && (
               <button
                 type="button"
                 onClick={() => setLightboxOpen(true)}
-                className="relative mb-2 block max-w-[75vw] sm:max-w-sm cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
+                className="relative mb-2 block max-w-[75vw] sm:max-w-sm lg:max-w-md cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
               >
-                <video src={mediaUrl} muted playsInline className="w-full h-auto max-h-60 pointer-events-none" />
+                <video src={mediaUrl} muted playsInline className="w-full h-auto max-h-60 lg:max-h-80 pointer-events-none" />
                 <span className="absolute inset-0 flex items-center justify-center">
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-2xl text-white">▶</span>
                 </span>
@@ -439,7 +439,7 @@ export default function ChatMessage({
             )}
             {content}
             {(showTimestamp || editedAt) && (
-              <span className="inline-flex items-center ml-2 gap-1 text-[10px] opacity-50 align-bottom">
+              <span className="inline-flex items-center ml-2 gap-1 text-[10px] opacity-50 align-bottom lg:text-xs">
                 {showTimestamp && formattedTime}
                 {editedAt && <span>{t("chat.edited")}</span>}
               </span>
@@ -449,7 +449,7 @@ export default function ChatMessage({
 
         {/* Reactions */}
         {reactions.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1 px-1">
+          <div className="flex flex-wrap gap-1 mt-1 px-1 lg:gap-1.5">
             {reactions.map((reaction) => {
               const hasReacted = reaction.userIds.includes(currentUserId);
               return (
@@ -457,7 +457,7 @@ export default function ChatMessage({
                   key={reaction.emoji}
                   type="button"
                   onClick={() => handleReactionClick(reaction.emoji)}
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border cursor-pointer transition-colors ${
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border cursor-pointer transition-colors lg:px-2.5 lg:py-1 lg:text-sm ${
                     hasReacted
                       ? "border-command bg-command/10 text-command"
                       : "border-ink-border hover:border-command/50"

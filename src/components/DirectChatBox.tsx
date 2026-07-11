@@ -345,7 +345,7 @@ export function DirectChatBox({
     <button
       onClick={toggleBlock}
       aria-label={blocked ? t("messages.unblock") : t("messages.block")}
-      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors shrink-0 ${
+      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors shrink-0 lg:px-4 lg:py-2 lg:text-sm ${
         blocked
           ? "border-danger/40 text-danger bg-danger/10 hover:bg-danger/15"
           : "border-ink-border text-ink-muted hover:text-danger hover:border-danger/40"
@@ -357,8 +357,8 @@ export function DirectChatBox({
 
   const messageList = (
     <>
-      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-6 sm:p-4 sm:pb-10 space-y-3" role="log" aria-live="polite">
-        {messages.length === 0 && <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noDirectMessages")}</p>}
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-6 sm:p-4 sm:pb-10 space-y-3 lg:p-6 lg:pb-12 lg:space-y-4" role="log" aria-live="polite">
+        {messages.length === 0 && <p className="text-sm text-ink-muted text-center mt-8 lg:text-base">{t("messages.noDirectMessages")}</p>}
         {messages.map((m, index) => {
           const mine = m.sender_id === currentUserId;
           const msgReactions = reactions[m.id] || [];
@@ -403,7 +403,7 @@ export function DirectChatBox({
 
       {error && (
         <div className="px-3 pb-1">
-          <p className="text-xs text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-1.5">{error}</p>
+          <p className="text-xs text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-1.5 lg:text-sm">{error}</p>
         </div>
       )}
 
@@ -484,28 +484,28 @@ export function DirectChatBox({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">
-      <div className="flex items-center justify-between gap-3 border-b border-ink-border bg-ink-surface px-3 py-3 sm:p-4">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center justify-between gap-3 border-b border-ink-border bg-ink-surface px-3 py-3 sm:p-4 lg:gap-4 lg:px-6 lg:py-4">
+        <div className="flex items-center gap-3 min-w-0 lg:gap-4">
           <Link
             href={backHref}
-            className="text-ink-muted hover:text-ink-text text-lg pr-1"
+            className="text-ink-muted hover:text-ink-text text-lg pr-1 lg:pr-2 lg:text-2xl"
             title={t("common.back")}
           >
             ←
           </Link>
           <Link
             href={`${profileBasePath}/${otherUser.id}`}
-            className="flex min-w-0 items-center gap-2 rounded-lg pr-2 hover:text-command transition-colors"
+            className="flex min-w-0 items-center gap-2 rounded-lg pr-2 hover:text-command transition-colors lg:gap-3"
             aria-label={t("member.viewProfile")}
           >
-            <span className="w-7 h-7 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-lg overflow-hidden shrink-0">
+            <span className="w-7 h-7 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-lg overflow-hidden shrink-0 lg:h-11 lg:w-11 lg:text-2xl">
               {otherUser.avatar_url ? (
                 <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
               ) : (
                 otherUser.avatar_emoji ?? "\u{1F642}"
               )}
             </span>
-            <span className="font-semibold truncate">{otherUser.display_name}</span>
+            <span className="font-semibold truncate lg:text-xl">{otherUser.display_name}</span>
           </Link>
         </div>
         {blockButton}
