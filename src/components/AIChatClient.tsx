@@ -71,6 +71,7 @@ export function AIChatClient({ audience }: { audience: Audience }) {
     setInput("");
     setError(null);
     setLoading(true);
+    let assistantId: string | null = null;
 
     try {
       const response = await fetch("/api/ai-chat", {
@@ -79,20 +80,53 @@ export function AIChatClient({ audience }: { audience: Audience }) {
         body: JSON.stringify({ messages: nextMessages }),
       });
 
-      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.error || "AI request failed.");
+        const contentType = response.headers.get("Content-Type") ?? "";
+        const errorBody = contentType.includes("application/json")
+          ? await response.json().catch(() => null)
+          : null;
+        throw new Error(errorBody?.error || "AI request failed.");
       }
 
+      if (!response.body) {
+        throw new Error("AI response stream is empty.");
+      }
+
+      const streamingId = crypto.randomUUID();
+      assistantId = streamingId;
       setMessages((current) => [
         ...current,
         {
-          id: crypto.randomUUID(),
+          id: streamingId,
           role: "assistant",
-          content: data.reply,
+          content: "",
         },
       ]);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let answer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        answer += decoder.decode(value, { stream: true });
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === streamingId ? { ...message, content: answer } : message
+          )
+        );
+      }
+
+      answer += decoder.decode();
+      if (!answer.trim()) {
+        throw new Error("AI returned an empty response.");
+      }
     } catch (err) {
+      if (assistantId) {
+        setMessages((current) => current.filter((message) => message.id !== assistantId));
+      }
       setError(err instanceof Error ? err.message : "AI request failed.");
     } finally {
       setLoading(false);
@@ -155,12 +189,12 @@ export function AIChatClient({ audience }: { audience: Audience }) {
                     : "rounded-bl-md border border-ink-border bg-ink-surface2 text-ink-text"
                 )}
               >
-                {message.content}
+                {message.content || "Thinking..."}
               </div>
             </div>
           ))}
 
-          {loading && (
+          {loading && messages[messages.length - 1]?.role !== "assistant" && (
             <div className="flex justify-start">
               <div className="rounded-2xl rounded-bl-md border border-ink-border bg-ink-surface2 px-4 py-3 text-sm text-ink-muted">
                 Thinking...
