@@ -32,6 +32,7 @@ interface ChatMessageProps {
   mediaUrl?: string | null;
   mediaType?: 'image' | 'video' | null;
   highlighted?: boolean;
+  showTimestamp?: boolean;
   onReply: (messageId: string) => void;
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
@@ -61,6 +62,7 @@ export default function ChatMessage({
   mediaUrl,
   mediaType,
   highlighted,
+  showTimestamp = true,
   onReply,
   onEdit,
   onDelete,
@@ -129,15 +131,25 @@ export default function ChatMessage({
     setActionSheetOpen(true);
   }, [closeHover]);
 
+  const clearTextSelection = useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.getSelection()?.removeAllRanges();
+  }, []);
+
   const handleTouchStart = () => {
+    clearTextSelection();
     clearLongPressTimer();
-    longPressTimeoutRef.current = setTimeout(openActionSheet, 520);
+    longPressTimeoutRef.current = setTimeout(() => {
+      clearTextSelection();
+      openActionSheet();
+    }, 520);
   };
 
   const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>) => {
     if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
       event.preventDefault();
       clearLongPressTimer();
+      clearTextSelection();
       openActionSheet();
     }
   };
@@ -302,7 +314,7 @@ export default function ChatMessage({
 
         {/* Message bubble with hover actions */}
         <div
-          className="relative flex flex-col"
+          className="relative flex select-none flex-col [-webkit-touch-callout:none] sm:select-text"
           onTouchStart={handleTouchStart}
           onTouchEnd={clearLongPressTimer}
           onTouchCancel={clearLongPressTimer}
@@ -396,7 +408,7 @@ export default function ChatMessage({
 
           {/* Bubble */}
           <div
-            className={`order-1 rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-300 ${
+            className={`order-1 select-none rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-300 sm:select-text ${
               highlighted ? "ring-2 ring-command/70 ring-offset-2 ring-offset-ink-surface" : ""
             } ${
               isMine
@@ -426,10 +438,12 @@ export default function ChatMessage({
               </button>
             )}
             {content}
-            <span className="inline-flex items-center ml-2 gap-1 text-[10px] opacity-50 align-bottom">
-              {formattedTime}
-              {editedAt && <span>{t("chat.edited")}</span>}
-            </span>
+            {(showTimestamp || editedAt) && (
+              <span className="inline-flex items-center ml-2 gap-1 text-[10px] opacity-50 align-bottom">
+                {showTimestamp && formattedTime}
+                {editedAt && <span>{t("chat.edited")}</span>}
+              </span>
+            )}
           </div>
         </div>
 

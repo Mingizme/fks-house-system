@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { Fragment, useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { AdminMessage, UserType, AdminRole } from "@/lib/types";
 import { useI18n } from "@/components/I18nProvider";
 import ChatMessage from "./chat/ChatMessage";
+import ChatTimeDivider from "./chat/ChatTimeDivider";
 import ChatInput from "./chat/ChatInput";
 import EmojiPicker from "./chat/EmojiPicker";
+import { shouldShowMessageTimeDivider } from "./chat/timeDividers";
 
 interface SenderInfo {
   display_name: string;
@@ -343,42 +345,46 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
             {t("messages.noHouseMessages")}
           </p>
         )}
-        {messages.map((m) => {
+        {messages.map((m, index) => {
           const isMine = m.sender_id === currentUserId;
           const senderInfo = m.sender as SenderInfo | undefined;
           const msgReactions = reactions[m.id] || [];
           const replyMsg = m.reply_to_id ? messages.find((r) => r.id === m.reply_to_id) : null;
           const replySender = replyMsg?.sender as SenderInfo | undefined;
           const replyContent = replyMsg ? formatReplyContent(replyMsg) : "";
+          const showTimeDivider = shouldShowMessageTimeDivider(m.created_at, messages[index - 1]?.created_at);
           return (
-            <ChatMessage
-              key={m.id}
-              id={m.id}
-              content={m.content}
-              senderId={m.sender_id}
-              senderName={senderInfo?.display_name}
-              senderEmoji={senderInfo?.avatar_emoji}
-              senderAvatarUrl={senderInfo?.avatar_url}
-              senderRole={senderInfo?.admin_role}
-              currentUserId={currentUserId}
-              timestamp={m.created_at}
-              editedAt={m.edited_at}
-              deletedAt={m.deleted_at}
-              replyTo={replyMsg ? { id: replyMsg.id, content: replyContent, senderName: replySender?.display_name || "Admin" } : null}
-              reactions={msgReactions}
-              profileBasePath="/admin/profile"
-              showSender={!isMine}
-              mediaUrl={m.media_url}
-              mediaType={m.media_type}
-              highlighted={highlightedMessageId === m.id}
-              onReply={handleReply}
-              onEdit={handleStartEdit}
-              onDelete={handleDelete}
-              onReact={handleReact}
-              onRemoveReact={handleRemoveReact}
-              onOpenFullPicker={handleOpenFullPicker}
-              onJumpToMessage={handleJumpToMessage}
-            />
+            <Fragment key={m.id}>
+              {showTimeDivider && <ChatTimeDivider timestamp={m.created_at} />}
+              <ChatMessage
+                id={m.id}
+                content={m.content}
+                senderId={m.sender_id}
+                senderName={senderInfo?.display_name}
+                senderEmoji={senderInfo?.avatar_emoji}
+                senderAvatarUrl={senderInfo?.avatar_url}
+                senderRole={senderInfo?.admin_role}
+                currentUserId={currentUserId}
+                timestamp={m.created_at}
+                editedAt={m.edited_at}
+                deletedAt={m.deleted_at}
+                replyTo={replyMsg ? { id: replyMsg.id, content: replyContent, senderName: replySender?.display_name || "Admin" } : null}
+                reactions={msgReactions}
+                profileBasePath="/admin/profile"
+                showSender={!isMine}
+                showTimestamp={false}
+                mediaUrl={m.media_url}
+                mediaType={m.media_type}
+                highlighted={highlightedMessageId === m.id}
+                onReply={handleReply}
+                onEdit={handleStartEdit}
+                onDelete={handleDelete}
+                onReact={handleReact}
+                onRemoveReact={handleRemoveReact}
+                onOpenFullPicker={handleOpenFullPicker}
+                onJumpToMessage={handleJumpToMessage}
+              />
+            </Fragment>
           );
         })}
         <div ref={bottomRef} />

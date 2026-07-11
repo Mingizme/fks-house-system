@@ -61,7 +61,7 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
   return (
     <>
       {/* ===== Desktop sidebar (giữ nguyên) ===== */}
-      <aside className="hidden lg:flex w-64 shrink-0 border-r border-ink-border bg-ink-surface/60 flex-col h-screen sticky top-0 z-40">
+      <aside className="hidden lg:flex w-72 shrink-0 border-r border-ink-border bg-ink-surface/60 flex-col h-screen sticky top-0 z-40">
         <div className="p-5 border-b border-ink-border">
           <div className="flex items-center gap-2 font-display font-bold text-sm tracking-[0.18em]">
             <span className="text-gradient">FKS SYSTEM</span>
@@ -86,19 +86,19 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
           </div>
         )}
 
-        <nav className="flex-1 space-y-1 px-3" aria-label="Player navigation">
+        <nav className="flex-1 space-y-2 px-4" aria-label="Player navigation">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
+                "flex min-h-12 items-center gap-4 rounded-xl px-4 py-3.5 text-base leading-6 transition-all duration-200",
                 isActive(item.href)
                   ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]"
                   : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
               )}
             >
-              <span className="w-4 text-center">{item.icon}</span>
+              <span className="w-6 text-center text-lg">{item.icon}</span>
               {t(item.labelKey)}
             </Link>
           ))}
