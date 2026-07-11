@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { AdminGroupChat } from "@/components/AdminGroupChat";
-import { AdminChatSidePanel } from "@/components/AdminChatSidePanel";
+import { AdminChatWorkspace } from "@/components/AdminChatWorkspace";
 import { getServerTranslator } from "@/lib/i18n-server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -36,30 +35,18 @@ export default async function AdminChatPage() {
   ]);
 
   return (
-    <main className="p-8 max-w-6xl mx-auto animate-fadeRise">
-      <header className="mb-6">
+    <main className="w-full p-6 lg:p-8 animate-fadeRise">
+      <div className="hidden lg:block mb-6">
         <p className="text-ink-muted font-mono text-xs mb-1">{t("admin.groupChatKicker")}</p>
         <h1 className="font-display font-bold text-3xl">{t("nav.adminGroupChat")}</h1>
-      </header>
-
-      <div className="flex flex-col gap-4 xl:flex-row">
-        <div className="h-[70svh] min-h-[420px] min-w-0 flex-1 xl:h-[calc(100vh-210px)] xl:min-h-[620px]">
-          <AdminGroupChat
-            currentUserId={user.id}
-            initialMessages={(messages as any) ?? []}
-          />
-        </div>
-
-        <div className="h-[380px] w-full shrink-0 xl:h-[calc(100vh-210px)] xl:min-h-[620px] xl:w-72">
-          <AdminChatSidePanel
-            admins={(admins as any) ?? []}
-            departments={(departments as any) ?? []}
-            messagesBasePath="/admin/messages"
-            profileBasePath="/admin/profile"
-            currentUserId={user.id}
-          />
-        </div>
       </div>
+
+      <AdminChatWorkspace
+        currentUserId={user.id}
+        initialMessages={(messages as any) ?? []}
+        admins={(admins as any) ?? []}
+        departments={(departments as any) ?? []}
+      />
     </main>
   );
 }

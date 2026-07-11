@@ -1,9 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HouseCrest } from "@/components/HouseCrest";
-import { HouseTabs } from "@/components/HouseTabs";
 import { HouseChatLayout } from "@/components/HouseChatLayout";
-import { HousePointsBoard } from "@/components/HousePointsBoard";
 import { getServerTranslator } from "@/lib/i18n-server";
 import type { HouseSlug, HouseScoreVisibility } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
@@ -44,38 +42,20 @@ export default async function HousePage({ params }: { params: { slug: string } }
 
   const messagesBasePath = isAdmin ? "/admin/messages" : "/messages";
   const profileBasePath = isAdmin ? "/admin/profile" : "/profile";
-  const { data: canViewLeaderboardData, error: canViewLeaderboardError } = await supabase.rpc("can_view_leaderboard");
-  const canViewLeaderboard = canViewLeaderboardError ? true : canViewLeaderboardData !== false;
 
   const [
     { data: points },
-    { data: leaderboard },
     { data: roster },
-    { data: recentTx },
     { data: messages },
     { data: masterBlockRow },
     { data: viewerMute },
   ] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
-    canViewLeaderboard
-      ? supabase
-          .from("house_points")
-          .select("*")
-          .order("total_points", { ascending: false })
-      : Promise.resolve({ data: [] } as any),
     supabase
       .from("profiles")
       .select("id, display_name, avatar_emoji, avatar_url, house_role, username")
       .eq("house_id", house.id)
       .order("display_name"),
-    canViewLeaderboard
-      ? supabase
-          .from("point_transactions")
-          .select("id, points, reason, created_at, admin:profiles(display_name, admin_role)")
-          .eq("house_id", house.id)
-          .order("created_at", { ascending: false })
-          .limit(8)
-      : Promise.resolve({ data: [] } as any),
     supabase
       .from("house_messages")
       .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
@@ -102,19 +82,11 @@ export default async function HousePage({ params }: { params: { slug: string } }
   else if (isMember && scoreVisibility === "hidden") viewerCanSeeScore = false;
 
   // Có bị mute không? (viewer là member)
-  const viewerMuted =
-    !isAdmin && !!viewerMute?.data && !!(viewerMute.data as any)?.muted_until
-      ? new Date((viewerMute.data as any).muted_until) > new Date()
-      : false;
-
-  // Xác định quyền xem leaderboard (chỉ để ẩn/hiện tab leaderboard)
-  const hideLeaderboard = !canViewLeaderboard;
-
-  void recentTx;
+  void viewerMute;
 
   return (
     <main className="w-full p-6 lg:p-8">
-      <div className="relative overflow-hidden rounded-xl2 glass-card p-6 mb-8 animate-fadeRise">
+      <div className="hidden lg:block relative overflow-hidden rounded-xl2 glass-card p-6 mb-8 animate-fadeRise">
         <div className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ backgroundColor: house.color === "phoenix" ? "rgba(255,92,57,0.18)" : "rgba(139,92,246,0.18)" }} />
         <div className="relative flex items-center gap-4">
           <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
@@ -135,53 +107,20 @@ export default async function HousePage({ params }: { params: { slug: string } }
         </div>
       </div>
 
-      <HouseTabs
-        defaultTab="chat"
-        hideLeaderboard={hideLeaderboard}
-        chatSlot={
-          <HouseChatLayout
-            houseId={house.id}
-            currentUserId={user.id}
-            currentDisplayName={profile?.house_role ?? ""}
-            currentAvatarEmoji={null}
-            initialMessages={(messages as any) ?? []}
-            roster={(roster as any) ?? []}
-            profileBasePath={profileBasePath}
-            messagesBasePath={messagesBasePath}
-            canModerate={canModerate}
-            editableName={isAdmin ? "admin" : "player"}
-          />
-        }
-        leaderboardSlot={
-          <div className="space-y-6">
-            <HousePointsBoard
-              initial={(leaderboard as any) ?? []}
-              linkPrefix="/house"
-              hiddenHouseIds={viewerCanSeeScore ? [] : [house.id]}
-            />
-            <div>
-              <h2 className="font-display font-bold text-lg mb-3">{t("house.recentPointHistory")}</h2>
-              <div className="rounded-xl2 glass-card divide-y divide-ink-border/60">
-                {(recentTx ?? []).map((tx: any) => (
-                  <div key={tx.id} className="p-3 flex items-start justify-between gap-2 hover:bg-white/[0.03] transition-colors first:rounded-t-xl2 last:rounded-b-xl2">
-                    <div className="min-w-0">
-                      <p className="text-sm truncate">{tx.reason}</p>
-                      <p className="text-xs text-ink-faint font-mono">
-                        {t("common.by", { name: tx.admin?.display_name ?? "" })}
-                      </p>
-                    </div>
-                    <span className={`font-mono text-sm font-bold shrink-0 ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
-                      {tx.points >= 0 ? `+${tx.points}` : tx.points}
-                    </span>
-                  </div>
-                ))}
-                {(recentTx ?? []).length === 0 && (
-                  <p className="text-sm text-ink-muted p-3">{t("house.noPointTransactions")}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        }
+      <HouseChatLayout
+        houseId={house.id}
+        currentUserId={user.id}
+        currentDisplayName={profile?.house_role ?? ""}
+        currentAvatarEmoji={null}
+        initialMessages={(messages as any) ?? []}
+        roster={(roster as any) ?? []}
+        profileBasePath={profileBasePath}
+        messagesBasePath={messagesBasePath}
+        canModerate={canModerate}
+        editableName={isAdmin ? "admin" : "player"}
+        houseName={house.name}
+        totalPoints={totalPoints}
+        viewerCanSeeScore={viewerCanSeeScore}
       />
     </main>
   );

@@ -131,6 +131,8 @@ const baseDictionaries = {
     "nav.pointsHistory": "Lịch sử điểm",
     "nav.adminChat": "Chat Admin",
     "nav.settings": "Cài đặt",
+    "nav.menu": "Menu",
+    "chat.showInfo": "Thông tin",
     "nav.houseMonitor": "GIÁM SÁT CÁC HOUSE",
 
     "dashboard.kicker": "TỔNG QUAN",
@@ -496,6 +498,8 @@ const baseDictionaries = {
     "nav.pointsHistory": "Points History",
     "nav.adminChat": "Admin Chat",
     "nav.settings": "Settings",
+    "nav.menu": "Menu",
+    "chat.showInfo": "Info",
     "nav.houseMonitor": "HOUSE MONITORING",
 
     "dashboard.kicker": "OVERVIEW",
@@ -860,6 +864,8 @@ const baseDictionaries = {
     "nav.pointsHistory": "ポイント履歴",
     "nav.adminChat": "Admin チャット",
     "nav.settings": "設定",
+    "nav.menu": "メニュー",
+    "chat.showInfo": "情報",
     "nav.houseMonitor": "HOUSE 監視",
 
     "dashboard.kicker": "概要",
@@ -1220,6 +1226,8 @@ const baseDictionaries = {
     "nav.pointsHistory": "ประวัติคะแนน",
     "nav.adminChat": "แชท Admin",
     "nav.settings": "ตั้งค่า",
+    "nav.menu": "เมนู",
+    "chat.showInfo": "ข้อมูล",
     "nav.houseMonitor": "ตรวจสอบ HOUSE",
 
     "dashboard.kicker": "ภาพรวม",
@@ -1580,6 +1588,8 @@ const baseDictionaries = {
     "nav.pointsHistory": "மதிப்பெண் வரலாறு",
     "nav.adminChat": "Admin அரட்டை",
     "nav.settings": "அமைப்புகள்",
+    "nav.menu": "மெனு",
+    "chat.showInfo": "தகவல்",
     "nav.houseMonitor": "HOUSE கண்காணிப்பு",
 
     "dashboard.kicker": "மேலோட்டம்",
@@ -1940,6 +1950,8 @@ const baseDictionaries = {
     "nav.pointsHistory": "점수 기록",
     "nav.adminChat": "Admin 채팅",
     "nav.settings": "설정",
+    "nav.menu": "메뉴",
+    "chat.showInfo": "정보",
     "nav.houseMonitor": "HOUSE 모니터링",
 
     "dashboard.kicker": "개요",
@@ -2295,6 +2307,8 @@ export const dictionaries = {
     "nav.pointsHistory": "Riwayat Poin",
     "nav.adminChat": "Chat Admin",
     "nav.settings": "Pengaturan",
+    "nav.menu": "Menu",
+    "chat.showInfo": "Info",
     "nav.houseMonitor": "PEMANTAUAN HOUSE",
     "nav.houseAnnouncements": "Pengumuman House",
     "nav.adminGroupChat": "Chat Grup Admin",

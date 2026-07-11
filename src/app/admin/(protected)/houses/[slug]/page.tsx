@@ -1,13 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HouseCrest } from "@/components/HouseCrest";
-import { HouseTabs } from "@/components/HouseTabs";
 import { HouseChatLayout } from "@/components/HouseChatLayout";
 import { AddPointsForm } from "@/components/AddPointsForm";
-import { HousePointsBoard } from "@/components/HousePointsBoard";
 import { HouseLeadershipSelect } from "@/components/HouseLeadershipSelect";
-import { MemberPopover } from "@/components/MemberPopover";
-import { formatPoints, houseRoleKey } from "@/lib/utils";
 import { getServerTranslator } from "@/lib/i18n-server";
 import type { HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
@@ -98,24 +94,12 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
 
   const [
     { data: pointsRow },
-    { data: leaderboard },
     roster,
-    { data: history },
     { data: messages },
     ipBans,
   ] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
-    supabase
-      .from("house_points")
-      .select("*")
-      .order("total_points", { ascending: false }),
     getHouseRoster(supabase, house.id),
-    supabase
-      .from("point_transactions")
-      .select("id, points, reason, created_at, admin:profiles(display_name, admin_role)")
-      .eq("house_id", house.id)
-      .order("created_at", { ascending: false })
-      .limit(15),
     supabase
       .from("house_messages")
       .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
@@ -131,7 +115,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
 
   return (
     <main className="w-full p-6 lg:p-8">
-      <div className="relative overflow-hidden rounded-xl2 glass-card p-6 mb-8 animate-fadeRise">
+      <div className="hidden lg:block relative overflow-hidden rounded-xl2 glass-card p-6 mb-8 animate-fadeRise">
         <div className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ backgroundColor: house.color === "phoenix" ? "rgba(255,92,57,0.18)" : "rgba(139,92,246,0.18)" }} />
         <div className="relative flex items-center gap-4">
           <HouseCrest color={house.color} icon={house.icon} size="lg" spin />
@@ -148,78 +132,27 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
         </div>
       </div>
 
-      <HouseTabs
-        defaultTab="chat"
-        chatSlot={
-          <div className="space-y-6">
+      <HouseChatLayout
+        houseId={house.id}
+        currentUserId={user.id}
+        currentDisplayName="admin"
+        currentAvatarEmoji={null}
+        initialMessages={(messages as any) ?? []}
+        roster={(roster as any) ?? []}
+        profileBasePath={profileBasePath}
+        messagesBasePath={messagesBasePath}
+        canModerate={true}
+        canModerateMembers={true}
+        activeIpBans={(ipBans as any) ?? []}
+        editableName="admin"
+        houseName={house.name}
+        totalPoints={totalPoints}
+        viewerCanSeeScore={true}
+        adminControls={
+          <>
             <AddPointsForm houseId={house.id} adminId={user.id} />
-            <HouseChatLayout
-              houseId={house.id}
-              currentUserId={user.id}
-              currentDisplayName="admin"
-              currentAvatarEmoji={null}
-              initialMessages={(messages as any) ?? []}
-              roster={(roster as any) ?? []}
-              profileBasePath={profileBasePath}
-              messagesBasePath={messagesBasePath}
-              canModerate={true}
-              canModerateMembers={true}
-              activeIpBans={(ipBans as any) ?? []}
-              editableName="admin"
-            />
             <HouseLeadershipSelect roster={(roster as any) ?? []} />
-          </div>
-        }
-        leaderboardSlot={
-          <div className="space-y-6">
-            <HousePointsBoard initial={(leaderboard as any) ?? []} linkPrefix="/admin/houses" />
-            <div>
-              <h2 className="font-display font-bold text-lg mb-3">{t("house.members")}</h2>
-              <div className="rounded-xl2 glass-card p-2 max-h-64 overflow-y-auto space-y-0.5">
-                {(roster ?? []).map((p: any) => {
-                  const roleKey = houseRoleKey(p.house_role);
-                  return (
-                    <MemberPopover
-                      key={p.id}
-                      memberId={p.id}
-                      displayName={p.display_name}
-                      avatarEmoji={p.avatar_emoji}
-                      roleLabel={roleKey ? t(roleKey) : null}
-                      messagesBasePath={messagesBasePath}
-                      profileBasePath={profileBasePath}
-                      currentUserId={user.id}
-                      presenceDot
-                    />
-                  );
-                })}
-                {(roster ?? []).length === 0 && (
-                  <p className="text-sm text-ink-muted p-3">{t("house.noMembers")}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <h2 className="font-display font-bold text-lg mb-3">{t("house.pointHistory")}</h2>
-              <div className="rounded-xl2 glass-card divide-y divide-ink-border/60 max-h-96 overflow-y-auto">
-                {(history ?? []).map((tx: any) => (
-                  <div key={tx.id} className="p-3 flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm truncate">{tx.reason}</p>
-                      <p className="text-xs text-ink-faint font-mono">
-                        {t("common.byWithRole", { name: tx.admin?.display_name ?? "", role: tx.admin?.admin_role ?? "" })}
-                      </p>
-                    </div>
-                    <span className={`font-mono text-sm font-bold shrink-0 ${tx.points >= 0 ? "text-success" : "text-danger"}`}>
-                      {formatPoints(tx.points)}
-                    </span>
-                  </div>
-                ))}
-                {(history ?? []).length === 0 && (
-                  <p className="text-sm text-ink-muted p-3">{t("house.noTransactions")}</p>
-                )}
-              </div>
-            </div>
-          </div>
+          </>
         }
       />
     </main>

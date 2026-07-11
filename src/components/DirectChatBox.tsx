@@ -6,6 +6,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { DirectMessage } from "@/lib/types";
 import { useI18n } from "@/components/I18nProvider";
+import { useIsMobile } from "@/lib/useIsMobile";
+import { MobileChatShell } from "@/components/MobileChatShell";
 import { useMuteStatus, MuteBanner } from "@/components/MuteControls";
 import ChatMessage from "./chat/ChatMessage";
 import ChatInput from "./chat/ChatInput";
@@ -51,6 +53,7 @@ export function DirectChatBox({
 }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
+  const isMobile = useIsMobile();
   const [messages, setMessages] = useState<DirectMessage[]>(initialMessages);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -334,45 +337,24 @@ export function DirectChatBox({
     }
   }
 
-  return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">
-      <div className="flex items-center justify-between gap-3 border-b border-ink-border bg-ink-surface px-3 py-3 sm:p-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link
-            href={profileBasePath.startsWith("/admin") ? "/admin/messages" : "/messages"}
-            className="text-ink-muted hover:text-ink-text text-lg pr-1"
-            title={t("common.back")}
-          >
-            ←
-          </Link>
-          <Link
-            href={`${profileBasePath}/${otherUser.id}`}
-            className="flex min-w-0 items-center gap-2 rounded-lg pr-2 hover:text-command transition-colors"
-            aria-label={t("member.viewProfile")}
-          >
-            <span className="w-7 h-7 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-lg overflow-hidden shrink-0">
-              {otherUser.avatar_url ? (
-                <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                otherUser.avatar_emoji ?? "\u{1F642}"
-              )}
-            </span>
-            <span className="font-semibold truncate">{otherUser.display_name}</span>
-          </Link>
-        </div>
-        <button
-          onClick={toggleBlock}
-          aria-label={blocked ? t("messages.unblock") : t("messages.block")}
-          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors shrink-0 ${
-            blocked
-              ? "border-danger/40 text-danger bg-danger/10 hover:bg-danger/15"
-              : "border-ink-border text-ink-muted hover:text-danger hover:border-danger/40"
-          }`}
-        >
-          {blocked ? t("messages.unblock") : t("messages.block")}
-        </button>
-      </div>
+  const backHref = profileBasePath.startsWith("/admin") ? "/admin/messages" : "/messages";
 
+  const blockButton = (
+    <button
+      onClick={toggleBlock}
+      aria-label={blocked ? t("messages.unblock") : t("messages.block")}
+      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors shrink-0 ${
+        blocked
+          ? "border-danger/40 text-danger bg-danger/10 hover:bg-danger/15"
+          : "border-ink-border text-ink-muted hover:text-danger hover:border-danger/40"
+      }`}
+    >
+      {blocked ? t("messages.unblock") : t("messages.block")}
+    </button>
+  );
+
+  const messageList = (
+    <>
       <div ref={scrollAreaRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-6 sm:p-4 sm:pb-10 space-y-3" role="log" aria-live="polite">
         {messages.length === 0 && <p className="text-sm text-ink-muted text-center mt-8">{t("messages.noDirectMessages")}</p>}
         {messages.map((m) => {
@@ -442,7 +424,7 @@ export function DirectChatBox({
       />
 
       {pickerMounted && activePicker && createPortal(
-        <div 
+        <div
           className="fixed z-[9999]"
           style={{ top: activePicker.y, left: activePicker.x }}
         >
@@ -457,6 +439,73 @@ export function DirectChatBox({
         </div>,
         document.body
       )}
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <MobileChatShell
+        title={otherUser.display_name}
+        backHref={backHref}
+        drawer={
+          <div className="p-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="w-12 h-12 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-2xl overflow-hidden shrink-0">
+                {otherUser.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  otherUser.avatar_emoji ?? "\u{1F642}"
+                )}
+              </span>
+              <p className="font-semibold truncate">{otherUser.display_name}</p>
+            </div>
+            <Link
+              href={`${profileBasePath}/${otherUser.id}`}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm bg-ink-surface2 hover:bg-ink-border transition-colors"
+            >
+              <span className="w-4 text-center">{"\u{1F464}"}</span>
+              {t("member.viewProfile")}
+            </Link>
+            <div>{blockButton}</div>
+          </div>
+        }
+      >
+        <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">{messageList}</div>
+      </MobileChatShell>
+    );
+  }
+
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-ink-border bg-ink-surface px-3 py-3 sm:p-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href={backHref}
+            className="text-ink-muted hover:text-ink-text text-lg pr-1"
+            title={t("common.back")}
+          >
+            ←
+          </Link>
+          <Link
+            href={`${profileBasePath}/${otherUser.id}`}
+            className="flex min-w-0 items-center gap-2 rounded-lg pr-2 hover:text-command transition-colors"
+            aria-label={t("member.viewProfile")}
+          >
+            <span className="w-7 h-7 rounded-full bg-ink-surface2 border border-ink-border flex items-center justify-center text-lg overflow-hidden shrink-0">
+              {otherUser.avatar_url ? (
+                <img src={otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                otherUser.avatar_emoji ?? "\u{1F642}"
+              )}
+            </span>
+            <span className="font-semibold truncate">{otherUser.display_name}</span>
+          </Link>
+        </div>
+        {blockButton}
+      </div>
+
+      {messageList}
     </div>
   );
 }

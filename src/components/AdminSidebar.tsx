@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,17 @@ export function AdminSidebar({
   const router = useRouter();
   const supabase = createClient();
   const { t } = useI18n();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const open = () => setMenuOpen(true);
+    window.addEventListener("open-mobile-nav", open);
+    return () => window.removeEventListener("open-mobile-nav", open);
+  }, []);
 
   async function signOut() {
     try {
@@ -54,70 +66,151 @@ export function AdminSidebar({
     router.push("/admin/login");
   }
 
-  return (
-    <aside className="w-full shrink-0 border-b border-ink-border bg-ink-surface/95 backdrop-blur lg:w-64 lg:border-b-0 lg:border-r lg:bg-ink-surface/60 flex flex-col lg:h-screen lg:sticky top-0 z-40">
-      <div className="p-3 sm:p-4 lg:p-5 border-b border-ink-border">
-        <div className="flex items-center gap-2 font-display font-bold text-sm tracking-[0.18em]">
-          <span className="text-gradient">FKS SYSTEM</span>
-        </div>
-        <span className="text-[10px] font-mono text-ink-faint">{t("common.adminPortal")}</span>
-        <LanguageSwitcher className="mt-3 lg:mt-4" />
-      </div>
+  function navActive(item: { href: string; exact?: boolean }) {
+    return item.exact ? pathname === item.href : pathname?.startsWith(item.href);
+  }
 
-      <nav className="flex gap-2 overflow-x-auto px-3 py-2 lg:block lg:flex-1 lg:space-y-1 lg:overflow-y-auto lg:overflow-x-visible lg:pt-4" aria-label="Admin navigation">
-        {NAV.map((item) => {
-          const active = item.exact ? pathname === item.href : pathname?.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex shrink-0 items-center gap-3 whitespace-nowrap px-3 py-2.5 rounded-lg text-sm transition-all duration-200 lg:shrink",
-                active ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
-              )}
-            >
-              <span className="w-4 text-center">{item.icon}</span>
-              {t(item.labelKey)}
-            </Link>
-          );
-        })}
-
-        <p className="flex shrink-0 items-center px-3 text-[10px] font-mono text-ink-faint lg:block lg:px-3 lg:pt-5 lg:pb-1">{t("nav.houseMonitor")}</p>
-        {HOUSES.map((h) => {
-          const active = pathname === `/admin/houses/${h.slug}`;
-          return (
-            <Link
-              key={h.slug}
-              href={`/admin/houses/${h.slug}`}
-              className={cn(
-                "flex shrink-0 items-center gap-3 whitespace-nowrap px-3 py-2 rounded-lg text-sm transition-all duration-200 lg:shrink",
-                active ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
-              )}
-            >
-              <span className="w-4 text-center">{h.icon}</span>
-              {h.name}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="p-3 lg:p-4 border-t border-ink-border flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden">
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-          ) : (
-            avatarEmoji
+  const navLinks = (onNav?: () => void) => (
+    <>
+      {NAV.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={onNav}
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
+            navActive(item)
+              ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]"
+              : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
           )}
+        >
+          <span className="w-4 text-center">{item.icon}</span>
+          {t(item.labelKey)}
+        </Link>
+      ))}
+
+      <p className="px-3 pt-5 pb-1 text-[10px] font-mono text-ink-faint">{t("nav.houseMonitor")}</p>
+      {HOUSES.map((h) => {
+        const active = pathname === `/admin/houses/${h.slug}`;
+        return (
+          <Link
+            key={h.slug}
+            href={`/admin/houses/${h.slug}`}
+            onClick={onNav}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+              active ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
+            )}
+          >
+            <span className="w-4 text-center">{h.icon}</span>
+            {h.name}
+          </Link>
+        );
+      })}
+    </>
+  );
+
+  return (
+    <>
+      {/* ===== Desktop sidebar (giữ nguyên) ===== */}
+      <aside className="hidden lg:flex w-64 shrink-0 border-r border-ink-border bg-ink-surface/60 flex-col h-screen sticky top-0 z-40">
+        <div className="p-5 border-b border-ink-border">
+          <div className="flex items-center gap-2 font-display font-bold text-sm tracking-[0.18em]">
+            <span className="text-gradient">FKS SYSTEM</span>
+          </div>
+          <span className="text-[10px] font-mono text-ink-faint">{t("common.adminPortal")}</span>
+          <LanguageSwitcher className="mt-4" />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate">{displayName}</p>
-          <p className="text-xs text-command font-mono">{adminRole ? ADMIN_ROLE_LABELS[adminRole] : ""}</p>
-          <button onClick={signOut} aria-label={t("common.logout")} className="text-xs text-ink-muted hover:text-danger transition-colors">
-            {t("common.logout")}
-          </button>
+
+        <nav className="flex-1 space-y-1 px-3 pt-4 overflow-y-auto" aria-label="Admin navigation">
+          {navLinks()}
+        </nav>
+
+        <div className="p-4 border-t border-ink-border flex items-center gap-3">
+          <Avatar avatarUrl={avatarUrl} avatarEmoji={avatarEmoji} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{displayName}</p>
+            <p className="text-xs text-command font-mono">{adminRole ? ADMIN_ROLE_LABELS[adminRole] : ""}</p>
+            <button onClick={signOut} aria-label={t("common.logout")} className="text-xs text-ink-muted hover:text-danger transition-colors">
+              {t("common.logout")}
+            </button>
+          </div>
         </div>
+      </aside>
+
+      {/* ===== Mobile top bar ===== */}
+      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between border-b border-ink-border bg-ink-surface/95 backdrop-blur px-3 py-2.5">
+        <div className="flex items-baseline gap-2">
+          <span className="font-display font-bold text-sm tracking-[0.18em] text-gradient">FKS SYSTEM</span>
+          <span className="text-[9px] font-mono text-ink-faint">{t("common.adminPortal")}</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label={t("nav.menu")}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-xl text-ink-muted hover:bg-ink-surface2 hover:text-ink-text"
+        >
+          ☰
+        </button>
       </div>
-    </aside>
+
+      {/* ===== Mobile slide-down menu ===== */}
+      {menuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMenuOpen(false)} />
+          <div className="absolute inset-x-0 top-0 max-h-[88vh] overflow-y-auto border-b border-ink-border bg-ink-surface shadow-2xl animate-fadeRise">
+            <div className="flex items-center justify-between p-4 border-b border-ink-border">
+              <div className="flex items-baseline gap-2">
+                <span className="font-display font-bold text-sm tracking-[0.18em] text-gradient">FKS SYSTEM</span>
+                <span className="text-[9px] font-mono text-ink-faint">{t("common.adminPortal")}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                aria-label={t("common.back")}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-xl text-ink-muted hover:bg-ink-surface2 hover:text-ink-text"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4">
+              <LanguageSwitcher />
+            </div>
+
+            <nav className="p-3 space-y-1" aria-label="Admin navigation">
+              {navLinks(() => setMenuOpen(false))}
+            </nav>
+
+            <div className="p-4 border-t border-ink-border flex items-center gap-3">
+              <Avatar avatarUrl={avatarUrl} avatarEmoji={avatarEmoji} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">{displayName}</p>
+                <p className="text-xs text-command font-mono">{adminRole ? ADMIN_ROLE_LABELS[adminRole] : ""}</p>
+              </div>
+              <button
+                onClick={signOut}
+                className="text-sm px-3 py-1.5 rounded-lg border border-ink-border text-ink-muted hover:text-danger hover:border-danger/40 transition-colors"
+              >
+                {t("common.logout")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Avatar({ avatarUrl, avatarEmoji }: { avatarUrl: string | null; avatarEmoji: string }) {
+  return (
+    <div className="w-9 h-9 rounded-full bg-ink-surface2 flex items-center justify-center text-lg overflow-hidden shrink-0">
+      {avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+      ) : (
+        avatarEmoji
+      )}
+    </div>
   );
 }
