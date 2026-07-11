@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
   const isAdminArea =
     (path.startsWith("/admin/") || path === "/admin") && path !== "/admin/login";
   const isPlayerArea =
-    ["/dashboard", "/house", "/messages", "/announcements", "/profile", "/admin-directory", "/house-announcements"].some((p) =>
+    ["/dashboard", "/house", "/messages", "/announcements", "/profile", "/admin-directory", "/house-announcements", "/ai-chat"].some((p) =>
       path.startsWith(p)
     );
   const isProtectedArea = isAdminArea || isPlayerArea;
@@ -121,6 +121,7 @@ export const config = {
     "/announcements/:path*",
     "/profile/:path*",
     "/house-announcements/:path*",
+    "/ai-chat/:path*",
     "/admin-directory/:path*",
     "/admin/:path*",
   ],

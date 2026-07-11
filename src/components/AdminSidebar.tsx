@@ -20,6 +20,7 @@ const NAV = [
   { href: "/admin/admin-directory", labelKey: "nav.adminDirectory", icon: "🛡️" },
   { href: "/admin/chat", labelKey: "nav.adminGroupChat", icon: "🔒" },
   { href: "/admin/messages", labelKey: "nav.adminMessages", icon: "💬" },
+  { href: "/admin/ai-chat", labelKey: "nav.aiChat", icon: "AI" },
   { href: "/admin/settings", labelKey: "nav.settings", icon: "⚙" },
 ] satisfies Array<{ href: string; labelKey: TranslationKey; icon: string; exact?: boolean }>;
 
