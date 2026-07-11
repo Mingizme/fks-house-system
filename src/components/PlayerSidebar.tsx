@@ -61,7 +61,7 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
   return (
     <>
       {/* ===== Desktop sidebar (giữ nguyên) ===== */}
-      <aside className="hidden lg:flex w-72 shrink-0 border-r border-ink-border bg-ink-surface/60 flex-col h-screen sticky top-0 z-40">
+      <aside className="hidden lg:flex w-96 shrink-0 border-r border-ink-border bg-ink-surface/60 flex-col h-screen sticky top-0 z-40">
         <div className="p-5 border-b border-ink-border">
           <div className="flex items-center gap-2 font-display font-bold text-sm tracking-[0.18em]">
             <span className="text-gradient">FKS SYSTEM</span>
@@ -72,33 +72,33 @@ export function PlayerSidebar({ displayName, avatarEmoji, avatarUrl, house }: Pr
         {house ? (
           <Link
             href={`/house/${house.slug}`}
-            className="m-4 p-3 rounded-xl2 border border-ink-border bg-ink-surface2/80 flex items-center gap-3 hover:border-command/50 hover:shadow-glow transition-all duration-200"
+            className="m-6 flex items-center gap-5 rounded-xl2 border border-ink-border bg-ink-surface2/80 p-5 text-xl hover:border-command/50 hover:shadow-glow transition-all duration-200"
           >
             <HouseCrest color={house.color} icon={house.icon} size="sm" />
             <div className="min-w-0">
-              <p className="text-xs text-ink-muted font-mono">{t("nav.playerHouse")}</p>
-              <p className="font-semibold truncate">{house.name}</p>
+              <p className="text-sm text-ink-muted font-mono">{t("nav.playerHouse")}</p>
+              <p className="font-semibold leading-7 truncate">{house.name}</p>
             </div>
           </Link>
         ) : (
-          <div className="m-4 p-3 rounded-xl2 border border-dashed border-ink-border text-xs text-ink-muted">
+          <div className="m-6 rounded-xl2 border border-dashed border-ink-border p-5 text-lg text-ink-muted">
             {t("nav.unassigned")}
           </div>
         )}
 
-        <nav className="flex-1 space-y-2 px-4" aria-label="Player navigation">
+        <nav className="flex-1 space-y-4 px-6" aria-label="Player navigation">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex min-h-12 items-center gap-4 rounded-xl px-4 py-3.5 text-base leading-6 transition-all duration-200",
+                "flex min-h-16 items-center gap-6 rounded-xl px-6 py-4 text-xl font-semibold leading-8 transition-all duration-200",
                 isActive(item.href)
                   ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]"
                   : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
               )}
             >
-              <span className="w-6 text-center text-lg">{item.icon}</span>
+              <span className="w-10 text-center text-3xl">{item.icon}</span>
               {t(item.labelKey)}
             </Link>
           ))}
