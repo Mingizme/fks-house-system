@@ -1,4 +1,4 @@
-import type { AdminRank, HouseRole, HouseScoreVisibility, HouseMasterToggle, LeaderboardVisibility, UserType } from "@/lib/types";
+import type { AdminRank, HouseRole, HouseScoreAudience, HouseScoreVisibility, HouseMasterToggle, LeaderboardVisibility, UserType } from "@/lib/types";
 
 /**
  * Mô tả tối thiểu của một actor (người đang thao tác) và target (đối tượng)
@@ -131,20 +131,19 @@ export function canSetLeaderboardVisibility(actor: ActorContext): boolean {
 export function canViewHouseScore(
   viewer: HouseLeaderContext,
   houseId: string,
+  scoreAudience: HouseScoreAudience | undefined,
   scoreVisibility: HouseScoreVisibility | undefined,
   isMasterBlocked: boolean
 ): boolean {
-  // Người ngoài house luôn xem được
-  if (viewer.houseId !== houseId) return true;
-  // House Master của house đó: nếu bị block thì không
+  if (viewer.userType === "admin") return true;
+  if (viewer.houseId !== houseId) return false;
   if (isHouseMaster(viewer) && viewer.houseId === houseId && isMasterBlocked) return false;
-  // Thành viên house: tuỳ score_visibility
-  if (viewer.houseId === houseId) {
-    return scoreVisibility !== "hidden";
-  }
-  return true;
-}
 
+  if (scoreAudience === "house") return true;
+  if (scoreAudience === "admin_only") return false;
+  if (scoreAudience === "masters_only") return isHouseMaster(viewer) || scoreVisibility === "visible";
+  return scoreVisibility !== "hidden";
+}
 /**
  * Quyết định hiển thị leaderboard chung.
  * Phản chiếu can_view_leaderboard() ở DB.

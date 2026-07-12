@@ -15,6 +15,7 @@ export interface Department {
 }
 
 export type HouseScoreVisibility = "visible" | "hidden";
+export type HouseScoreAudience = "house" | "masters_only" | "admin_only";
 export type HouseMasterToggle = "allowed" | "blocked";
 export type LeaderboardVisibility = "public" | "masters_only" | "admin_only";
 
@@ -27,6 +28,7 @@ export interface House {
   description: string | null;
   created_at: string;
   score_visibility?: HouseScoreVisibility;
+  score_audience?: HouseScoreAudience;
   master_can_toggle_score?: HouseMasterToggle;
 }
 

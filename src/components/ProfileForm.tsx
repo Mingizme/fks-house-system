@@ -150,10 +150,10 @@ export function ProfileForm({
   }
 
   return (
-    <div className="space-y-5 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.8fr)] lg:items-start lg:gap-6 lg:space-y-0">
-      <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 lg:p-6">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="w-16 h-16 rounded-xl overflow-hidden bg-ink-surface2 border border-ink-border flex items-center justify-center text-2xl">
+    <div className="space-y-5 lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.75fr)] lg:items-start lg:gap-8 lg:space-y-0 2xl:grid-cols-[minmax(0,1.75fr)_minmax(440px,0.65fr)] 2xl:gap-10">
+      <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 lg:p-8 2xl:p-10">
+        <div className="flex items-center gap-4 mb-5 lg:gap-6 lg:mb-8">
+          <div className="w-16 h-16 rounded-xl overflow-hidden bg-ink-surface2 border border-ink-border flex items-center justify-center text-2xl lg:h-24 lg:w-24 lg:text-4xl 2xl:h-28 2xl:w-28">
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -162,22 +162,22 @@ export function ProfileForm({
             )}
           </div>
           <div className="min-w-0">
-            <p className="font-semibold truncate">{profile.display_name}</p>
-            <p className="text-xs text-ink-muted font-mono truncate">@{profile.username}</p>
-            {profile.email && <p className="text-xs text-ink-faint truncate">{profile.email}</p>}
+            <p className="font-semibold truncate lg:text-xl 2xl:text-2xl">{profile.display_name}</p>
+            <p className="text-xs text-ink-muted font-mono truncate lg:text-sm">@{profile.username}</p>
+            {profile.email && <p className="text-xs text-ink-faint truncate lg:text-sm">{profile.email}</p>}
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 lg:space-y-6">
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("profile.displayNameLabel")}</label>
+            <label className="text-xs font-mono text-ink-muted block mb-1.5 lg:text-sm lg:mb-2">{t("profile.displayNameLabel")}</label>
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               disabled={!canChangeDisplayName}
-              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors disabled:opacity-60 lg:py-3 lg:text-base"
+              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors disabled:opacity-60 lg:px-5 lg:py-4 lg:text-lg"
             />
-            <p className="text-xs text-ink-faint mt-1.5">
+            <p className="text-xs text-ink-faint mt-1.5 lg:text-sm lg:mt-2">
               {canChangeDisplayName
                 ? t("profile.displayNameAvailable")
                 : t("profile.displayNameCooldown", {
@@ -187,21 +187,21 @@ export function ProfileForm({
           </div>
 
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-1.5">{t("profile.bioLabel")}</label>
+            <label className="text-xs font-mono text-ink-muted block mb-1.5 lg:text-sm lg:mb-2">{t("profile.bioLabel")}</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={200}
               placeholder={t("profile.bioPlaceholder") || "Write something about yourself..."}
-              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors resize-none h-24 text-sm lg:h-32 lg:py-3 lg:text-base"
+              className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors resize-none h-24 text-sm lg:h-44 lg:px-5 lg:py-4 lg:text-lg 2xl:h-52"
             />
-            <p className="text-xs text-ink-faint mt-1.5 font-mono text-right">
+            <p className="text-xs text-ink-faint mt-1.5 font-mono text-right lg:text-sm lg:mt-2">
               {bio.length}/200
             </p>
           </div>
 
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-2">{t("profile.avatarImageLabel")}</label>
+            <label className="text-xs font-mono text-ink-muted block mb-2 lg:text-sm lg:mb-3">{t("profile.avatarImageLabel")}</label>
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
@@ -209,20 +209,20 @@ export function ProfileForm({
                 const file = e.target.files?.[0];
                 if (file) void uploadAvatar(file);
               }}
-              className="block w-full text-sm text-ink-muted file:mr-4 file:rounded-lg file:border-0 file:bg-command file:px-4 file:py-2 file:text-sm file:font-semibold file:text-ink-text hover:file:bg-command/85"
+              className="block w-full text-sm text-ink-muted file:mr-4 file:rounded-lg file:border-0 file:bg-command file:px-4 file:py-2 file:text-sm file:font-semibold file:text-ink-text hover:file:bg-command/85 lg:text-base lg:file:px-5 lg:file:py-3 lg:file:text-base"
             />
-            <p className="text-xs text-ink-faint mt-1.5">{t("profile.avatarHelp")}</p>
+            <p className="text-xs text-ink-faint mt-1.5 lg:text-sm lg:mt-2">{t("profile.avatarHelp")}</p>
           </div>
 
           <div>
-            <label className="text-xs font-mono text-ink-muted block mb-2">{t("profile.iconLabel")}</label>
-            <div className="flex flex-wrap gap-2">
+            <label className="text-xs font-mono text-ink-muted block mb-2 lg:text-sm lg:mb-3">{t("profile.iconLabel")}</label>
+            <div className="flex flex-wrap gap-2 lg:gap-3">
               {emojiOptions.map((e) => (
                 <button
                   key={e}
                   type="button"
                   onClick={() => setEmoji(e)}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg border transition-colors ${
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg border transition-colors lg:h-12 lg:w-12 lg:text-xl 2xl:h-14 2xl:w-14 2xl:text-2xl ${
                     emoji === e ? "border-command bg-command/15" : "border-ink-border hover:border-ink-faint"
                   }`}
                 >
@@ -232,12 +232,12 @@ export function ProfileForm({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 pt-1">
+          <div className="flex flex-wrap gap-3 pt-1 lg:gap-4 lg:pt-2">
             <button
               type="button"
               onClick={save}
               disabled={saving || uploading}
-              className="rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold px-5 py-2.5 text-sm"
+              className="rounded-lg bg-command hover:bg-command/85 disabled:opacity-50 transition-colors font-semibold px-5 py-2.5 text-sm lg:px-7 lg:py-3 lg:text-base"
             >
               {saving ? t("common.saving") : t("common.saveChanges")}
             </button>
@@ -245,7 +245,7 @@ export function ProfileForm({
               <button
                 type="button"
                 onClick={() => setAvatarUrl(null)}
-                className="rounded-lg border border-ink-border hover:border-danger/60 text-ink-muted hover:text-danger transition-colors px-5 py-2.5 text-sm"
+                className="rounded-lg border border-ink-border hover:border-danger/60 text-ink-muted hover:text-danger transition-colors px-5 py-2.5 text-sm lg:px-7 lg:py-3 lg:text-base"
               >
                 {t("profile.removeAvatar")}
               </button>
@@ -254,14 +254,14 @@ export function ProfileForm({
         </div>
       </section>
 
-      <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 lg:p-6">
-        <h2 className="font-display font-bold text-xl mb-2">{t("profile.securityTitle")}</h2>
-        <p className="text-sm text-ink-muted mb-4">{t("profile.securitySubtitle")}</p>
+      <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 lg:p-8 2xl:p-10">
+        <h2 className="font-display font-bold text-xl mb-2 lg:text-2xl">{t("profile.securityTitle")}</h2>
+        <p className="text-sm text-ink-muted mb-4 lg:text-base lg:mb-6">{t("profile.securitySubtitle")}</p>
         <button
           type="button"
           onClick={sendPasswordEmail}
           disabled={sendingPasswordEmail}
-          className="rounded-lg border border-command/50 text-command hover:bg-command/10 disabled:opacity-50 transition-colors font-semibold px-5 py-2.5 text-sm"
+          className="rounded-lg border border-command/50 text-command hover:bg-command/10 disabled:opacity-50 transition-colors font-semibold px-5 py-2.5 text-sm lg:px-6 lg:py-3 lg:text-base"
         >
           {sendingPasswordEmail ? t("auth.sendingReset") : t("profile.sendPasswordEmail")}
         </button>

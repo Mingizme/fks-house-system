@@ -525,6 +525,10 @@ do $$ begin
   create type house_score_visibility as enum ('visible', 'hidden');
 exception when duplicate_object then null; end $$;
 
+do $$ begin
+  create type house_score_audience as enum ('house', 'masters_only', 'admin_only');
+exception when duplicate_object then null; end $$;
+
 -- Cờ toggle quyền của House Master
 do $$ begin
   create type house_master_toggle as enum ('allowed', 'blocked');
@@ -532,6 +536,15 @@ exception when duplicate_object then null; end $$;
 
 -- Thêm cột cấu hình hiển thị điểm cho mỗi house
 alter table houses add column if not exists score_visibility house_score_visibility not null default 'visible';
+alter table houses add column if not exists score_audience house_score_audience;
+update houses
+  set score_audience = case
+    when score_visibility = 'hidden' then 'masters_only'::house_score_audience
+    else 'house'::house_score_audience
+  end
+  where score_audience is null;
+alter table houses alter column score_audience set default 'house';
+alter table houses alter column score_audience set not null;
 -- Admin có thể cấm House Master đổi trạng thái hiển thị điểm
 alter table houses add column if not exists master_can_toggle_score house_master_toggle not null default 'allowed';
 
@@ -544,7 +557,7 @@ as $$
 declare
   h record;
 begin
-  select score_visibility, master_can_toggle_score into h
+  select score_audience, master_can_toggle_score into h
     from houses where id = house_uuid;
 
   if not found then
@@ -559,11 +572,48 @@ begin
     raise exception 'Only the House Master of this house can toggle score visibility.';
   end if;
 
-  update houses set score_visibility = visibility where id = house_uuid;
+  if exists (
+    select 1
+    from house_master_score_blocks b
+    where b.house_id = house_uuid
+      and b.master_id = auth.uid()
+  ) then
+    raise exception 'An admin has blocked this House Master from managing score visibility.';
+  end if;
+
+  if h.score_audience <> 'masters_only' then
+    raise exception 'House Master can only toggle score visibility in masters-only mode.';
+  end if;
+
+  update houses
+    set score_visibility = visibility
+    where id = house_uuid;
 end;
 $$;
 
--- RPC: Admin cấm/cho phép House Master đổi hiển thị điểm
+-- RPC: Admin đặt phạm vi xem điểm house
+create or replace function admin_set_house_score_audience(house_uuid uuid, audience house_score_audience)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if not is_admin() then
+    raise exception 'Only admins can set house score audience.';
+  end if;
+
+  update houses
+    set score_audience = audience,
+        score_visibility = case
+          when audience = 'house' then 'visible'::house_score_visibility
+          when audience = 'masters_only' then 'hidden'::house_score_visibility
+          when score_audience = 'masters_only' then score_visibility
+          else 'hidden'::house_score_visibility
+        end
+    where id = house_uuid;
+end;
+$$;
+
 create or replace function admin_set_master_score_toggle(house_uuid uuid, toggle house_master_toggle)
 returns void
 language plpgsql security definer
@@ -578,6 +628,7 @@ end;
 $$;
 
 grant execute on function set_house_score_visibility(uuid, house_score_visibility) to authenticated;
+grant execute on function admin_set_house_score_audience(uuid, house_score_audience) to authenticated;
 grant execute on function admin_set_master_score_toggle(uuid, house_master_toggle) to authenticated;
 
 -- =========================================================
@@ -800,20 +851,28 @@ set search_path = public
 as $$
   select case
     when is_admin() then true
-    when exists (
-      select 1 from profiles p
-      where p.id = viewer_id
-        and p.house_role = 'master'
-        and p.house_id = house_uuid
-        and exists (select 1 from house_master_score_blocks b where b.master_id = viewer_id)
-    ) then false
-    when exists (
-      select 1 from profiles p
+    when viewer_id is distinct from auth.uid() then false
+    else exists (
+      select 1
+      from profiles p
+      join houses h on h.id = house_uuid
       where p.id = viewer_id
         and p.house_id = house_uuid
-        and (select score_visibility from houses where id = house_uuid) = 'hidden'
-    ) then false
-    else true
+        and not (
+          p.house_role = 'master'
+          and exists (select 1 from house_master_score_blocks b where b.master_id = viewer_id)
+        )
+        and (
+          h.score_audience = 'house'
+          or (
+            h.score_audience = 'masters_only'
+            and (
+              h.score_visibility = 'visible'
+              or p.house_role = 'master'
+            )
+          )
+        )
+    )
   end;
 $$;
 

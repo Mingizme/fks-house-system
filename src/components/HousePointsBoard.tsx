@@ -38,10 +38,10 @@ export function HousePointsBoard({
         (payload) => {
           const row = payload.new as { house_id: string; points: number };
           setHouses((prev) =>
-            prev.map((h) =>
-              h.house_id === row.house_id
-                ? { ...h, total_points: pointsValue(h.total_points) + row.points }
-                : h
+            prev.map((house) =>
+              house.house_id === row.house_id && !isScoreHidden(house, hiddenSet)
+                ? { ...house, total_points: pointsValue(house.total_points) + row.points }
+                : house
             )
           );
         }
@@ -51,7 +51,7 @@ export function HousePointsBoard({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase]);
+  }, [hiddenSet, supabase]);
 
   const sorted = useMemo(
     () =>

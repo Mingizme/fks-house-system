@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/I18nProvider";
-import type { House, HouseMasterToggle } from "@/lib/types";
+import type { House, HouseMasterToggle, HouseScoreAudience } from "@/lib/types";
 
 interface BlockRow {
   id?: string;
@@ -16,17 +16,12 @@ interface BlockRow {
 
 interface Props {
   houses: House[];
-  /** Admin được phép đổi (true) */
   canAdminBlock: boolean;
   blockedMasters: BlockRow[];
 }
 
-/**
- * Section quản lý hiển thị điểm house:
- *  - Bật/tắt score_visibility cho từng house (chỉ House Master khi chưa bị cấm)
- *  - Admin cấm/cho phép House Master toggle
- *  - Admin cấm đích danh House Master xem điểm
- */
+const AUDIENCE_OPTIONS: HouseScoreAudience[] = ["house", "masters_only", "admin_only"];
+
 export function ScoreVisibilitySection({ houses, canAdminBlock, blockedMasters }: Props) {
   const supabase = createClient();
   const router = useRouter();
@@ -43,36 +38,41 @@ export function ScoreVisibilitySection({ houses, canAdminBlock, blockedMasters }
           <thead>
             <tr className="text-left text-[10px] font-mono text-ink-muted uppercase">
               <th className="py-2 pr-3">{t("permissions.scoreVisibilityHouse")}</th>
-              <th className="py-2 px-3">{t("permissions.scoreVisible")}</th>
+              <th className="py-2 px-3">{t("permissions.scoreAudience")}</th>
               <th className="py-2 px-3">{t("permissions.masterCanToggle")}</th>
               <th className="py-2 pl-3" />
             </tr>
           </thead>
           <tbody>
-            {houses.map((h) => (
-              <HouseVisibilityRow key={h.id} house={h} canAdminBlock={canAdminBlock} supabase={supabase} router={router} />
+            {houses.map((house) => (
+              <HouseVisibilityRow
+                key={house.id}
+                house={house}
+                canAdminBlock={canAdminBlock}
+                supabase={supabase}
+                router={router}
+              />
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Master blocks */}
       <div className="space-y-2 border-t border-ink-border pt-4">
         <h3 className="text-sm font-semibold">{t("permissions.blockedMasters")}</h3>
         {blockedMasters.length === 0 ? (
           <p className="text-xs text-ink-muted">{t("permissions.noBlockedMasters")}</p>
         ) : (
           <ul className="rounded-lg border border-ink-border divide-y divide-ink-border overflow-hidden lg:grid lg:grid-cols-2 lg:divide-y-0 lg:gap-3 lg:border-0">
-            {blockedMasters.map((b) => (
-              <li key={b.master_id} className="p-3 flex items-center gap-3 bg-ink-surface2 lg:rounded-lg lg:border lg:border-ink-border">
-                <span className="text-base">{b.master_emoji ?? "🙂"}</span>
+            {blockedMasters.map((block) => (
+              <li key={block.master_id} className="p-3 flex items-center gap-3 bg-ink-surface2 lg:rounded-lg lg:border lg:border-ink-border">
+                <span className="text-base">{block.master_emoji ?? "?"}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{b.master_display_name ?? "—"}</p>
+                  <p className="text-sm truncate">{block.master_display_name ?? "-"}</p>
                   <p className="text-[10px] text-ink-faint font-mono">
-                    {b.blocked_by_name ? t("common.by", { name: b.blocked_by_name }) : ""}
+                    {block.blocked_by_name ? t("common.by", { name: block.blocked_by_name }) : ""}
                   </p>
                 </div>
-                {canAdminBlock && <UnblockMasterButton masterId={b.master_id} supabase={supabase} router={router} />}
+                {canAdminBlock && <UnblockMasterButton masterId={block.master_id} supabase={supabase} router={router} />}
               </li>
             ))}
           </ul>
@@ -92,14 +92,15 @@ interface HouseRowProps {
 function HouseVisibilityRow({ house, canAdminBlock, supabase, router }: HouseRowProps) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
-  const scoreVisible = (house.score_visibility ?? "visible") === "visible";
+  const audience = getScoreAudience(house);
   const masterBlocked = (house.master_can_toggle_score ?? "allowed") === "blocked";
+  const masterToggleApplies = audience === "masters_only";
 
-  async function toggleScore() {
+  async function setAudience(next: HouseScoreAudience) {
     setBusy(true);
-    const { error } = await supabase.rpc("set_house_score_visibility", {
+    const { error } = await supabase.rpc("admin_set_house_score_audience", {
       house_uuid: house.id,
-      visibility: scoreVisible ? "hidden" : "visible",
+      audience: next,
     });
     setBusy(false);
     if (error) {
@@ -129,44 +130,58 @@ function HouseVisibilityRow({ house, canAdminBlock, supabase, router }: HouseRow
       <td className="py-3 pr-3">
         <span className="font-medium">{house.icon} {house.name}</span>
       </td>
-      <td className="py-3 px-3">
-        <button
-          type="button"
-          onClick={toggleScore}
-          disabled={busy}
-          title={scoreVisible ? t("permissions.scoreVisible") : t("permissions.scoreHidden")}
-          className={`text-xs px-2 py-1 rounded-md border transition-colors ${
-            scoreVisible
-              ? "bg-success/10 border-success/40 text-success"
-              : "bg-ink-surface2 border-ink-border text-ink-muted"
-          } disabled:opacity-50`}
+      <td className="py-3 px-3 min-w-56">
+        <select
+          value={audience}
+          onChange={(event) => void setAudience(event.target.value as HouseScoreAudience)}
+          disabled={!canAdminBlock || busy}
+          className="w-full rounded-md border border-ink-border bg-ink-surface2 px-2 py-1.5 text-xs text-ink-text outline-none transition-colors focus:border-command disabled:opacity-50"
         >
-          {scoreVisible ? "👁 " + t("permissions.scoreVisible") : "🔒 " + t("permissions.scoreHidden")}
-        </button>
+          {AUDIENCE_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {audienceLabel(option, t)}
+            </option>
+          ))}
+        </select>
       </td>
       <td className="py-3 px-3">
-        {canAdminBlock ? (
-          <button
-            type="button"
-            onClick={toggleMasterBlock}
-            disabled={busy}
-            className={`text-xs px-2 py-1 rounded-md border transition-colors ${
-              masterBlocked
-                ? "bg-danger/10 border-danger/40 text-danger"
-                : "bg-success/10 border-success/40 text-success"
-            } disabled:opacity-50`}
-          >
-            {masterBlocked ? "⛔ " + t("permissions.masterToggleBlocked") : "✓ " + t("permissions.masterCanToggle")}
-          </button>
+        {masterToggleApplies ? (
+          canAdminBlock ? (
+            <button
+              type="button"
+              onClick={toggleMasterBlock}
+              disabled={busy}
+              className={`text-xs px-2 py-1 rounded-md border transition-colors ${
+                masterBlocked
+                  ? "bg-danger/10 border-danger/40 text-danger"
+                  : "bg-success/10 border-success/40 text-success"
+              } disabled:opacity-50`}
+            >
+              {masterBlocked ? t("permissions.masterToggleBlocked") : t("permissions.masterCanToggle")}
+            </button>
+          ) : (
+            <span className={`text-xs ${masterBlocked ? "text-danger" : "text-success"}`}>
+              {masterBlocked ? t("permissions.masterToggleBlocked") : t("permissions.masterCanToggle")}
+            </span>
+          )
         ) : (
-          <span className={`text-xs ${masterBlocked ? "text-danger" : "text-success"}`}>
-            {masterBlocked ? "⛔" : "✓"}
-          </span>
+          <span className="text-xs text-ink-faint">{t("permissions.masterToggleOnlyInMastersMode")}</span>
         )}
       </td>
       <td className="py-3 pl-3" />
     </tr>
   );
+}
+
+function getScoreAudience(house: House): HouseScoreAudience {
+  if (house.score_audience) return house.score_audience;
+  return (house.score_visibility ?? "visible") === "visible" ? "house" : "masters_only";
+}
+
+function audienceLabel(option: HouseScoreAudience, t: ReturnType<typeof useI18n>["t"]) {
+  if (option === "house") return t("permissions.scoreAudienceHouse");
+  if (option === "masters_only") return t("permissions.scoreAudienceMastersOnly");
+  return t("permissions.scoreAudienceAdminOnly");
 }
 
 function UnblockMasterButton({

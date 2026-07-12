@@ -2,8 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HouseCrest } from "@/components/HouseCrest";
 import { HouseChatLayout } from "@/components/HouseChatLayout";
+import { HouseScoreVisibilityToggle } from "@/components/HouseScoreVisibilityToggle";
 import { getServerTranslator } from "@/lib/i18n-server";
-import type { HouseSlug, HouseScoreVisibility } from "@/lib/types";
+import type { HouseMasterToggle, HouseScoreAudience, HouseScoreVisibility, HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
 const HOUSE_MOTTO_KEYS: Record<HouseSlug, TranslationKey> = {
@@ -23,7 +24,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
 
   const { data: house } = await supabase
     .from("houses")
-    .select("id, name, slug, color, icon, description, score_visibility, master_can_toggle_score")
+    .select("id, name, slug, color, icon, description, score_visibility, score_audience, master_can_toggle_score")
     .eq("slug", params.slug)
     .single();
   if (!house) notFound();
@@ -48,6 +49,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
     { data: roster },
     { data: messages },
     { data: masterBlockRow },
+    { data: canViewHouseScore, error: canViewHouseScoreError },
     { data: viewerMute },
   ] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
@@ -65,21 +67,23 @@ export default async function HousePage({ params }: { params: { slug: string } }
     isMember && profile?.house_role === "master"
       ? supabase.from("house_master_score_blocks").select("id").eq("master_id", user.id).maybeSingle()
       : Promise.resolve({ data: null } as any),
+    supabase.rpc("can_view_house_score", { house_uuid: house.id, viewer_id: user.id }),
     supabase.rpc("get_mute_status", { user_id: user.id }),
   ]);
 
   const isMasterBlocked = !!masterBlockRow?.id;
   const scoreVisibility: HouseScoreVisibility = (house.score_visibility as HouseScoreVisibility) ?? "visible";
+  const scoreAudience: HouseScoreAudience =
+    (house.score_audience as HouseScoreAudience | null) ?? (scoreVisibility === "visible" ? "house" : "masters_only");
+  const masterCanToggleScore: HouseMasterToggle = (house.master_can_toggle_score as HouseMasterToggle | null) ?? "allowed";
   const totalPoints = points?.total_points ?? 0;
-
-  // Quyết định viewer có được xem điểm house không
-  // - admin: luôn xem
-  // - master của house này, bị block: không
-  // - thành viên house, score_visibility = hidden: không
-  let viewerCanSeeScore = true;
-  if (isAdmin) viewerCanSeeScore = true;
-  else if (isMember && profile?.house_role === "master" && isMasterBlocked) viewerCanSeeScore = false;
-  else if (isMember && scoreVisibility === "hidden") viewerCanSeeScore = false;
+  const viewerCanSeeScore = canViewHouseScoreError ? isAdmin : canViewHouseScore !== false;
+  const canMasterToggleScore =
+    isMember &&
+    profile?.house_role === "master" &&
+    scoreAudience === "masters_only" &&
+    masterCanToggleScore !== "blocked" &&
+    !isMasterBlocked;
 
   // Có bị mute không? (viewer là member)
   void viewerMute;
@@ -121,6 +125,11 @@ export default async function HousePage({ params }: { params: { slug: string } }
         houseName={house.name}
         totalPoints={totalPoints}
         viewerCanSeeScore={viewerCanSeeScore}
+        adminControls={
+          canMasterToggleScore ? (
+            <HouseScoreVisibilityToggle houseId={house.id} initialVisibility={scoreVisibility} />
+          ) : undefined
+        }
       />
     </main>
   );
