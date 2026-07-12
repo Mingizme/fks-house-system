@@ -31,8 +31,8 @@ Bạn cần tạo 2 tài khoản miễn phí:
    4. `supabase/chat_features.sql` — edit/delete/reply/reactions cho chat.
    5. `supabase/chat_attachments.sql` — ảnh/video trong chat (bucket `attachments`).
    6. `supabase/make_admin.sql` — (chỉ khi cần) sau khi tạo tài khoản, sửa email + role rồi chạy.
-   7. `supabase/rbac.sql` — **Dynamic RBAC**: departments (Security/Linguistic/Admin/Staff/Media/Judge/Ex/Executive), admin_rank (`global_director`/`director`/`member`), `can_manage_admin()`, RPC `admin_set_role` / `admin_demote_to_player` / `rename_department`.
-   8. **`supabase/rbac_ext.sql`** — (MỚI) Mute có thời hạn + tự gỡ, House score visibility (visible/hidden),_master_can_toggle_score flag, cấm đích danh House Master xem điểm, Leaderboard visibility (`public`/`masters_only`), các RPC và RLS liên quan.
+   7. `supabase/rbac.sql` — **Dynamic RBAC**: departments (Security/Linguistic/Admin/Staff/Media/Judge/Ex/Executive), admin_rank (`global_director`/`director`/`deputy_director`/`member`), `can_manage_admin()`, RPC `admin_set_role` / `admin_demote_to_player` / `rename_department`.
+   8. **`supabase/rbac_ext.sql`** — (MỚI) Mute có thời hạn + tự gỡ, per-role/per-profile title controls, House score visibility (visible/hidden),_master_can_toggle_score flag, cấm đích danh House Master xem điểm, Leaderboard visibility (`public`/`masters_only`), các RPC và RLS liên quan.
 
    Mọi file đều idempotent (chạy lại không lỗi). Nếu thấy `Success. No rows returned` là đã chạy đúng.
 3. Vào **Authentication → Providers**, đảm bảo **Email** đang bật (mặc định đã bật sẵn).

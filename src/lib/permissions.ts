@@ -37,6 +37,10 @@ export function isDirector(actor: ActorContext): boolean {
   return actor.userType === "admin" && actor.adminRank === "director";
 }
 
+export function isDeputyDirector(actor: ActorContext): boolean {
+  return actor.userType === "admin" && actor.adminRank === "deputy_director";
+}
+
 export function isAdmin(actor: ActorContext): boolean {
   return actor.userType === "admin";
 }
@@ -53,7 +57,8 @@ export function isHouseLeader(ctx: HouseLeaderContext): boolean {
  * Phản chiếu logic can_manage_admin() ở DB (supabase/rbac.sql):
  *  - Global Director: quản lý được tất cả (trừ chính mình)
  *  - Mọi admin: quản lý player
- *  - Director: quản lý thêm member cùng department
+ *  - Director: quản lý thêm Deputy Director / Member cùng department
+ *  - Deputy Director: quản lý thêm Member cùng department
  *  - Không ai tự quản lý bản thân
  */
 export function canManage(actor: ActorContext, target: TargetContext): boolean {
@@ -63,8 +68,14 @@ export function canManage(actor: ActorContext, target: TargetContext): boolean {
   if (actor.adminRank === "global_director") return true;
   if (target.userType === "player") return true;
 
+  const sameDepartment = !!actor.departmentId && target.departmentId === actor.departmentId;
+
   if (actor.adminRank === "director") {
-    return target.adminRank === "member" && target.departmentId === actor.departmentId;
+    return sameDepartment && (target.adminRank === "deputy_director" || target.adminRank === "member");
+  }
+
+  if (actor.adminRank === "deputy_director") {
+    return sameDepartment && target.adminRank === "member";
   }
 
   return false;
@@ -80,9 +91,9 @@ export function canRenameDepartments(actor: ActorContext): boolean {
   return isGlobalDirector(actor);
 }
 
-/** Có được phép đổi title role của chính mình không (Director trở lên). */
+/** Có được phép vào khu vực role title không. DB vẫn kiểm tra chi tiết theo department/rank. */
 export function canEditOwnRoleTitle(actor: ActorContext): boolean {
-  return isGlobalDirector(actor) || isDirector(actor);
+  return isAdmin(actor);
 }
 
 /** Có được phép mute/unmute/ban target không (cùng luật can_manage). */
@@ -93,8 +104,14 @@ export function canMute(actor: ActorContext, target: TargetContext): boolean {
   if (actor.adminRank === "global_director") return true;
   if (target.userType === "player") return true;
 
+  const sameDepartment = !!actor.departmentId && target.departmentId === actor.departmentId;
+
   if (actor.adminRank === "director") {
-    return target.adminRank === "member" && target.departmentId === actor.departmentId;
+    return sameDepartment && (target.adminRank === "deputy_director" || target.adminRank === "member");
+  }
+
+  if (actor.adminRank === "deputy_director") {
+    return sameDepartment && target.adminRank === "member";
   }
 
   return false;

@@ -26,12 +26,12 @@ export default async function AdminChatPage() {
       .limit(200),
     supabase
       .from("profiles")
-      .select("id, display_name, avatar_emoji, avatar_url, admin_rank, department_id, username, department:departments(id, name, director_title, member_title, sort_order)")
+      .select("id, display_name, avatar_emoji, avatar_url, admin_rank, department_id, role_title_override, username, department:departments(id, name, director_title, deputy_director_title, member_title, sort_order)")
       .eq("user_type", "admin")
       .order("display_name"),
     supabase
       .from("departments")
-      .select("id, key, name, director_title, member_title, sort_order, created_at")
+      .select("id, key, name, director_title, deputy_director_title, member_title, director_title_editing_enabled, deputy_director_title_editing_enabled, member_title_editing_enabled, sort_order, created_at")
       .order("sort_order"),
     getChatMarkdownSettingsForUser(supabase, user.id),
   ]);

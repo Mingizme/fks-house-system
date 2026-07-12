@@ -25,17 +25,19 @@
 -- │ ex            │ director         │
 -- │ ex            │ member           │
 -- └───────────────┴──────────────────┘
+-- deputy_director cũng hợp lệ cho mọi department không phải global_director.
 
 -- ============ THAY 3 GIÁ TRỊ DƯỚI ĐÂY RỒI CHẠY ============
 -- 1) Email tài khoản player cần nâng cấp (phải đã đăng ký qua /signup):
 --   vd: 'minh_tran@example.com'
 -- 2) department_key: vd 'security'
--- 3) rank: 'global_director' | 'director' | 'member'
+-- 3) rank: 'global_director' | 'director' | 'deputy_director' | 'member'
 
 update profiles
 set user_type = 'admin',
     department_id = (select id from departments where key = 'security'),  -- ← đổi department_key
-    admin_rank    = 'member'                                               -- ← đổi rank
+    admin_rank    = 'member',                                              -- ← đổi rank
+    role_title_override = null
 where id = (
   select id from auth.users where email = 'EMAIL_CUA_BAN@example.com'      -- ← đổi email
 );
@@ -43,5 +45,5 @@ where id = (
 -- Sau khi chạy xong: đăng xuất rồi đăng nhập lại tại /admin/login.
 -- Để gỡ admin → player: chạy lệnh sau (đặt lại user_type, xoá dept/rank):
 -- update profiles
---   set user_type = 'player', admin_rank = null, department_id = null
+--   set user_type = 'player', admin_rank = null, department_id = null, role_title_override = null
 -- where id = (select id from auth.users where email = '...');

@@ -91,8 +91,8 @@ Web quản lý hệ thống thi đua **4 House** (Arctic Wolves 🐺 · Inferno 
 
 ## Mô hình phân quyền (RBAC) — logic cốt lõi
 - **Department** ngang hàng: Security · Linguistic · Admin · Staff · Media · Judge · Executive Protection Detail (Ex). Admin ở các department khác nhau **không quản trị lẫn nhau**.
-- **admin_rank**: `member` (chỉ quản lý Player) < `director` (quản lý Player + member cùng department) < `global_director` (thuộc dept Executive, toàn quyền; có **Dynamic Role Renaming** đổi tên chức danh, phong Player→Admin, đổi role bất kỳ).
-- `departmentTitle(rank, dept)` trong `types.ts` quyết định chức danh hiển thị (global → "Global Director"; director → `dept.director_title` đổi tên được; member → `dept.member_title`).
+- **admin_rank**: `member` (quản lý Player) < `deputy_director` (quản lý Player + member cùng department) < `director` (quản lý Player + deputy/member cùng department) < `global_director` (thuộc dept Executive, toàn quyền; có **Dynamic Role Renaming** đổi tên chức danh, phong Player→Admin, đổi role bất kỳ).
+- `departmentTitle(rank, dept, override)` trong `types.ts` quyết định chức danh hiển thị (global → "Global Director"; director/deputy/member → title theo department, ưu tiên `role_title_override` từng profile nếu có).
 - **House leadership**: một Player chỉ giữ **duy nhất 1 chức** (`master` HOẶC `vice`) — enforce bằng unique index + RPC `set_house_leader` (tự gỡ người cũ).
 - **Mute có thời hạn**: `mute_user(target, duration_minutes, reason)`; **lazy unmute** khi `muted_until <= now()`, KHÔNG cần cron.
 - **Hiển thị điểm**: House Master bật/tắt điểm cho thành viên house (khi admin chưa cấm); admin có thể cấm Master toggle và/hoặc cấm đích danh Master xem điểm. Leaderboard chung có visibility `public` / `masters_only` / `admin_only`.

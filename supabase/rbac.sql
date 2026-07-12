@@ -15,31 +15,59 @@ create table if not exists departments (
   key text not null unique,          -- định danh cố định: security | linguistic | admin | staff | media | judge | ex
   name text not null,                -- tên hiển thị (Global Director đổi được)
   director_title text not null,      -- vd 'Director of Security' -> có thể đổi 'Commanding Chief'
+  deputy_director_title text not null,
   member_title text not null,        -- vd 'Security Officer'
+  director_title_editing_enabled boolean not null default false,
+  deputy_director_title_editing_enabled boolean not null default false,
+  member_title_editing_enabled boolean not null default false,
   sort_order int not null default 0,
   created_at timestamptz default now()
 );
 
+alter table departments add column if not exists deputy_director_title text;
+alter table departments add column if not exists director_title_editing_enabled boolean not null default false;
+alter table departments add column if not exists deputy_director_title_editing_enabled boolean not null default false;
+alter table departments add column if not exists member_title_editing_enabled boolean not null default false;
+
 -- Seed 7 bộ phận ngang hàng mặc định
-insert into departments (key, name, director_title, member_title, sort_order) values
-  ('executive', 'Executive',  'Global Director',          'Executive',            0),
-  ('admin',     'Admin',      'Director of Admin',        'Admin Officer',        1),
-  ('security',  'Security',   'Director of Security',     'Security Officer',     2),
-  ('linguistic','Linguistic', 'Director of Linguistic',   'Linguistic Officer',   3),
-  ('judge',     'Judge',      'Director of Judges',       'Judge',                4),
-  ('staff',     'Staff',      'Director of Staff',        'Staff Member',         5),
-  ('media',     'Media',      'Director of Media',        'Media Officer',        6),
-  ('ex',        'Executive Protection Detail', 'Director of Ex', 'Ex Officer',    7)
+insert into departments (key, name, director_title, deputy_director_title, member_title, sort_order) values
+  ('executive', 'Executive',  'Global Director',          'Deputy Global Director',     'Executive',            0),
+  ('admin',     'Admin',      'Director of Admin',        'Deputy Director of Admin',   'Admin Officer',        1),
+  ('security',  'Security',   'Director of Security',     'Deputy Director of Security','Security Officer',     2),
+  ('linguistic','Linguistic', 'Director of Linguistic',   'Deputy Director of Linguistic', 'Linguistic Officer', 3),
+  ('judge',     'Judge',      'Director of Judges',       'Deputy Director of Judges',  'Judge',                4),
+  ('staff',     'Staff',      'Director of Staff',        'Deputy Director of Staff',   'Staff Member',         5),
+  ('media',     'Media',      'Director of Media',        'Deputy Director of Media',   'Media Officer',        6),
+  ('ex',        'Executive Protection Detail', 'Director of Ex', 'Deputy Director of Ex', 'Ex Officer',    7)
 on conflict (key) do nothing;
+
+update departments
+  set deputy_director_title = case key
+    when 'executive' then 'Deputy Global Director'
+    when 'admin' then 'Deputy Director of Admin'
+    when 'security' then 'Deputy Director of Security'
+    when 'linguistic' then 'Deputy Director of Linguistic'
+    when 'judge' then 'Deputy Director of Judges'
+    when 'staff' then 'Deputy Director of Staff'
+    when 'media' then 'Deputy Director of Media'
+    when 'ex' then 'Deputy Director of Ex'
+    else 'Deputy Director of Department'
+  end
+  where deputy_director_title is null or trim(deputy_director_title) = '';
+
+alter table departments alter column deputy_director_title set not null;
 
 -- ---------- ENUM: admin_rank ----------
 do $$ begin
-  create type admin_rank as enum ('global_director', 'director', 'member');
+  create type admin_rank as enum ('global_director', 'director', 'deputy_director', 'member');
 exception when duplicate_object then null; end $$;
+
+alter type admin_rank add value if not exists 'deputy_director';
 
 -- ---------- PROFILES: cột department + rank ----------
 alter table profiles add column if not exists department_id uuid references departments(id);
 alter table profiles add column if not exists admin_rank admin_rank;
+alter table profiles add column if not exists role_title_override text;
 
 create index if not exists idx_profiles_department on profiles(department_id);
 
@@ -118,7 +146,8 @@ $$;
 
 -- Quy tắc quản trị:
 --  - Global Director: quản lý được TẤT CẢ mọi người.
---  - Director of Department: quản lý được member (rank='member') cùng department, và player.
+--  - Director of Department: quản lý được deputy/member cùng department, và player.
+--  - Deputy Director of Department: quản lý được member cùng department, và player.
 --  - Ngang hàng (member <-> member, hay khác department) KHÔNG quản lý được nhau.
 create or replace function can_manage_admin(target_id uuid)
 returns boolean
@@ -140,7 +169,7 @@ begin
   end if;
 
   -- Global Director: toàn quyền
-  if me.admin_rank = 'global_director' then
+  if me.admin_rank::text = 'global_director' then
     return true;
   end if;
 
@@ -153,12 +182,18 @@ begin
     return true;
   end if;
 
-  -- Director: quản lý member NỘI BỘ department của mình
-  if me.admin_rank = 'director' then
-    if target.admin_rank = 'member' and target.department_id = me.department_id then
-      return true;
-    end if;
+  if me.department_id is null or target.department_id is distinct from me.department_id then
     return false;
+  end if;
+
+  -- Director: quản lý deputy/member NỘI BỘ department của mình
+  if me.admin_rank::text = 'director' then
+    return target.admin_rank::text in ('deputy_director', 'member');
+  end if;
+
+  -- Deputy Director: quản lý member NỘI BỘ department của mình
+  if me.admin_rank::text = 'deputy_director' then
+    return target.admin_rank::text = 'member';
   end if;
 
   return false;
@@ -186,7 +221,7 @@ begin
     raise exception 'A Global Director cannot change their own role.';
   end if;
 
-  if new_rank = 'global_director' then
+  if new_rank::text = 'global_director' then
     raise exception 'Global Director rank must be assigned manually, not through role management.';
   end if;
 
@@ -198,7 +233,8 @@ begin
   update profiles
     set user_type = 'admin',
         department_id = dep_id,
-        admin_rank = new_rank
+        admin_rank = new_rank,
+        role_title_override = null
     where id = target_id;
 end;
 $$;
@@ -216,7 +252,8 @@ begin
   update profiles
     set user_type = 'player',
         admin_rank = null,
-        department_id = null
+        department_id = null,
+        role_title_override = null
     where id = target_id;
 end;
 $$;
@@ -226,6 +263,7 @@ create or replace function rename_department(
   dept_id uuid,
   new_name text,
   new_director_title text,
+  new_deputy_director_title text,
   new_member_title text
 )
 returns void
@@ -239,6 +277,7 @@ begin
   update departments
     set name = coalesce(nullif(trim(new_name), ''), name),
         director_title = coalesce(nullif(trim(new_director_title), ''), director_title),
+        deputy_director_title = coalesce(nullif(trim(new_deputy_director_title), ''), deputy_director_title),
         member_title = coalesce(nullif(trim(new_member_title), ''), member_title)
     where id = dept_id;
 end;
@@ -269,7 +308,7 @@ $$;
 
 grant execute on function admin_set_role(uuid, text, admin_rank) to authenticated;
 grant execute on function admin_demote_to_player(uuid) to authenticated;
-grant execute on function rename_department(uuid, text, text, text) to authenticated;
+grant execute on function rename_department(uuid, text, text, text, text) to authenticated;
 grant execute on function rename_department_name(uuid, text) to authenticated;
 grant execute on function can_manage_admin(uuid) to authenticated;
 

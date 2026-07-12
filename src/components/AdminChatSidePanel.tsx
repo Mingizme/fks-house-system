@@ -15,7 +15,8 @@ export interface AdminChatMember {
   avatar_url: string | null;
   admin_rank: AdminRank | null;
   department_id: string | null;
-  department?: Pick<Department, "id" | "name" | "director_title" | "member_title" | "sort_order"> | null;
+  role_title_override?: string | null;
+  department?: Pick<Department, "id" | "name" | "director_title" | "deputy_director_title" | "member_title" | "sort_order"> | null;
   username?: string;
 }
 
@@ -28,13 +29,14 @@ interface Props {
 }
 
 const ADMIN_SELECT =
-  "id, display_name, avatar_emoji, avatar_url, admin_rank, department_id, username, department:departments(id, name, director_title, member_title, sort_order)";
+  "id, display_name, avatar_emoji, avatar_url, admin_rank, department_id, role_title_override, username, department:departments(id, name, director_title, deputy_director_title, member_title, sort_order)";
 
-/** rank ordering trong 1 department: director (0) -> member (1) */
+/** rank ordering trong 1 department: director -> deputy -> member */
 function rankOrder(rank: AdminRank | null) {
   if (rank === "director") return 0;
-  if (rank === "member") return 1;
-  return 2;
+  if (rank === "deputy_director") return 1;
+  if (rank === "member") return 2;
+  return 3;
 }
 
 interface DeptGroup {
@@ -46,7 +48,7 @@ interface DeptGroup {
 /**
  * Nhóm admin cho panel chat admin:
  *  - Global Director đứng đầu (section riêng)
- *  - Sau đó từng department theo sort_order; trong department: Director -> Member
+ *  - Sau đó từng department theo sort_order; trong department: Director -> Deputy -> Member
  */
 function buildGroups(admins: AdminChatMember[], departments: Department[]): DeptGroup[] {
   const groups: DeptGroup[] = [];
@@ -139,7 +141,7 @@ export function AdminChatSidePanel({
             </p>
             <div className="space-y-0.5">
               {group.members.map((m) => {
-                const label = departmentTitle(m.admin_rank, m.department ?? null);
+                const label = departmentTitle(m.admin_rank, m.department ?? null, m.role_title_override);
                 return (
                   <div key={m.id} className="relative">
                     <MemberPopover

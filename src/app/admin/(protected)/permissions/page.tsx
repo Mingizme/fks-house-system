@@ -7,7 +7,6 @@ import { ScoreVisibilitySection } from "@/components/rbac/ScoreVisibilitySection
 import { LeaderboardVisibilitySection } from "@/components/rbac/LeaderboardVisibilitySection";
 import {
   isGlobalDirector,
-  canEditOwnRoleTitle,
   canAdminBlockMasterScoreToggle,
   canSetLeaderboardVisibility,
 } from "@/lib/permissions";
@@ -53,19 +52,18 @@ export default async function PermissionSettingsPage() {
   };
 
   const canRename = isGlobalDirector(actor);
-  const canEditRoleTitle = canEditOwnRoleTitle(actor);
   const canBlockMasterToggle = canAdminBlockMasterScoreToggle(actor);
   const canSetLeaderboard = canSetLeaderboardVisibility(actor);
 
   const [{ data: departments }, { data: houses }, { data: settings }, { data: blockedRows }] = await Promise.all([
     supabase
       .from("departments")
-      .select("id, key, name, director_title, member_title, sort_order, created_at")
+      .select("id, key, name, director_title, deputy_director_title, member_title, director_title_editing_enabled, deputy_director_title_editing_enabled, member_title_editing_enabled, sort_order, created_at")
       .order("sort_order"),
     supabase.from("houses").select("*").order("name"),
     supabase
       .from("system_settings")
-      .select("id, leaderboard_visibility, role_title_editing_locked, updated_at")
+      .select("id, leaderboard_visibility, updated_at")
       .eq("id", 1)
       .maybeSingle(),
     supabase
@@ -85,7 +83,6 @@ export default async function PermissionSettingsPage() {
 
   const currentVisibility: LeaderboardVisibility = (settings?.leaderboard_visibility as LeaderboardVisibility) ?? "public";
   const currentDepartment = departments?.find((department) => department.id === me.department_id) ?? null;
-  const roleTitleEditingLocked = settings?.role_title_editing_locked ?? false;
 
   return (
     <main className="p-8 lg:p-10 2xl:p-12 w-full max-w-[1800px] mx-auto space-y-8 animate-fadeRise">
@@ -100,9 +97,8 @@ export default async function PermissionSettingsPage() {
       <RoleTitleSettingsSection
         adminRank={me.admin_rank}
         department={(currentDepartment as any) ?? null}
-        canEdit={canEditRoleTitle}
-        canToggleLock={canRename}
-        locked={roleTitleEditingLocked}
+        departments={(departments as any) ?? []}
+        canManageAll={canRename}
       />
 
       <ScoreVisibilitySection

@@ -7,7 +7,49 @@ import { useI18n } from "@/components/I18nProvider";
 import { usePresence } from "@/components/PresenceProvider";
 import { PresenceDot } from "@/components/PresenceDot";
 import { AdminSetRoleControl } from "@/components/rbac/AdminSetRoleControl";
-import type { AdminDirectoryEntry, Department } from "@/lib/types";
+import { AdminMuteControl } from "@/components/AdminMuteControl";
+import { canMute } from "@/lib/permissions";
+import { departmentTitle } from "@/lib/types";
+import type { ActorContext } from "@/lib/permissions";
+import type { AdminDirectoryEntry, Department, DepartmentAdminRank } from "@/lib/types";
+
+const DEPARTMENT_SELECT_COLUMNS =
+  "id, key, name, director_title, deputy_director_title, member_title, director_title_editing_enabled, deputy_director_title_editing_enabled, member_title_editing_enabled, sort_order, created_at";
+
+function isDepartmentAdminRank(rank: AdminDirectoryEntry["admin_rank"]): rank is DepartmentAdminRank {
+  return rank === "director" || rank === "deputy_director" || rank === "member";
+}
+
+function titleEditingEnabled(department: Department, rank: DepartmentAdminRank): boolean {
+  if (rank === "director") return !!department.director_title_editing_enabled;
+  if (rank === "deputy_director") return !!department.deputy_director_title_editing_enabled;
+  return !!department.member_title_editing_enabled;
+}
+
+function canEditProfileRoleTitle(
+  actor: ActorContext | null,
+  target: AdminDirectoryEntry,
+  targetDepartment: Department | null
+): boolean {
+  if (!actor || actor.userType !== "admin" || target.user_type !== "admin") return false;
+  if (actor.adminRank === "global_director") return true;
+  if (!isDepartmentAdminRank(target.admin_rank) || !targetDepartment || !actor.departmentId) return false;
+  if (actor.departmentId !== (target.department_id ?? targetDepartment.id)) return false;
+
+  if (actor.id === target.id && actor.adminRank === target.admin_rank) {
+    return titleEditingEnabled(targetDepartment, target.admin_rank);
+  }
+
+  if (actor.adminRank === "director") {
+    return target.admin_rank === "deputy_director" || target.admin_rank === "member";
+  }
+
+  if (actor.adminRank === "deputy_director") {
+    return target.admin_rank === "member";
+  }
+
+  return false;
+}
 
 interface Props {
   initialDepartments: Department[];
@@ -19,6 +61,87 @@ interface Props {
   /** Viewer có quyền đổi role không (Global Director) */
   canSetRole?: boolean;
   currentUserId?: string;
+  viewerActor?: ActorContext | null;
+  activeIpBans?: Array<{ ip_address: string; reason: string | null; created_at: string }>;
+}
+
+function AdminRoleTitleOverrideControl({
+  targetId,
+  currentTitle,
+  defaultTitle,
+  canEdit,
+  onSaved,
+}: {
+  targetId: string;
+  currentTitle?: string | null;
+  defaultTitle: string;
+  canEdit: boolean;
+  onSaved: () => void;
+}) {
+  const supabase = createClient();
+  const { t } = useI18n();
+  const [title, setTitle] = useState(currentTitle ?? "");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTitle(currentTitle ?? "");
+  }, [currentTitle]);
+
+  if (!canEdit) return null;
+
+  const dirty = title.trim() !== (currentTitle ?? "").trim();
+
+  async function save() {
+    setSaving(true);
+    setMsg(null);
+    setErr(null);
+
+    const { error } = await supabase.rpc("admin_set_profile_role_title", {
+      target_id: targetId,
+      new_title: title.trim() || null,
+    });
+
+    setSaving(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+
+    setMsg(t("common.saved"));
+    setTimeout(() => setMsg(null), 2000);
+    onSaved();
+  }
+
+  return (
+    <div className="rounded-lg border border-ink-border bg-ink-surface2 p-3 space-y-2">
+      <label className="block">
+        <span className="text-[10px] font-mono text-ink-muted uppercase">{t("permissions.roleTitleCurrent")}</span>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          disabled={saving}
+          maxLength={60}
+          placeholder={defaultTitle}
+          className="w-full mt-1 rounded-md bg-ink-surface border border-ink-border px-3 py-2 text-sm outline-none focus:border-command disabled:opacity-50"
+        />
+      </label>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[10px] text-ink-faint">{t("permissions.profileRoleTitleHint")}</p>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving || !dirty}
+          className="rounded-md bg-command px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-command/85 disabled:opacity-40"
+        >
+          {saving ? t("common.saving") : t("common.saveChanges")}
+        </button>
+      </div>
+      {msg && <p className="text-xs text-success">{msg}</p>}
+      {err && <p className="text-xs text-danger">{err}</p>}
+    </div>
+  );
 }
 
 /**
@@ -34,19 +157,45 @@ export function AdminDirectoryClient({
   isPlayer: _isPlayer,
   canSetRole = false,
   currentUserId,
+  viewerActor = null,
+  activeIpBans = [],
 }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
   const { isOnline } = usePresence();
   const [admins, setAdmins] = useState<AdminDirectoryEntry[]>(initialAdmins);
-  const [departments] = useState<Department[]>(initialDepartments);
+  const [departments, setDepartments] = useState<Department[]>(initialDepartments);
   const [activeDept, setActiveDept] = useState<string>("all");
   const [query, setQuery] = useState("");
   const [selectedAdmin, setSelectedAdmin] = useState<AdminDirectoryEntry | null>(null);
 
+  useEffect(() => {
+    setAdmins(initialAdmins);
+    setSelectedAdmin((current) => {
+      if (!current) return null;
+      return initialAdmins.find((row) => row.id === current.id) ?? current;
+    });
+  }, [initialAdmins]);
+
+  useEffect(() => {
+    setDepartments(initialDepartments);
+  }, [initialDepartments]);
+
+  async function refetchDepartments() {
+    const { data } = await supabase
+      .from("departments")
+      .select(DEPARTMENT_SELECT_COLUMNS)
+      .order("sort_order");
+
+    if (data) setDepartments(data as unknown as Department[]);
+  }
+
   async function refetchDirectory() {
-    const selectColumns =
-      "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, department:departments(id, key, name, director_title, member_title, sort_order, created_at), house_id, house_role, created_at";
+    const baseSelectColumns =
+      "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, role_title_override, department:departments(id, key, name, director_title, deputy_director_title, member_title, sort_order, created_at), house_id, house_role, created_at";
+    const moderationSelectColumns =
+      "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, role_title_override, department:departments(id, key, name, director_title, deputy_director_title, member_title, sort_order, created_at), house_id, house_role, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip, created_at";
+    const selectColumns = viewerActor ? moderationSelectColumns : baseSelectColumns;
 
     const [{ data: adminRows }, { data: playerRows }] = await Promise.all([
       supabase
@@ -87,7 +236,8 @@ export function AdminDirectoryClient({
         "postgres_changes",
         { event: "*", schema: "public", table: "departments" },
         () => {
-          // departments được reload qua router.refresh (server)
+          void refetchDepartments();
+          void refetchDirectory();
         }
       )
       .subscribe();
@@ -95,14 +245,14 @@ export function AdminDirectoryClient({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, canSetRole]);
+  }, [supabase, canSetRole, viewerActor]);
 
   const filtered = admins.filter((a) => {
     if (activeDept !== "all") {
-      const deptId = a.department?.id ?? a.department_id;
-      const deptKey = a.department?.key;
-      const wanted = departments.find((d) => d.id === deptId || d.key === activeDept);
-      if (deptKey !== activeDept && wanted?.key !== deptKey) return false;
+      const deptKey =
+        a.department?.key ??
+        departments.find((department) => department.id === a.department_id)?.key;
+      if (deptKey !== activeDept) return false;
     }
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -162,7 +312,7 @@ export function AdminDirectoryClient({
                 <div>
                   <p className="font-display font-bold">{dept.name}</p>
                   <p className="text-[11px] text-ink-muted font-mono">
-                    {dept.director_title} · {dept.member_title}
+                    {dept.director_title} / {dept.deputy_director_title} / {dept.member_title}
                   </p>
                 </div>
                 <span className="text-xs text-ink-faint font-mono">{list.length}</span>
@@ -170,12 +320,11 @@ export function AdminDirectoryClient({
               <ul className="divide-y divide-ink-border">
                 {list.map((a) => {
                   const online = isOnline(a.id);
-                  const roleTitle =
-                    a.admin_rank === "global_director"
-                      ? "Global Director"
-                      : a.admin_rank === "director"
-                      ? dept.director_title
-                      : dept.member_title;
+                  const displayDept =
+                    departments.find((d) => d.id === (a.department?.id ?? a.department_id) || d.key === a.department?.key) ??
+                    a.department ??
+                    dept;
+                  const roleTitle = departmentTitle(a.admin_rank, displayDept, a.role_title_override);
                   return (
                     <li key={a.id}>
                       <button
@@ -318,6 +467,62 @@ export function AdminDirectoryClient({
                 {t("adminDirectory.messageAdmin")}
               </Link>
             </div>
+
+            {(() => {
+              const selectedDepartment =
+                departments.find(
+                  (department) =>
+                    department.id === (selectedAdmin.department?.id ?? selectedAdmin.department_id) ||
+                    department.key === selectedAdmin.department?.key
+                ) ??
+                selectedAdmin.department ??
+                null;
+              const defaultRoleTitle = departmentTitle(selectedAdmin.admin_rank, selectedDepartment);
+              const canEditRoleTitle = canEditProfileRoleTitle(viewerActor, selectedAdmin, selectedDepartment);
+
+              return (
+                <AdminRoleTitleOverrideControl
+                  targetId={selectedAdmin.id}
+                  currentTitle={selectedAdmin.role_title_override}
+                  defaultTitle={defaultRoleTitle}
+                  canEdit={canEditRoleTitle}
+                  onSaved={() => void refetchDirectory()}
+                />
+              );
+            })()}
+
+            {(() => {
+              const activeIpBan = selectedAdmin.last_seen_ip
+                ? activeIpBans.find((ban) => ban.ip_address === selectedAdmin.last_seen_ip)
+                : null;
+              const canModerate =
+                !!viewerActor &&
+                canMute(viewerActor, {
+                  id: selectedAdmin.id,
+                  userType: selectedAdmin.user_type,
+                  adminRank: selectedAdmin.admin_rank,
+                  departmentId: selectedAdmin.department_id,
+                });
+
+              return canModerate ? (
+                <AdminMuteControl
+                  targetId={selectedAdmin.id}
+                  targetName={selectedAdmin.display_name}
+                  targetEmoji={selectedAdmin.avatar_emoji}
+                  blocked={null}
+                  mutedUntil={selectedAdmin.muted_until}
+                  muteReason={selectedAdmin.mute_reason}
+                  chatBannedAt={selectedAdmin.chat_banned_at}
+                  chatBanReason={selectedAdmin.chat_ban_reason}
+                  accountBannedAt={selectedAdmin.account_banned_at}
+                  accountBanReason={selectedAdmin.account_ban_reason}
+                  lastSeenIp={selectedAdmin.last_seen_ip}
+                  ipBannedAt={activeIpBan?.created_at ?? null}
+                  ipBanReason={activeIpBan?.reason ?? null}
+                  canMute={true}
+                />
+              ) : null;
+            })()}
 
             {canSetRole && selectedAdmin.id !== currentUserId && (
               <AdminSetRoleControl

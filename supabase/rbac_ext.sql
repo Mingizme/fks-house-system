@@ -116,6 +116,9 @@ alter table profiles add column if not exists account_banned_by uuid references 
 alter table profiles add column if not exists account_ban_reason text;
 alter table profiles add column if not exists last_seen_ip inet;
 alter table profiles add column if not exists last_seen_at timestamptz;
+alter table profiles add column if not exists role_title_override text;
+
+alter type admin_rank add value if not exists 'deputy_director';
 
 create index if not exists idx_profiles_chat_banned_at on profiles(chat_banned_at) where chat_banned_at is not null;
 create index if not exists idx_profiles_account_banned_at on profiles(account_banned_at) where account_banned_at is not null;
@@ -142,7 +145,7 @@ begin
     return false;
   end if;
 
-  if me.admin_rank = 'global_director' then
+  if me.admin_rank::text = 'global_director' then
     return true;
   end if;
 
@@ -153,8 +156,16 @@ begin
     return true;
   end if;
 
-  if me.admin_rank = 'director' then
-    return target.admin_rank = 'member' and target.department_id = me.department_id;
+  if me.department_id is null or target.department_id is distinct from me.department_id then
+    return false;
+  end if;
+
+  if me.admin_rank::text = 'director' then
+    return target.admin_rank::text in ('deputy_director', 'member');
+  end if;
+
+  if me.admin_rank::text = 'deputy_director' then
+    return target.admin_rank::text = 'member';
   end if;
 
   return false;
@@ -727,6 +738,27 @@ alter table system_settings
 insert into system_settings (id, leaderboard_visibility, role_title_editing_locked) values (1, 'public', false)
   on conflict (id) do nothing;
 
+alter table departments add column if not exists deputy_director_title text;
+alter table departments add column if not exists director_title_editing_enabled boolean not null default false;
+alter table departments add column if not exists deputy_director_title_editing_enabled boolean not null default false;
+alter table departments add column if not exists member_title_editing_enabled boolean not null default false;
+
+update departments
+  set deputy_director_title = case key
+    when 'executive' then 'Deputy Global Director'
+    when 'admin' then 'Deputy Director of Admin'
+    when 'security' then 'Deputy Director of Security'
+    when 'linguistic' then 'Deputy Director of Linguistic'
+    when 'judge' then 'Deputy Director of Judges'
+    when 'staff' then 'Deputy Director of Staff'
+    when 'media' then 'Deputy Director of Media'
+    when 'ex' then 'Deputy Director of Ex'
+    else 'Deputy Director of Department'
+  end
+  where deputy_director_title is null or trim(deputy_director_title) = '';
+
+alter table departments alter column deputy_director_title set not null;
+
 alter table system_settings enable row level security;
 
 drop policy if exists "settings_select_all" on system_settings;
@@ -752,7 +784,260 @@ $$;
 
 grant execute on function admin_set_leaderboard_visibility(leaderboard_visibility) to authenticated;
 
--- Global Director có thể khóa/mở chức năng director tự đổi title role.
+create or replace function admin_can_edit_department_role_title(dept_id uuid, role_rank admin_rank)
+returns boolean
+language plpgsql security definer stable
+set search_path = public
+as $$
+declare
+  me record;
+  role_text text := role_rank::text;
+begin
+  if role_text not in ('director', 'deputy_director', 'member') then
+    return false;
+  end if;
+
+  select user_type, admin_rank::text as admin_rank, department_id into me
+    from profiles
+    where id = auth.uid();
+
+  if me.user_type is distinct from 'admin' then
+    return false;
+  end if;
+
+  if me.admin_rank = 'global_director' then
+    return true;
+  end if;
+
+  if me.department_id is null or me.department_id is distinct from dept_id then
+    return false;
+  end if;
+
+  if me.admin_rank = 'director' then
+    return role_text in ('deputy_director', 'member');
+  end if;
+
+  if me.admin_rank = 'deputy_director' then
+    return role_text = 'member';
+  end if;
+
+  return false;
+end;
+$$;
+
+create or replace function admin_can_toggle_department_role_title(dept_id uuid, role_rank admin_rank)
+returns boolean
+language plpgsql security definer stable
+set search_path = public
+as $$
+declare
+  me record;
+  role_text text := role_rank::text;
+begin
+  if role_text not in ('director', 'deputy_director', 'member') then
+    return false;
+  end if;
+
+  select user_type, admin_rank::text as admin_rank, department_id into me
+    from profiles
+    where id = auth.uid();
+
+  if me.user_type is distinct from 'admin' then
+    return false;
+  end if;
+
+  if me.admin_rank = 'global_director' then
+    return true;
+  end if;
+
+  if me.department_id is null or me.department_id is distinct from dept_id then
+    return false;
+  end if;
+
+  if me.admin_rank = 'director' then
+    return role_text in ('deputy_director', 'member');
+  end if;
+
+  if me.admin_rank = 'deputy_director' then
+    return role_text = 'member';
+  end if;
+
+  return false;
+end;
+$$;
+
+create or replace function admin_rename_department_role_title(dept_id uuid, role_rank admin_rank, new_title text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  normalized_title text := nullif(trim(new_title), '');
+  role_text text := role_rank::text;
+begin
+  if normalized_title is null then
+    raise exception 'Role title cannot be empty.';
+  end if;
+
+  if length(normalized_title) > 60 then
+    raise exception 'Role title must be 60 characters or fewer.';
+  end if;
+
+  if not admin_can_edit_department_role_title(dept_id, role_rank) then
+    raise exception 'You do not have permission to rename this role title.';
+  end if;
+
+  if role_text = 'director' then
+    update departments set director_title = normalized_title where id = dept_id;
+  elsif role_text = 'deputy_director' then
+    update departments set deputy_director_title = normalized_title where id = dept_id;
+  elsif role_text = 'member' then
+    update departments set member_title = normalized_title where id = dept_id;
+  else
+    raise exception 'Unsupported role title rank.';
+  end if;
+end;
+$$;
+
+create or replace function admin_set_department_role_title_editing(dept_id uuid, role_rank admin_rank, enabled boolean)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  role_text text := role_rank::text;
+begin
+  if not admin_can_toggle_department_role_title(dept_id, role_rank) then
+    raise exception 'You do not have permission to change this role title editing permission.';
+  end if;
+
+  if role_text = 'director' then
+    update departments set director_title_editing_enabled = enabled where id = dept_id;
+  elsif role_text = 'deputy_director' then
+    update departments set deputy_director_title_editing_enabled = enabled where id = dept_id;
+  elsif role_text = 'member' then
+    update departments set member_title_editing_enabled = enabled where id = dept_id;
+  else
+    raise exception 'Unsupported role title rank.';
+  end if;
+end;
+$$;
+
+create or replace function admin_can_edit_profile_role_title(target_id uuid)
+returns boolean
+language plpgsql security definer stable
+set search_path = public
+as $$
+declare
+  me record;
+  target record;
+  self_edit_enabled boolean := false;
+begin
+  select user_type, admin_rank::text as admin_rank, department_id into me
+    from profiles
+    where id = auth.uid();
+
+  if me.user_type is distinct from 'admin' then
+    return false;
+  end if;
+
+  select user_type, admin_rank::text as admin_rank, department_id into target
+    from profiles
+    where id = target_id;
+
+  if target.user_type is distinct from 'admin' or target.admin_rank is null then
+    return false;
+  end if;
+
+  if me.admin_rank = 'global_director' then
+    return true;
+  end if;
+
+  if target.admin_rank = 'global_director' then
+    return false;
+  end if;
+
+  if me.department_id is null or me.department_id is distinct from target.department_id then
+    return false;
+  end if;
+
+  if auth.uid() = target_id and me.admin_rank = target.admin_rank then
+    select case target.admin_rank
+      when 'director' then director_title_editing_enabled
+      when 'deputy_director' then deputy_director_title_editing_enabled
+      else member_title_editing_enabled
+    end into self_edit_enabled
+    from departments
+    where id = target.department_id;
+
+    return coalesce(self_edit_enabled, false);
+  end if;
+
+  if me.admin_rank = 'director' then
+    return target.admin_rank in ('deputy_director', 'member');
+  end if;
+
+  if me.admin_rank = 'deputy_director' then
+    return target.admin_rank = 'member';
+  end if;
+
+  return false;
+end;
+$$;
+
+create or replace function admin_set_profile_role_title(target_id uuid, new_title text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  normalized_title text := nullif(trim(new_title), '');
+begin
+  if normalized_title is not null and length(normalized_title) > 60 then
+    raise exception 'Role title must be 60 characters or fewer.';
+  end if;
+
+  if not admin_can_edit_profile_role_title(target_id) then
+    raise exception 'You do not have permission to rename this profile role title.';
+  end if;
+
+  update profiles
+    set role_title_override = normalized_title
+    where id = target_id;
+end;
+$$;
+
+create or replace function guard_profile_role_title_override_update()
+returns trigger
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if new.role_title_override is distinct from old.role_title_override then
+    if not admin_can_edit_profile_role_title(new.id) then
+      raise exception 'You do not have permission to rename this profile role title.';
+    end if;
+
+    new.role_title_override := nullif(trim(new.role_title_override), '');
+
+    if new.role_title_override is not null and length(new.role_title_override) > 60 then
+      raise exception 'Role title must be 60 characters or fewer.';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_role_title_override_guard on profiles;
+create trigger profiles_role_title_override_guard
+  before update of role_title_override on profiles
+  for each row execute function guard_profile_role_title_override_update();
+
+grant execute on function admin_can_edit_profile_role_title(uuid) to authenticated;
+grant execute on function admin_set_profile_role_title(uuid, text) to authenticated;
+
+-- Compatibility wrapper for the old global lock. New UI uses per department/rank toggles.
 create or replace function admin_set_role_title_editing_locked(locked boolean)
 returns void
 language plpgsql security definer
@@ -767,10 +1052,15 @@ begin
     set role_title_editing_locked = locked,
         updated_at = now()
     where id = 1;
+
+  update departments
+    set director_title_editing_enabled = not locked,
+        deputy_director_title_editing_enabled = not locked,
+        member_title_editing_enabled = not locked;
 end;
 $$;
 
--- Director trở lên chỉ được đổi title role của chính department mình.
+-- Compatibility wrapper for old callers that renamed the actor's own role title.
 create or replace function admin_rename_own_role_title(new_title text)
 returns void
 language plpgsql security definer
@@ -778,45 +1068,29 @@ set search_path = public
 as $$
 declare
   me record;
-  normalized_title text := nullif(trim(new_title), '');
-  title_editing_locked boolean;
 begin
-  if normalized_title is null then
-    raise exception 'Role title cannot be empty.';
-  end if;
-
-  if length(normalized_title) > 60 then
-    raise exception 'Role title must be 60 characters or fewer.';
-  end if;
-
-  select role_title_editing_locked into title_editing_locked
-    from system_settings
-    where id = 1;
-
-  if coalesce(title_editing_locked, false) then
-    raise exception 'Role title editing is locked.';
-  end if;
-
   select user_type, admin_rank, department_id into me
     from profiles
     where id = auth.uid();
 
   if me.user_type is distinct from 'admin'
      or me.admin_rank is null
-     or me.admin_rank not in ('director', 'global_director') then
-    raise exception 'Only Directors and Global Directors can rename their role title.';
+     or me.admin_rank::text = 'global_director' then
+    raise exception 'Only department roles can rename their own role title through this function.';
   end if;
 
   if me.department_id is null then
     raise exception 'Your admin account is not assigned to a department.';
   end if;
 
-  update departments
-    set director_title = normalized_title
-    where id = me.department_id;
+  perform admin_set_profile_role_title(auth.uid(), new_title);
 end;
 $$;
 
+grant execute on function admin_can_edit_department_role_title(uuid, admin_rank) to authenticated;
+grant execute on function admin_can_toggle_department_role_title(uuid, admin_rank) to authenticated;
+grant execute on function admin_rename_department_role_title(uuid, admin_rank, text) to authenticated;
+grant execute on function admin_set_department_role_title_editing(uuid, admin_rank, boolean) to authenticated;
 grant execute on function admin_set_role_title_editing_locked(boolean) to authenticated;
 grant execute on function admin_rename_own_role_title(text) to authenticated;
 

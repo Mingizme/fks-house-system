@@ -2,7 +2,8 @@ import type { ChatMarkdownSettings } from "@/lib/chat-markdown-settings";
 
 export type UserType = "player" | "admin";
 export type AdminRole = "director" | "admin" | "judge" | "security" | "linguistic";
-export type AdminRank = "global_director" | "director" | "member";
+export type AdminRank = "global_director" | "director" | "deputy_director" | "member";
+export type DepartmentAdminRank = Exclude<AdminRank, "global_director">;
 export type HouseRole = "master" | "vice";
 export type HouseSlug = "arctic-wolves" | "inferno-phoenix" | "noble-lions" | "ironclad-rhinos";
 
@@ -11,7 +12,11 @@ export interface Department {
   key: string;
   name: string;
   director_title: string;
+  deputy_director_title: string;
   member_title: string;
+  director_title_editing_enabled?: boolean;
+  deputy_director_title_editing_enabled?: boolean;
+  member_title_editing_enabled?: boolean;
   sort_order: number;
   created_at: string;
 }
@@ -88,8 +93,16 @@ export interface AdminDirectoryEntry {
   admin_rank: AdminRank | null;
   department_id: string | null;
   department?: Department | null;
+  role_title_override?: string | null;
   house_id: string | null;
   house_role: HouseRole | null;
+  muted_until?: string | null;
+  mute_reason?: string | null;
+  chat_banned_at?: string | null;
+  chat_ban_reason?: string | null;
+  account_banned_at?: string | null;
+  account_ban_reason?: string | null;
+  last_seen_ip?: string | null;
   created_at: string;
 }
 
@@ -102,6 +115,7 @@ export interface Profile {
   admin_role: AdminRole | null;
   admin_rank: AdminRank | null;
   department_id: string | null;
+  role_title_override: string | null;
   house_role: HouseRole | null;
   house_id: string | null;
   avatar_emoji: string | null;
@@ -219,22 +233,39 @@ export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
 export const ADMIN_RANK_LABELS: Record<AdminRank, string> = {
   global_director: "Global Director",
   director: "Director",
+  deputy_director: "Deputy Director",
   member: "Member",
 };
+
+export const DEPARTMENT_ADMIN_RANKS: DepartmentAdminRank[] = ["director", "deputy_director", "member"];
+
+export function departmentRoleTitle(
+  rank: DepartmentAdminRank,
+  dept: Pick<Department, "director_title" | "deputy_director_title" | "member_title">
+): string {
+  if (rank === "director") return dept.director_title;
+  if (rank === "deputy_director") return dept.deputy_director_title;
+  return dept.member_title;
+}
 
 /**
  * Tiêu đề chức danh hiển thị của một admin, dựa trên rank + department.
  * - global_director: dùng director_title của department nếu có, fallback "Global Director"
  * - director: dùng department.director_title (đổi tên được, vd "Commanding Chief")
+ * - deputy_director: dùng department.deputy_director_title
  * - member: dùng department.member_title
  */
 export function departmentTitle(
   rank: AdminRank | null,
-  dept: Pick<Department, "director_title" | "member_title"> | null
+  dept: Pick<Department, "director_title" | "deputy_director_title" | "member_title"> | null,
+  override?: string | null
 ): string {
+  const normalizedOverride = override?.trim();
+  if (normalizedOverride) return normalizedOverride;
   if (rank === "global_director") return dept?.director_title || ADMIN_RANK_LABELS.global_director;
   if (!dept) return rank ? ADMIN_RANK_LABELS[rank] : "";
   if (rank === "director") return dept.director_title;
+  if (rank === "deputy_director") return dept.deputy_director_title;
   if (rank === "member") return dept.member_title;
   return "";
 }

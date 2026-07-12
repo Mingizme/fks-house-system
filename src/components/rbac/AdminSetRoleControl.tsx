@@ -20,9 +20,10 @@ interface Props {
 
 const RANKS: Array<{
   value: Exclude<AdminRank, "global_director">;
-  labelKey: "permissions.rankDirector" | "permissions.rankMember";
+  labelKey: "permissions.rankDirector" | "permissions.rankDeputyDirector" | "permissions.rankMember";
 }> = [
   { value: "director", labelKey: "permissions.rankDirector" },
+  { value: "deputy_director", labelKey: "permissions.rankDeputyDirector" },
   { value: "member", labelKey: "permissions.rankMember" },
 ];
 
@@ -48,7 +49,7 @@ export function AdminSetRoleControl({
   const { t } = useI18n();
   const [deptKey, setDeptKey] = useState<string>(currentDeptKey ?? "admin");
   const [rank, setRank] = useState<Exclude<AdminRank, "global_director">>(
-    currentRank === "director" || currentRank === "member" ? currentRank : "member"
+    currentRank === "director" || currentRank === "deputy_director" || currentRank === "member" ? currentRank : "member"
   );
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
