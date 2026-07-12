@@ -184,15 +184,16 @@ export function AIChatClient({ audience }: { audience: Audience }) {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}
+              className={cn("flex w-full min-w-0", message.role === "user" ? "justify-end" : "justify-start")}
             >
               <div
                 className={cn(
-                  "min-w-0 max-w-[88%] whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-2xl px-4 py-3 text-sm leading-6 sm:max-w-[75%] lg:text-base lg:leading-7",
+                  "min-w-0 max-w-[88%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 sm:max-w-[75%] lg:text-base lg:leading-7",
                   message.role === "user"
                     ? "rounded-br-md bg-command text-white"
                     : "rounded-bl-md border border-ink-border bg-ink-surface2 text-ink-text"
                 )}
+                style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
               >
                 {message.content || "Thinking..."}
               </div>
@@ -200,7 +201,7 @@ export function AIChatClient({ audience }: { audience: Audience }) {
           ))}
 
           {loading && messages[messages.length - 1]?.role !== "assistant" && (
-            <div className="flex justify-start">
+            <div className="flex w-full min-w-0 justify-start">
               <div className="rounded-2xl rounded-bl-md border border-ink-border bg-ink-surface2 px-4 py-3 text-sm text-ink-muted">
                 Thinking...
               </div>

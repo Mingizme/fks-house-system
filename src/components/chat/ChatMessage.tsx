@@ -240,7 +240,7 @@ export default function ChatMessage({
     return (
       <div
         data-chat-message-id={id}
-        className={`flex ${isMine ? "justify-end" : "justify-start"} scroll-mt-24 px-4 py-0.5 transition-colors duration-300 ${
+        className={`flex w-full min-w-0 ${isMine ? "justify-end" : "justify-start"} scroll-mt-24 px-4 py-0.5 transition-colors duration-300 ${
           highlighted ? "bg-command/10" : ""
         }`}
       >
@@ -256,7 +256,7 @@ export default function ChatMessage({
   return (
     <div
       data-chat-message-id={id}
-      className={`group flex ${isMine ? "justify-end" : "justify-start"} scroll-mt-24 px-4 py-0.5 transition-colors duration-300 lg:px-6 lg:py-1 ${
+      className={`group flex w-full min-w-0 ${isMine ? "justify-end" : "justify-start"} scroll-mt-24 px-4 py-0.5 transition-colors duration-300 lg:px-6 lg:py-1 ${
         highlighted ? "bg-command/10" : ""
       }`}
     >
@@ -408,13 +408,14 @@ export default function ChatMessage({
 
           {/* Bubble */}
           <div
-            className={`order-1 min-w-0 max-w-full select-none rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap [overflow-wrap:anywhere] transition-shadow duration-300 lg:px-5 lg:py-3 lg:text-base lg:leading-7 sm:select-text ${
+            className={`order-1 min-w-0 max-w-full select-none rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap transition-shadow duration-300 lg:px-5 lg:py-3 lg:text-base lg:leading-7 sm:select-text ${
               highlighted ? "ring-2 ring-command/70 ring-offset-2 ring-offset-ink-surface" : ""
             } ${
               isMine
                 ? "bg-command text-white rounded-br-md"
                 : "bg-ink-surface2 text-ink-text rounded-bl-md"
             }`}
+            style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
           >
             {mediaUrl && mediaType === "image" && (
               <button
