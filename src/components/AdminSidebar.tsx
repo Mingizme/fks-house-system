@@ -156,7 +156,7 @@ export function AdminSidebar({
       </aside>
 
       {/* ===== Mobile top bar ===== */}
-      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between border-b border-ink-border bg-ink-surface/95 backdrop-blur px-3 py-2.5">
+      <div className="mobile-app-topbar lg:hidden sticky top-0 z-40 flex items-center justify-between border-b border-ink-border bg-ink-surface/95 backdrop-blur px-3 py-2.5">
         <div className="flex items-baseline gap-2">
           <span className="font-display font-bold text-sm tracking-[0.18em] text-gradient">FKS SYSTEM</span>
           <span className="text-[9px] font-mono text-ink-faint">{t("common.adminPortal")}</span>

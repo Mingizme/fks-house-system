@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode, type TouchEvent } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/I18nProvider";
 
@@ -39,14 +40,18 @@ export function MobileChatShell({
   const router = useRouter();
   const { t } = useI18n();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   // Khoá cuộn trang nền khi shell chiếm màn hình
   useEffect(() => {
     const prev = document.body.style.overflow;
+    setMounted(true);
     document.body.style.overflow = "hidden";
+    document.body.classList.add("mobile-chat-shell-open");
     return () => {
       document.body.style.overflow = prev;
+      document.body.classList.remove("mobile-chat-shell-open");
     };
   }, []);
 
@@ -80,7 +85,7 @@ export function MobileChatShell({
     }
   }
 
-  return (
+  const shell = (
     <div className="fixed inset-0 z-[45] flex h-[100dvh] flex-col bg-ink-bg">
       {/* Header */}
       <header className="relative z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b border-ink-border bg-ink-surface px-3 pt-[env(safe-area-inset-top)]">
@@ -143,4 +148,8 @@ export function MobileChatShell({
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+
+  return createPortal(shell, document.body);
 }

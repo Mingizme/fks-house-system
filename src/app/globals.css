@@ -187,6 +187,10 @@ select:focus {
   box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 24px 60px -30px rgba(0, 0, 0, 0.85);
 }
 
+body.mobile-chat-shell-open .mobile-app-topbar {
+  display: none;
+}
+
 /* Animated gradient hairline border for feature cards */
 .gradient-border {
   position: relative;
