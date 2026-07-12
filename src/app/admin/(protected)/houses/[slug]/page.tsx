@@ -5,6 +5,7 @@ import { HouseChatLayout } from "@/components/HouseChatLayout";
 import { AddPointsForm } from "@/components/AddPointsForm";
 import { HouseLeadershipSelect } from "@/components/HouseLeadershipSelect";
 import { getServerTranslator } from "@/lib/i18n-server";
+import { getChatMarkdownSettingsForUser } from "@/lib/chat-markdown-settings";
 import type { HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -102,7 +103,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
     getHouseRoster(supabase, house.id),
     supabase
       .from("house_messages")
-      .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
+      .select("*, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
       .eq("house_id", house.id)
       .order("created_at", { ascending: false })
       .limit(100),
@@ -112,6 +113,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
   const profileBasePath = "/admin/profile";
   const messagesBasePath = "/admin/messages";
   const totalPoints = pointsRow?.total_points ?? 0;
+  const chatMarkdownSettings = await getChatMarkdownSettingsForUser(supabase, user.id);
 
   return (
     <main className="w-full p-6 lg:p-8">
@@ -148,6 +150,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
         houseName={house.name}
         totalPoints={totalPoints}
         viewerCanSeeScore={true}
+        composerMarkdownSettings={chatMarkdownSettings}
         adminControls={
           <>
             <AddPointsForm houseId={house.id} adminId={user.id} />

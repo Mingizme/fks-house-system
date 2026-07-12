@@ -43,12 +43,14 @@ create table if not exists profiles (
   house_id uuid references houses(id) on delete set null,
   avatar_emoji text default '🙂',
   avatar_url text,
+  chat_markdown_settings jsonb not null default '{}'::jsonb,
   display_name_changed_at timestamptz,
   created_at timestamptz default now()
 );
 
 alter table profiles add column if not exists email text;
 alter table profiles add column if not exists avatar_url text;
+alter table profiles add column if not exists chat_markdown_settings jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists display_name_changed_at timestamptz;
 
 create index if not exists idx_profiles_house on profiles(house_id);
@@ -87,10 +89,13 @@ create table if not exists direct_messages (
   sender_id uuid references profiles(id) not null,
   recipient_id uuid references profiles(id) not null,
   content text not null,
+  formatting_settings jsonb not null default '{}'::jsonb,
   is_admin_chat boolean not null default false,
   created_at timestamptz default now(),
   read_at timestamptz
 );
+
+alter table direct_messages add column if not exists formatting_settings jsonb not null default '{}'::jsonb;
 
 create index if not exists idx_dm_pair on direct_messages(sender_id, recipient_id, created_at);
 
@@ -100,8 +105,11 @@ create table if not exists house_messages (
   house_id uuid references houses(id) on delete cascade not null,
   sender_id uuid references profiles(id) not null,
   content text not null,
+  formatting_settings jsonb not null default '{}'::jsonb,
   created_at timestamptz default now()
 );
+
+alter table house_messages add column if not exists formatting_settings jsonb not null default '{}'::jsonb;
 
 create index if not exists idx_house_msg on house_messages(house_id, created_at);
 

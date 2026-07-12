@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DirectChatBox } from "@/components/DirectChatBox";
 import Link from "next/link";
 import { getServerTranslator } from "@/lib/i18n-server";
+import { getChatMarkdownSettingsForUser } from "@/lib/chat-markdown-settings";
 
 export default async function MessageThreadPage({ params }: { params: { userId: string } }) {
   const { t } = getServerTranslator();
@@ -36,6 +37,7 @@ export default async function MessageThreadPage({ params }: { params: { userId: 
     .eq("blocker_id", user.id)
     .eq("blocked_id", params.userId)
     .maybeSingle();
+  const chatMarkdownSettings = await getChatMarkdownSettingsForUser(supabase, user.id);
 
   return (
     <main className="flex min-h-0 flex-1 flex-col bg-ink-surface">
@@ -47,6 +49,7 @@ export default async function MessageThreadPage({ params }: { params: { userId: 
           profileBasePath="/profile"
           isAdminChat={false}
           initiallyBlocked={!!blockRow}
+          composerMarkdownSettings={chatMarkdownSettings}
         />
       </div>
     </main>

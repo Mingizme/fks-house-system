@@ -6,23 +6,31 @@ import { MobileChatShell } from "@/components/MobileChatShell";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useI18n } from "@/components/I18nProvider";
 import type { AdminMessage, Department } from "@/lib/types";
+import type { ChatMarkdownSettings } from "@/lib/chat-markdown-settings";
 
 interface Props {
   currentUserId: string;
   initialMessages: AdminMessage[];
   admins: AdminChatMember[];
   departments: Department[];
+  composerMarkdownSettings?: ChatMarkdownSettings;
 }
 
 /**
  * Bọc Admin Group Chat: desktop = chat + danh bạ cạnh nhau;
  * mobile = full màn hình qua MobileChatShell, danh bạ trong drawer phải.
  */
-export function AdminChatWorkspace({ currentUserId, initialMessages, admins, departments }: Props) {
+export function AdminChatWorkspace({ currentUserId, initialMessages, admins, departments, composerMarkdownSettings }: Props) {
   const isMobile = useIsMobile();
   const { t } = useI18n();
 
-  const chat = <AdminGroupChat currentUserId={currentUserId} initialMessages={initialMessages} />;
+  const chat = (
+    <AdminGroupChat
+      currentUserId={currentUserId}
+      initialMessages={initialMessages}
+      composerMarkdownSettings={composerMarkdownSettings}
+    />
+  );
   const panel = (
     <AdminChatSidePanel
       admins={admins}

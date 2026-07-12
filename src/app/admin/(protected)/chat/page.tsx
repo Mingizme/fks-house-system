@@ -3,6 +3,7 @@ import { AdminChatWorkspace } from "@/components/AdminChatWorkspace";
 import { getServerTranslator } from "@/lib/i18n-server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getChatMarkdownSettingsForUser } from "@/lib/chat-markdown-settings";
 
 export const metadata: Metadata = {
   title: "Admin Group Chat — FKS System",
@@ -17,10 +18,10 @@ export default async function AdminChatPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const [{ data: messages }, { data: admins }, { data: departments }] = await Promise.all([
+  const [{ data: messages }, { data: admins }, { data: departments }, chatMarkdownSettings] = await Promise.all([
     supabase
       .from("admin_messages")
-      .select("id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role)")
+      .select("*, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role)")
       .order("created_at", { ascending: false })
       .limit(200),
     supabase
@@ -32,6 +33,7 @@ export default async function AdminChatPage() {
       .from("departments")
       .select("id, key, name, director_title, member_title, sort_order, created_at")
       .order("sort_order"),
+    getChatMarkdownSettingsForUser(supabase, user.id),
   ]);
 
   return (
@@ -46,6 +48,7 @@ export default async function AdminChatPage() {
         initialMessages={(((messages as any[]) ?? []).slice().reverse() as any)}
         admins={(admins as any) ?? []}
         departments={(departments as any) ?? []}
+          composerMarkdownSettings={chatMarkdownSettings}
       />
     </main>
   );

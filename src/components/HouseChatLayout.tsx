@@ -7,6 +7,7 @@ import { MobileChatShell } from "@/components/MobileChatShell";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useMuteStatus, MuteBanner } from "@/components/MuteControls";
 import type { HouseMessage } from "@/lib/types";
+import type { ChatMarkdownSettings } from "@/lib/chat-markdown-settings";
 
 interface Props {
   houseId: string;
@@ -29,6 +30,7 @@ interface Props {
   viewerCanSeeScore: boolean;
   /** Control admin (cộng/trừ điểm + Master/Vice). Desktop: trên khung chat; Mobile: đầu drawer. */
   adminControls?: ReactNode;
+  composerMarkdownSettings?: ChatMarkdownSettings;
 }
 
 /**
@@ -51,6 +53,7 @@ export function HouseChatLayout({
   totalPoints,
   viewerCanSeeScore,
   adminControls,
+  composerMarkdownSettings,
 }: Props) {
   const maxWords = editableName === "admin" ? 2000 : 1000;
   const { isMuted, muteStatus } = useMuteStatus(currentUserId, houseId);
@@ -66,6 +69,7 @@ export function HouseChatLayout({
       viewerMuted={isMuted}
       muteBanner={<MuteBanner muteStatus={muteStatus} />}
       maxWords={maxWords}
+      composerMarkdownSettings={composerMarkdownSettings}
     />
   );
 

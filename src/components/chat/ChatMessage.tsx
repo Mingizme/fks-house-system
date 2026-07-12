@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { format } from "date-fns";
 import { useI18n } from "@/components/I18nProvider";
+import ChatMarkdown, { type ChatMarkdownSettings } from "@/components/chat/ChatMarkdown";
 import MediaLightbox from "@/components/chat/MediaLightbox";
 import EmojiPicker from "@/components/chat/EmojiPicker";
 
@@ -33,6 +34,7 @@ interface ChatMessageProps {
   mediaType?: 'image' | 'video' | null;
   highlighted?: boolean;
   showTimestamp?: boolean;
+  markdownSettings?: ChatMarkdownSettings | null;
   onReply: (messageId: string) => void;
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
@@ -63,6 +65,7 @@ export default function ChatMessage({
   mediaType,
   highlighted,
   showTimestamp = true,
+  markdownSettings,
   onReply,
   onEdit,
   onDelete,
@@ -438,7 +441,7 @@ export default function ChatMessage({
                 </span>
               </button>
             )}
-            {content}
+            <ChatMarkdown content={content} settings={markdownSettings} />
             {(showTimestamp || editedAt) && (
               <span className="inline-flex items-center ml-2 gap-1 text-[10px] opacity-50 align-bottom lg:text-xs">
                 {showTimestamp && formattedTime}

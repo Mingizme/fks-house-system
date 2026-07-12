@@ -4,6 +4,7 @@ import { HouseCrest } from "@/components/HouseCrest";
 import { HouseChatLayout } from "@/components/HouseChatLayout";
 import { HouseScoreVisibilityToggle } from "@/components/HouseScoreVisibilityToggle";
 import { getServerTranslator } from "@/lib/i18n-server";
+import { getChatMarkdownSettingsForUser } from "@/lib/chat-markdown-settings";
 import type { HouseMasterToggle, HouseScoreAudience, HouseScoreVisibility, HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -60,7 +61,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
       .order("display_name"),
     supabase
       .from("house_messages")
-      .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
+      .select("*, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
       .eq("house_id", house.id)
       .order("created_at", { ascending: false })
       .limit(100),
@@ -84,6 +85,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
     scoreAudience === "masters_only" &&
     masterCanToggleScore !== "blocked" &&
     !isMasterBlocked;
+  const chatMarkdownSettings = await getChatMarkdownSettingsForUser(supabase, user.id);
 
   // Có bị mute không? (viewer là member)
   void viewerMute;
@@ -125,6 +127,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
         houseName={house.name}
         totalPoints={totalPoints}
         viewerCanSeeScore={viewerCanSeeScore}
+        composerMarkdownSettings={chatMarkdownSettings}
         adminControls={
           canMasterToggleScore ? (
             <HouseScoreVisibilityToggle houseId={house.id} initialVisibility={scoreVisibility} />

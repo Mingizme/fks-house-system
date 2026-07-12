@@ -1,3 +1,5 @@
+import type { ChatMarkdownSettings } from "@/lib/chat-markdown-settings";
+
 export type UserType = "player" | "admin";
 export type AdminRole = "director" | "admin" | "judge" | "security" | "linguistic";
 export type AdminRank = "global_director" | "director" | "member";
@@ -117,6 +119,7 @@ export interface Profile {
   last_seen_ip: string | null;
   last_seen_at: string | null;
   display_name_changed_at: string | null;
+  chat_markdown_settings: ChatMarkdownSettings | null;
   created_at: string;
 }
 
@@ -163,6 +166,7 @@ export interface DirectMessage {
   reply_to_id: string | null;
   media_url: string | null;
   media_type: 'image' | 'video' | null;
+  formatting_settings: ChatMarkdownSettings | null;
 }
 
 export interface HouseMessage {
@@ -176,6 +180,7 @@ export interface HouseMessage {
   reply_to_id: string | null;
   media_url: string | null;
   media_type: 'image' | 'video' | null;
+  formatting_settings: ChatMarkdownSettings | null;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role" | "house_role">;
 }
 
@@ -189,6 +194,7 @@ export interface AdminMessage {
   reply_to_id: string | null;
   media_url: string | null;
   media_type: 'image' | 'video' | null;
+  formatting_settings: ChatMarkdownSettings | null;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;
 }
 

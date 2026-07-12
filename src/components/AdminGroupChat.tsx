@@ -18,6 +18,7 @@ import {
   type GroupedReactions,
   type MessageReactionRow,
 } from "@/lib/chat-reactions";
+import { resolveChatMarkdownSettings, type ChatMarkdownSettings } from "@/lib/chat-markdown-settings";
 
 const MAX_LIVE_MESSAGES = 200;
 
@@ -32,9 +33,10 @@ interface SenderInfo {
 interface Props {
   currentUserId: string;
   initialMessages: AdminMessage[];
+  composerMarkdownSettings?: ChatMarkdownSettings;
 }
 
-export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
+export function AdminGroupChat({ currentUserId, initialMessages, composerMarkdownSettings }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
   const [messages, setMessages] = useState<AdminMessage[]>(initialMessages);
@@ -51,6 +53,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messageIdSetRef = useRef<Set<string>>(new Set(initialMessages.map((message) => message.id)));
+  const composerFormattingSettings = resolveChatMarkdownSettings(composerMarkdownSettings);
 
   useEffect(() => {
     setPickerMounted(true);
@@ -145,7 +148,13 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
           setMessages((prev) =>
             prev.map((m) => {
               if (m.id === row.id) {
-                return { ...m, content: row.content, edited_at: row.edited_at, deleted_at: row.deleted_at };
+                return {
+                  ...m,
+                  content: row.content,
+                  edited_at: row.edited_at,
+                  deleted_at: row.deleted_at,
+                  formatting_settings: row.formatting_settings,
+                };
               }
               return m;
             })
@@ -215,7 +224,8 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
         content, 
         reply_to_id: replyToId,
         media_url: mediaUrl || null,
-        media_type: mediaType || null
+        media_type: mediaType || null,
+        formatting_settings: composerFormattingSettings,
       })
       .select()
       .single();
@@ -262,6 +272,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
       .update({
         content,
         edited_at: new Date().toISOString(),
+        formatting_settings: composerFormattingSettings,
       })
       .eq("id", msgId);
 
@@ -270,7 +281,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     } else {
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === msgId ? { ...m, content, edited_at: new Date().toISOString() } : m
+          m.id === msgId ? { ...m, content, edited_at: new Date().toISOString(), formatting_settings: composerFormattingSettings } : m
         )
       );
     }
@@ -389,6 +400,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
                 mediaUrl={m.media_url}
                 mediaType={m.media_type}
                 highlighted={highlightedMessageId === m.id}
+                markdownSettings={m.formatting_settings}
                 onReply={handleReply}
                 onEdit={handleStartEdit}
                 onDelete={handleDelete}

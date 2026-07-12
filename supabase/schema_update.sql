@@ -99,14 +99,20 @@ CREATE INDEX IF NOT EXISTS idx_dm_recipient ON direct_messages(recipient_id, rea
 
 -- Add bio column to profiles
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio text DEFAULT '';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS chat_markdown_settings jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS formatting_settings jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE house_messages ADD COLUMN IF NOT EXISTS formatting_settings jsonb NOT NULL DEFAULT '{}'::jsonb;
 
 -- Create admin_messages table for admin group chat
 CREATE TABLE IF NOT EXISTS admin_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   sender_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   content text NOT NULL CHECK(char_length(content) <= 2000),
+  formatting_settings jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz DEFAULT now()
 );
+
+ALTER TABLE admin_messages ADD COLUMN IF NOT EXISTS formatting_settings jsonb NOT NULL DEFAULT '{}'::jsonb;
 
 -- RLS for admin_messages
 ALTER TABLE admin_messages ENABLE ROW LEVEL SECURITY;

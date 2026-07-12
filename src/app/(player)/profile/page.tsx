@@ -17,11 +17,24 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
+  const profileColumns = "id, email, username, display_name, avatar_emoji, avatar_url, bio, display_name_changed_at, chat_markdown_settings";
+  const legacyProfileColumns = "id, email, username, display_name, avatar_emoji, avatar_url, bio, display_name_changed_at";
+
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, email, username, display_name, avatar_emoji, avatar_url, bio, display_name_changed_at")
+    .select(profileColumns)
     .eq("id", user!.id)
     .single();
+
+  const resolvedProfile = profileError
+    ? (
+        await supabase
+          .from("profiles")
+          .select(legacyProfileColumns)
+          .eq("id", user!.id)
+          .single()
+      ).data
+    : profile;
 
   return (
     <main className="p-8 max-w-2xl mx-auto lg:w-full lg:max-w-[1800px] lg:p-10 2xl:p-12 animate-fadeRise">
@@ -29,7 +42,7 @@ export default async function ProfilePage() {
         <p className="text-ink-muted font-mono text-xs mb-1 lg:text-sm">{t("profile.kicker")}</p>
         <h1 className="font-display font-bold text-3xl lg:text-4xl">{t("profile.title")}</h1>
       </header>
-      <ProfileForm profile={profile!} emojiOptions={EMOJIS} />
+      <ProfileForm profile={resolvedProfile!} emojiOptions={EMOJIS} />
     </main>
   );
 }

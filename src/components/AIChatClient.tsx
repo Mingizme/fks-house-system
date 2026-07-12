@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import ChatMarkdown from "@/components/chat/ChatMarkdown";
 import { cn } from "@/lib/utils";
 
 type Audience = "player" | "admin";
@@ -195,7 +196,7 @@ export function AIChatClient({ audience }: { audience: Audience }) {
                 )}
                 style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
               >
-                {message.content || "Thinking..."}
+                {message.content ? <ChatMarkdown content={message.content} /> : "Thinking..."}
               </div>
             </div>
           ))}
