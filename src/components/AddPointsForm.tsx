@@ -44,31 +44,31 @@ export function AddPointsForm({ houseId, adminId }: { houseId: string; adminId: 
   }
 
   return (
-    <div className="rounded-xl2 glass-card p-5">
+    <div className="min-w-0 rounded-xl2 glass-card p-4 sm:p-5">
       <p className="font-display font-bold mb-4 flex items-center gap-2">
         <span className="inline-block w-1 h-4 rounded-full bg-command-gradient" />
         {t("points.formTitle")}
       </p>
-      <div className="flex gap-3 mb-3">
+      <div className="mb-3 grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-2 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-3">
         <input
           type="number"
           min={1}
           value={points}
           onChange={(e) => setPoints(Number(e.target.value))}
           aria-label={t("points.formTitle")}
-          className="w-24 rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
+          className="w-full min-w-0 rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
         />
         <input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder={t("points.reasonPlaceholder")}
           aria-label={t("points.reasonPlaceholder")}
-          className="flex-1 rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
+          className="w-full min-w-0 rounded-lg bg-ink-surface2 border border-ink-border px-3 py-2 text-sm outline-none focus:border-command"
         />
       </div>
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
       {ok && <p className="text-sm text-success mb-3">{t("points.saved")}</p>}
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => submit(1)}
           disabled={saving}
