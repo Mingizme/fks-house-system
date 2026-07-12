@@ -188,7 +188,7 @@ export function AIChatClient({ audience }: { audience: Audience }) {
             >
               <div
                 className={cn(
-                  "max-w-[88%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-6 sm:max-w-[75%] lg:text-base lg:leading-7",
+                  "min-w-0 max-w-[88%] whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-2xl px-4 py-3 text-sm leading-6 sm:max-w-[75%] lg:text-base lg:leading-7",
                   message.role === "user"
                     ? "rounded-br-md bg-command text-white"
                     : "rounded-bl-md border border-ink-border bg-ink-surface2 text-ink-text"

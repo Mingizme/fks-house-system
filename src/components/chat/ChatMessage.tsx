@@ -260,8 +260,8 @@ export default function ChatMessage({
         highlighted ? "bg-command/10" : ""
       }`}
     >
-      <div 
-        className={`relative max-w-[88%] sm:max-w-[70%] lg:max-w-[68%] ${isMine ? "items-end" : "items-start"} flex flex-col px-3 py-2 -mx-3 -my-2 rounded-lg`}
+      <div
+        className={`relative min-w-0 max-w-[88%] sm:max-w-[70%] lg:max-w-[68%] ${isMine ? "items-end" : "items-start"} flex flex-col px-3 py-2 -mx-3 -my-2 rounded-lg`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -314,7 +314,7 @@ export default function ChatMessage({
 
         {/* Message bubble with hover actions */}
         <div
-          className="relative flex select-none flex-col [-webkit-touch-callout:none] sm:select-text"
+          className="relative flex min-w-0 max-w-full select-none flex-col [-webkit-touch-callout:none] sm:select-text"
           onTouchStart={handleTouchStart}
           onTouchEnd={clearLongPressTimer}
           onTouchCancel={clearLongPressTimer}
@@ -408,7 +408,7 @@ export default function ChatMessage({
 
           {/* Bubble */}
           <div
-            className={`order-1 select-none rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-300 lg:px-5 lg:py-3 lg:text-base lg:leading-7 sm:select-text ${
+            className={`order-1 min-w-0 max-w-full select-none rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap [overflow-wrap:anywhere] transition-shadow duration-300 lg:px-5 lg:py-3 lg:text-base lg:leading-7 sm:select-text ${
               highlighted ? "ring-2 ring-command/70 ring-offset-2 ring-offset-ink-surface" : ""
             } ${
               isMine
