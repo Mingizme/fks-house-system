@@ -242,7 +242,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="bg-ink-surface p-3 sm:p-4 lg:p-5">
+    <div className="sticky bottom-0 z-10 shrink-0 border-t border-ink-border bg-ink-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom))] lg:p-5 lg:pb-5">
       {/* Reply preview bar */}
       {replyingTo && (
         <div className="flex items-center justify-between bg-ink-surface2 border border-b-0 border-ink-border rounded-t-xl px-3 py-2 lg:px-4 lg:py-3">

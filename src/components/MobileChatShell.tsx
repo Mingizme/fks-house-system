@@ -79,9 +79,9 @@ export function MobileChatShell({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex h-[100dvh] flex-col bg-ink-bg">
+    <div className="fixed inset-0 z-[45] flex h-[100dvh] flex-col bg-ink-bg">
       {/* Header */}
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-ink-border bg-ink-surface px-3">
+      <header className="relative z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b border-ink-border bg-ink-surface px-3 pt-[env(safe-area-inset-top)]">
         <button
           type="button"
           onClick={goBackOrMenu}
@@ -109,7 +109,7 @@ export function MobileChatShell({
 
       {/* Thân: khung chat + drawer */}
       <div
-        className="relative min-h-0 flex-1 overflow-hidden"
+        className="relative z-0 min-h-0 flex-1 overflow-hidden"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
