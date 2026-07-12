@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/I18nProvider";
@@ -26,6 +26,22 @@ export function ScoreVisibilitySection({ houses, canAdminBlock, blockedMasters }
   const supabase = createClient();
   const router = useRouter();
   const { t } = useI18n();
+  const [localHouses, setLocalHouses] = useState<House[]>(houses);
+  const [localBlockedMasters, setLocalBlockedMasters] = useState<BlockRow[]>(blockedMasters);
+
+  useEffect(() => {
+    setLocalHouses(houses);
+  }, [houses]);
+
+  useEffect(() => {
+    setLocalBlockedMasters(blockedMasters);
+  }, [blockedMasters]);
+
+  function updateHouse(nextHouse: House) {
+    setLocalHouses((current) =>
+      current.map((house) => (house.id === nextHouse.id ? nextHouse : house))
+    );
+  }
 
   return (
     <section className="rounded-xl2 border border-ink-border bg-ink-surface p-5 space-y-4 lg:p-6">
@@ -44,13 +60,14 @@ export function ScoreVisibilitySection({ houses, canAdminBlock, blockedMasters }
             </tr>
           </thead>
           <tbody>
-            {houses.map((house) => (
+            {localHouses.map((house) => (
               <HouseVisibilityRow
                 key={house.id}
                 house={house}
                 canAdminBlock={canAdminBlock}
                 supabase={supabase}
                 router={router}
+                onHouseChange={updateHouse}
               />
             ))}
           </tbody>
@@ -59,11 +76,11 @@ export function ScoreVisibilitySection({ houses, canAdminBlock, blockedMasters }
 
       <div className="space-y-2 border-t border-ink-border pt-4">
         <h3 className="text-sm font-semibold">{t("permissions.blockedMasters")}</h3>
-        {blockedMasters.length === 0 ? (
+        {localBlockedMasters.length === 0 ? (
           <p className="text-xs text-ink-muted">{t("permissions.noBlockedMasters")}</p>
         ) : (
           <ul className="rounded-lg border border-ink-border divide-y divide-ink-border overflow-hidden lg:grid lg:grid-cols-2 lg:divide-y-0 lg:gap-3 lg:border-0">
-            {blockedMasters.map((block) => (
+            {localBlockedMasters.map((block) => (
               <li key={block.master_id} className="p-3 flex items-center gap-3 bg-ink-surface2 lg:rounded-lg lg:border lg:border-ink-border">
                 <span className="text-base">{block.master_emoji ?? "?"}</span>
                 <div className="flex-1 min-w-0">
@@ -72,7 +89,16 @@ export function ScoreVisibilitySection({ houses, canAdminBlock, blockedMasters }
                     {block.blocked_by_name ? t("common.by", { name: block.blocked_by_name }) : ""}
                   </p>
                 </div>
-                {canAdminBlock && <UnblockMasterButton masterId={block.master_id} supabase={supabase} router={router} />}
+                {canAdminBlock && (
+                  <UnblockMasterButton
+                    masterId={block.master_id}
+                    supabase={supabase}
+                    router={router}
+                    onUnblocked={(masterId) =>
+                      setLocalBlockedMasters((current) => current.filter((row) => row.master_id !== masterId))
+                    }
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -87,9 +113,10 @@ interface HouseRowProps {
   canAdminBlock: boolean;
   supabase: ReturnType<typeof createClient>;
   router: ReturnType<typeof useRouter>;
+  onHouseChange: (house: House) => void;
 }
 
-function HouseVisibilityRow({ house, canAdminBlock, supabase, router }: HouseRowProps) {
+function HouseVisibilityRow({ house, canAdminBlock, supabase, router, onHouseChange }: HouseRowProps) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const audience = getScoreAudience(house);
@@ -97,6 +124,15 @@ function HouseVisibilityRow({ house, canAdminBlock, supabase, router }: HouseRow
   const masterToggleApplies = audience === "masters_only";
 
   async function setAudience(next: HouseScoreAudience) {
+    if (next === audience || busy) return;
+
+    const previousHouse = house;
+    const nextHouse: House = {
+      ...house,
+      score_audience: next,
+      score_visibility: next === "house" ? "visible" : "hidden",
+    };
+    onHouseChange(nextHouse);
     setBusy(true);
     const { error } = await supabase.rpc("admin_set_house_score_audience", {
       house_uuid: house.id,
@@ -104,6 +140,7 @@ function HouseVisibilityRow({ house, canAdminBlock, supabase, router }: HouseRow
     });
     setBusy(false);
     if (error) {
+      onHouseChange(previousHouse);
       alert(error.message);
     } else {
       router.refresh();
@@ -111,14 +148,19 @@ function HouseVisibilityRow({ house, canAdminBlock, supabase, router }: HouseRow
   }
 
   async function toggleMasterBlock() {
-    setBusy(true);
+    if (busy) return;
+
     const next: HouseMasterToggle = masterBlocked ? "allowed" : "blocked";
+    const previousHouse = house;
+    onHouseChange({ ...house, master_can_toggle_score: next });
+    setBusy(true);
     const { error } = await supabase.rpc("admin_set_master_score_toggle", {
       house_uuid: house.id,
       toggle: next,
     });
     setBusy(false);
     if (error) {
+      onHouseChange(previousHouse);
       alert(error.message);
     } else {
       router.refresh();
@@ -188,10 +230,12 @@ function UnblockMasterButton({
   masterId,
   supabase,
   router,
+  onUnblocked,
 }: {
   masterId: string;
   supabase: ReturnType<typeof createClient>;
   router: ReturnType<typeof useRouter>;
+  onUnblocked: (masterId: string) => void;
 }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
@@ -201,7 +245,10 @@ function UnblockMasterButton({
     const { error } = await supabase.rpc("admin_unblock_master_score", { master_uuid: masterId });
     setBusy(false);
     if (error) alert(error.message);
-    else router.refresh();
+    else {
+      onUnblocked(masterId);
+      router.refresh();
+    }
   }
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/I18nProvider";
@@ -19,14 +19,26 @@ export function LeaderboardVisibilitySection({ current, canAdmin }: Props) {
   const router = useRouter();
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
+  const [visibility, setVisibility] = useState<LeaderboardVisibility>(current);
 
-  async function set(v: LeaderboardVisibility) {
-    if (v === current || !canAdmin) return;
+  useEffect(() => {
+    setVisibility(current);
+  }, [current]);
+
+  async function setGlobalVisibility(v: LeaderboardVisibility) {
+    if (v === visibility || !canAdmin || busy) return;
+
+    const previous = visibility;
+    setVisibility(v);
     setBusy(true);
     const { error } = await supabase.rpc("admin_set_leaderboard_visibility", { visibility: v });
     setBusy(false);
-    if (error) alert(error.message);
-    else router.refresh();
+    if (error) {
+      setVisibility(previous);
+      alert(error.message);
+    } else {
+      router.refresh();
+    }
   }
 
   return (
@@ -38,10 +50,10 @@ export function LeaderboardVisibilitySection({ current, canAdmin }: Props) {
       <div className="grid gap-2 sm:grid-cols-3 lg:gap-3">
         <button
           type="button"
-          onClick={() => set("public")}
-          disabled={!canAdmin || busy || current === "public"}
+          onClick={() => setGlobalVisibility("public")}
+          disabled={!canAdmin || busy || visibility === "public"}
           className={`flex-1 rounded-lg border px-4 py-3 text-sm transition-colors ${
-            current === "public"
+            visibility === "public"
               ? "bg-command/15 border-command text-command font-semibold"
               : "border-ink-border text-ink-muted hover:border-command/50"
           } disabled:opacity-50`}
@@ -50,10 +62,10 @@ export function LeaderboardVisibilitySection({ current, canAdmin }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => set("masters_only")}
-          disabled={!canAdmin || busy || current === "masters_only"}
+          onClick={() => setGlobalVisibility("masters_only")}
+          disabled={!canAdmin || busy || visibility === "masters_only"}
           className={`flex-1 rounded-lg border px-4 py-3 text-sm transition-colors ${
-            current === "masters_only"
+            visibility === "masters_only"
               ? "bg-command/15 border-command text-command font-semibold"
               : "border-ink-border text-ink-muted hover:border-command/50"
           } disabled:opacity-50`}
@@ -62,10 +74,10 @@ export function LeaderboardVisibilitySection({ current, canAdmin }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => set("admin_only")}
-          disabled={!canAdmin || busy || current === "admin_only"}
+          onClick={() => setGlobalVisibility("admin_only")}
+          disabled={!canAdmin || busy || visibility === "admin_only"}
           className={`flex-1 rounded-lg border px-4 py-3 text-sm transition-colors ${
-            current === "admin_only"
+            visibility === "admin_only"
               ? "bg-command/15 border-command text-command font-semibold"
               : "border-ink-border text-ink-muted hover:border-command/50"
           } disabled:opacity-50`}
