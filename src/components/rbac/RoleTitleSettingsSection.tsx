@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/I18nProvider";
@@ -36,6 +36,22 @@ function titleEditingEnabled(department: Department, role: DepartmentAdminRank):
   return !!department.member_title_editing_enabled;
 }
 
+function withRoleTitleEditing(
+  department: Department,
+  role: DepartmentAdminRank,
+  enabled: boolean
+): Department {
+  if (role === "director") return { ...department, director_title_editing_enabled: enabled };
+  if (role === "deputy_director") return { ...department, deputy_director_title_editing_enabled: enabled };
+  return { ...department, member_title_editing_enabled: enabled };
+}
+
+function withRoleTitle(department: Department, role: DepartmentAdminRank, title: string): Department {
+  if (role === "director") return { ...department, director_title: title };
+  if (role === "deputy_director") return { ...department, deputy_director_title: title };
+  return { ...department, member_title: title };
+}
+
 function canToggleRoleTitle(
   actorRank: AdminRank | null,
   actorDepartmentId: string | null,
@@ -66,18 +82,28 @@ export function RoleTitleSettingsSection({ adminRank, department, departments, c
   const supabase = createClient();
   const router = useRouter();
   const { t } = useI18n();
-  const visibleDepartments = canManageAll ? departments : department ? [department] : [];
+  const [localDepartments, setLocalDepartments] = useState<Department[]>(departments);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [toggleKey, setToggleKey] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  useEffect(() => {
+    setLocalDepartments(departments);
+  }, [departments]);
+
+  const currentDepartment = department
+    ? localDepartments.find((dept) => dept.id === department.id) ?? department
+    : null;
+  const actorDepartmentId = currentDepartment?.id ?? department?.id ?? null;
+  const visibleDepartments = canManageAll ? localDepartments : currentDepartment ? [currentDepartment] : [];
+
   const hasAccess = visibleDepartments.some((dept) =>
     DEPARTMENT_ADMIN_RANKS.some(
       (role) =>
-        canEditRoleTitle(adminRank, department?.id ?? null, dept, role, canManageAll) ||
-        canToggleRoleTitle(adminRank, department?.id ?? null, dept, role, canManageAll)
+        canEditRoleTitle(adminRank, actorDepartmentId, dept, role, canManageAll) ||
+        canToggleRoleTitle(adminRank, actorDepartmentId, dept, role, canManageAll)
     )
   );
 
@@ -106,6 +132,9 @@ export function RoleTitleSettingsSection({ adminRank, department, departments, c
 
     setMsg(t("common.saved"));
     setTimeout(() => setMsg(null), 2000);
+    setLocalDepartments((current) =>
+      current.map((dept) => (dept.id === targetDepartment.id ? withRoleTitle(dept, role, nextTitle) : dept))
+    );
     router.refresh();
   }
 
@@ -114,11 +143,12 @@ export function RoleTitleSettingsSection({ adminRank, department, departments, c
     setToggleKey(key);
     setMsg(null);
     setErr(null);
+    const nextEnabled = !titleEditingEnabled(targetDepartment, role);
 
     const { error } = await supabase.rpc("admin_set_department_role_title_editing", {
       dept_id: targetDepartment.id,
       role_rank: role,
-      enabled: !titleEditingEnabled(targetDepartment, role),
+      enabled: nextEnabled,
     });
 
     setToggleKey(null);
@@ -127,6 +157,11 @@ export function RoleTitleSettingsSection({ adminRank, department, departments, c
       return;
     }
 
+    setLocalDepartments((current) =>
+      current.map((dept) =>
+        dept.id === targetDepartment.id ? withRoleTitleEditing(dept, role, nextEnabled) : dept
+      )
+    );
     router.refresh();
   }
 
@@ -152,8 +187,8 @@ export function RoleTitleSettingsSection({ adminRank, department, departments, c
                 const key = rowKey(dept.id, role);
                 const currentTitle = departmentRoleTitle(role, dept);
                 const draftTitle = drafts[key] ?? currentTitle;
-                const canEdit = canEditRoleTitle(adminRank, department?.id ?? null, dept, role, canManageAll);
-                const canToggle = canToggleRoleTitle(adminRank, department?.id ?? null, dept, role, canManageAll);
+                const canEdit = canEditRoleTitle(adminRank, actorDepartmentId, dept, role, canManageAll);
+                const canToggle = canToggleRoleTitle(adminRank, actorDepartmentId, dept, role, canManageAll);
                 const enabled = titleEditingEnabled(dept, role);
                 const dirty = draftTitle.trim() !== currentTitle;
 
