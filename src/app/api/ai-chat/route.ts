@@ -19,6 +19,10 @@ const MAX_MESSAGE_LENGTH = 3000;
 const DEFAULT_MODEL = "gemini-3.5-flash";
 const MAX_OUTPUT_TOKENS = 1024;
 const FAST_CONTEXT_CHAR_LIMIT = 18000;
+const REQUEST_BODY_LIMIT_BYTES = 64_000;
+const AI_RATE_LIMIT_WINDOW_MS = 60_000;
+const AI_RATE_LIMIT_MAX_REQUESTS = 12;
+const AI_RATE_LIMIT_MAX_KEYS = 5_000;
 
 const publicAppGuide = `
 Safe app help for every signed-in user:
@@ -40,10 +44,48 @@ Admin-only help:
 `;
 
 let fksServerDataPromise: Promise<string> | null = null;
+const aiRateLimit = new Map<string, { windowStart: number; count: number }>();
 
 async function getFksServerData() {
   fksServerDataPromise ??= readFile(path.join(process.cwd(), "FKS_Server_Data.md"), "utf8");
   return fksServerDataPromise;
+}
+
+function checkAiRateLimit(userId: string) {
+  const now = Date.now();
+  const current = aiRateLimit.get(userId);
+
+  if (!current || now - current.windowStart >= AI_RATE_LIMIT_WINDOW_MS) {
+    aiRateLimit.set(userId, { windowStart: now, count: 1 });
+    pruneAiRateLimit(now);
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+
+  if (current.count >= AI_RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.ceil((AI_RATE_LIMIT_WINDOW_MS - (now - current.windowStart)) / 1000),
+    };
+  }
+
+  current.count++;
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
+function pruneAiRateLimit(now: number) {
+  if (aiRateLimit.size <= AI_RATE_LIMIT_MAX_KEYS) return;
+
+  for (const [key, value] of aiRateLimit) {
+    if (now - value.windowStart >= AI_RATE_LIMIT_WINDOW_MS) {
+      aiRateLimit.delete(key);
+    }
+    if (aiRateLimit.size <= AI_RATE_LIMIT_MAX_KEYS) return;
+  }
+
+  for (const key of aiRateLimit.keys()) {
+    aiRateLimit.delete(key);
+    if (aiRateLimit.size <= AI_RATE_LIMIT_MAX_KEYS) return;
+  }
 }
 
 function cleanMessage(message: unknown): ChatMessage | null {
@@ -319,6 +361,22 @@ export async function POST(request: Request) {
 
   if (profile.account_banned_at) {
     return NextResponse.json({ error: "Account banned" }, { status: 403 });
+  }
+
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+  if (contentLength > REQUEST_BODY_LIMIT_BYTES) {
+    return NextResponse.json({ error: "Request body is too large." }, { status: 413 });
+  }
+
+  const rateLimit = checkAiRateLimit(user.id);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many AI requests. Please wait a moment and try again." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      }
+    );
   }
 
   let payload: unknown;

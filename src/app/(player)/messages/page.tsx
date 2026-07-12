@@ -23,7 +23,8 @@ export default async function MessagesListPage() {
     .select("sender_id, recipient_id, content, created_at")
     .eq("is_admin_chat", false)
     .or(`sender_id.eq.${user!.id},recipient_id.eq.${user!.id}`)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(500);
 
   const lastByUser = new Map<string, { content: string; created_at: string }>();
   (dms ?? []).forEach((m) => {
@@ -46,7 +47,8 @@ export default async function MessagesListPage() {
     supabase
       .from("profiles")
       .select("id, display_name, avatar_emoji, avatar_url, house_id")
-      .order("display_name"),
+      .order("display_name")
+      .limit(1000),
     supabase.from("houses").select("id, name, icon").order("name"),
   ]);
 

@@ -10,6 +10,16 @@ import ChatTimeDivider from "./chat/ChatTimeDivider";
 import ChatInput from "./chat/ChatInput";
 import EmojiPicker from "./chat/EmojiPicker";
 import { shouldShowMessageTimeDivider } from "./chat/timeDividers";
+import {
+  addReaction,
+  groupReactions,
+  pruneReactions,
+  removeReaction,
+  type GroupedReactions,
+  type MessageReactionRow,
+} from "@/lib/chat-reactions";
+
+const MAX_LIVE_MESSAGES = 150;
 
 interface SenderInfo {
   display_name: string;
@@ -33,27 +43,6 @@ interface Props {
   maxWords?: number;
 }
 
-function groupReactions(reactionsList: any[]) {
-  const grouped: Record<string, { emoji: string; count: number; userIds: string[] }[]> = {};
-  for (const r of reactionsList) {
-    if (!grouped[r.message_id]) grouped[r.message_id] = [];
-    const existing = grouped[r.message_id].find((x) => x.emoji === r.emoji);
-    if (existing) {
-      if (!existing.userIds.includes(r.user_id)) {
-        existing.userIds.push(r.user_id);
-        existing.count++;
-      }
-    } else {
-      grouped[r.message_id].push({
-        emoji: r.emoji,
-        count: 1,
-        userIds: [r.user_id],
-      });
-    }
-  }
-  return grouped;
-}
-
 export function HouseChatBox({
   houseId,
   currentUserId,
@@ -72,13 +61,14 @@ export function HouseChatBox({
   const [error, setError] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<{ id: string; content: string; senderName: string } | null>(null);
   const [editingMessage, setEditingMessage] = useState<{ id: string; content: string } | null>(null);
-  const [reactions, setReactions] = useState<Record<string, { emoji: string; count: number; userIds: string[] }[]>>({});
+  const [reactions, setReactions] = useState<GroupedReactions>({});
   const [activePicker, setActivePicker] = useState<{ messageId: string; x: number; y: number } | null>(null);
   const [pickerMounted, setPickerMounted] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageIdSetRef = useRef<Set<string>>(new Set(initialMessages.map((message) => message.id)));
 
   useEffect(() => {
     setPickerMounted(true);
@@ -110,24 +100,33 @@ export function HouseChatBox({
     });
   }, [initialMessages]);
 
-  const refetchReactions = useCallback(() => {
-    const msgIds = messages.map((m) => m.id);
-    if (msgIds.length === 0) return;
+  const refetchReactions = useCallback((ids?: string[]) => {
+    const msgIds = ids ?? [...messageIdSetRef.current];
+    if (msgIds.length === 0) {
+      setReactions({});
+      return;
+    }
     supabase
       .from("message_reactions")
-      .select("*")
+      .select("message_id,user_id,emoji")
       .eq("message_type", "house")
       .in("message_id", msgIds)
       .then(({ data }) => {
         if (data) {
-          setReactions(groupReactions(data));
+          setReactions(groupReactions(data as MessageReactionRow[]));
         }
       });
-  }, [messages, supabase]);
+  }, [supabase]);
 
   useEffect(() => {
     refetchReactions();
-  }, [messages.length, refetchReactions]);
+  }, [refetchReactions]);
+
+  useEffect(() => {
+    const ids = new Set(messages.map((message) => message.id));
+    messageIdSetRef.current = ids;
+    setReactions((prev) => pruneReactions(prev, ids));
+  }, [messages]);
 
   useEffect(() => {
     const channel = supabase
@@ -137,7 +136,6 @@ export function HouseChatBox({
         { event: "INSERT", schema: "public", table: "house_messages", filter: `house_id=eq.${houseId}` },
         async (payload) => {
           const row = payload.new as HouseMessage;
-          if (messages.some((m) => m.id === row.id)) return;
 
           let sender = profileCache.current.get(row.sender_id);
           if (!sender) {
@@ -152,7 +150,7 @@ export function HouseChatBox({
           }
           setMessages((prev) => {
             if (prev.some((m) => m.id === row.id)) return prev;
-            return [...prev, { ...row, sender }];
+            return [...prev, { ...row, sender }].slice(-MAX_LIVE_MESSAGES);
           });
         }
       )
@@ -173,9 +171,24 @@ export function HouseChatBox({
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "message_reactions", filter: "message_type=eq.house" },
-        () => {
-          refetchReactions();
+        { event: "INSERT", schema: "public", table: "message_reactions", filter: "message_type=eq.house" },
+        (payload) => {
+          const row = payload.new as MessageReactionRow;
+          if (!messageIdSetRef.current.has(row.message_id)) return;
+          setReactions((prev) => addReaction(prev, row));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "message_reactions", filter: "message_type=eq.house" },
+        (payload) => {
+          const row = payload.old as Partial<MessageReactionRow>;
+          if (!row.message_id || !row.user_id || !row.emoji) {
+            refetchReactions();
+            return;
+          }
+          if (!messageIdSetRef.current.has(row.message_id)) return;
+          setReactions((prev) => removeReaction(prev, row as MessageReactionRow));
         }
       )
       .subscribe();
@@ -183,7 +196,7 @@ export function HouseChatBox({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [houseId, supabase, refetchReactions, messages]);
+  }, [houseId, supabase, refetchReactions]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -329,7 +342,7 @@ export function HouseChatBox({
     if (err && err.code !== "23505") {
       showError(t("chat.actionFailed"));
     } else {
-      refetchReactions();
+      setReactions((prev) => addReaction(prev, { message_id: messageId, user_id: currentUserId, emoji }));
     }
   };
 
@@ -345,7 +358,7 @@ export function HouseChatBox({
     if (err) {
       showError(t("chat.actionFailed"));
     } else {
-      refetchReactions();
+      setReactions((prev) => removeReaction(prev, { message_id: messageId, user_id: currentUserId, emoji }));
     }
   };
 

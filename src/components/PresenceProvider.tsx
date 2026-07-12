@@ -37,13 +37,11 @@ export function usePresence() {
 }
 
 const CHANNEL_NAME_USER = "presence-global";
-const CHANNEL_NAME_HOUSE = "presence-house";
 
 export function PresenceProvider({
   userId,
   displayName,
   avatarEmoji,
-  houseId,
   children,
 }: {
   userId: string;
@@ -55,7 +53,6 @@ export function PresenceProvider({
   const supabase = createClient();
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const channelRef = useRef<any>(null);
-  const houseChannelRef = useRef<any>(null);
 
   const updatePresence = useCallback((state: PresenceState) => {
     const ids = new Set(Object.keys(state));
@@ -112,60 +109,9 @@ export function PresenceProvider({
         }
       });
 
-    // House-scoped presence (nếu có houseId): track trên channel house riêng để
-    // danh sách thành viên house cập nhật online nhanh và không phụ thuộc channel global
-    if (houseId) {
-      const houseChannel = supabase.channel(`${CHANNEL_NAME_HOUSE}-${houseId}`, {
-        config: { presence: { key: userId } },
-      });
-      houseChannelRef.current = houseChannel;
-      houseChannel
-        .on("presence", { event: "sync" }, () => {
-          const state = houseChannel.presenceState() as any;
-          const flat: PresenceState = {};
-          for (const [key, metas] of Object.entries(state)) {
-            const meta = Array.isArray(metas) && metas[0] ? (metas[0] as any) : null;
-            flat[key] = meta || { id: key, online_at: Date.now() };
-          }
-          updatePresence(flat);
-        })
-        .on("presence", { event: "join" }, ({ key }) => {
-          setOnlineUserIds((prev) => {
-            if (prev.has(key)) return prev;
-            const next = new Set(prev);
-            next.add(key);
-            return next;
-          });
-        })
-        .on("presence", { event: "leave" }, ({ key }) => {
-          setOnlineUserIds((prev) => {
-            if (!prev.has(key)) return prev;
-            const next = new Set(prev);
-            next.delete(key);
-            return next;
-          });
-        })
-        .subscribe(async (status) => {
-          if (status === "SUBSCRIBED") {
-            await houseChannel.track({
-              id: userId,
-              display_name: displayName,
-              avatar_emoji: avatarEmoji,
-              online_at: Date.now(),
-            });
-          }
-        });
-    }
-
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         channel.track({
-          id: userId,
-          display_name: displayName,
-          avatar_emoji: avatarEmoji,
-          online_at: Date.now(),
-        }).catch(() => {});
-        houseChannelRef.current?.track({
           id: userId,
           display_name: displayName,
           avatar_emoji: avatarEmoji,
@@ -177,7 +123,6 @@ export function PresenceProvider({
 
     const handleBeforeUnload = () => {
       channel.untrack();
-      houseChannelRef.current?.untrack();
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
@@ -185,13 +130,10 @@ export function PresenceProvider({
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("beforeunload", handleBeforeUnload);
       channel.untrack();
-      houseChannelRef.current?.untrack();
       supabase.removeChannel(channel);
-      if (houseChannelRef.current) supabase.removeChannel(houseChannelRef.current);
-      houseChannelRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, houseId, displayName, avatarEmoji]);
+  }, [userId, displayName, avatarEmoji]);
 
   const isOnline = useCallback((id: string) => onlineUserIds.has(id), [onlineUserIds]);
 

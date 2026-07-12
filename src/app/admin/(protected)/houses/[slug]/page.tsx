@@ -104,7 +104,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
       .from("house_messages")
       .select("id, house_id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
       .eq("house_id", house.id)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(100),
     getActiveIpBans(supabase),
   ]);
@@ -137,7 +137,7 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
         currentUserId={user.id}
         currentDisplayName="admin"
         currentAvatarEmoji={null}
-        initialMessages={(messages as any) ?? []}
+        initialMessages={(((messages as any[]) ?? []).slice().reverse() as any)}
         roster={(roster as any) ?? []}
         profileBasePath={profileBasePath}
         messagesBasePath={messagesBasePath}

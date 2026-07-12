@@ -27,7 +27,8 @@ export default async function AdminMessageThreadPage({ params }: { params: { use
     .or(
       `and(sender_id.eq.${user.id},recipient_id.eq.${params.userId}),and(sender_id.eq.${params.userId},recipient_id.eq.${user.id})`
     )
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   const { data: blockRow } = await supabase
     .from("blocks")
@@ -42,7 +43,7 @@ export default async function AdminMessageThreadPage({ params }: { params: { use
         <DirectChatBox
           currentUserId={user.id}
           otherUser={otherUser}
-          initialMessages={messages ?? []}
+          initialMessages={((messages ?? []).slice().reverse() as any)}
           profileBasePath="/admin/profile"
           isAdminChat={false}
           initiallyBlocked={!!blockRow}

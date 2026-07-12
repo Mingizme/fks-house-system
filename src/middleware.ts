@@ -12,6 +12,45 @@ type AuthProfile = {
   account_banned_at: string | null;
 };
 
+const IP_BAN_CACHE_TTL_MS = 30_000;
+const PROFILE_IP_RECORD_TTL_MS = 5 * 60_000;
+const MAX_MIDDLEWARE_CACHE_ENTRIES = 5_000;
+
+const ipBanCache = new Map<string, { banned: boolean; expiresAt: number }>();
+const profileIpRecordCache = new Map<string, number>();
+
+function pruneCache<T>(cache: Map<string, T>) {
+  if (cache.size <= MAX_MIDDLEWARE_CACHE_ENTRIES) return;
+  const removeCount = Math.ceil(cache.size / 5);
+  for (const key of cache.keys()) {
+    cache.delete(key);
+    if (cache.size <= MAX_MIDDLEWARE_CACHE_ENTRIES - removeCount) break;
+  }
+}
+
+async function isIpBannedCached(supabase: any, ip: string) {
+  const now = Date.now();
+  const cached = ipBanCache.get(ip);
+  if (cached && cached.expiresAt > now) return cached.banned;
+
+  const { data: ipBanned, error: ipBanError } = await supabase.rpc("is_ip_banned", { ip_text: ip });
+  const banned = !ipBanError && !!ipBanned;
+  ipBanCache.set(ip, { banned, expiresAt: now + IP_BAN_CACHE_TTL_MS });
+  pruneCache(ipBanCache);
+  return banned;
+}
+
+function shouldRecordProfileIp(userId: string, ip: string) {
+  const now = Date.now();
+  const key = `${userId}:${ip}`;
+  const lastRecordedAt = profileIpRecordCache.get(key) ?? 0;
+  if (now - lastRecordedAt < PROFILE_IP_RECORD_TTL_MS) return false;
+
+  profileIpRecordCache.set(key, now);
+  pruneCache(profileIpRecordCache);
+  return true;
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
@@ -55,8 +94,8 @@ export async function middleware(request: NextRequest) {
   const clientIp = getClientIp(request);
 
   if (clientIp) {
-    const { data: ipBanned, error: ipBanError } = await supabase.rpc("is_ip_banned", { ip_text: clientIp });
-    if (!ipBanError && ipBanned) {
+    const ipBanned = await isIpBannedCached(supabase, clientIp);
+    if (ipBanned) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("banned", "ip");
@@ -72,7 +111,7 @@ export async function middleware(request: NextRequest) {
 
   let profile: AuthProfile | null = null;
   if (user && isProtectedArea) {
-    if (clientIp) {
+    if (clientIp && shouldRecordProfileIp(user.id, clientIp)) {
       await supabase.rpc("record_profile_ip", { ip_text: clientIp });
     }
 

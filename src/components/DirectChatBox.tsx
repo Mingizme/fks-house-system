@@ -14,6 +14,16 @@ import ChatTimeDivider from "./chat/ChatTimeDivider";
 import ChatInput from "./chat/ChatInput";
 import EmojiPicker from "./chat/EmojiPicker";
 import { shouldShowMessageTimeDivider } from "./chat/timeDividers";
+import {
+  addReaction,
+  groupReactions,
+  pruneReactions,
+  removeReaction,
+  type GroupedReactions,
+  type MessageReactionRow,
+} from "@/lib/chat-reactions";
+
+const MAX_LIVE_MESSAGES = 150;
 
 interface Props {
   currentUserId: string;
@@ -22,27 +32,6 @@ interface Props {
   profileBasePath: string;
   isAdminChat?: boolean;
   initiallyBlocked?: boolean;
-}
-
-function groupReactions(reactionsList: any[]) {
-  const grouped: Record<string, { emoji: string; count: number; userIds: string[] }[]> = {};
-  for (const r of reactionsList) {
-    if (!grouped[r.message_id]) grouped[r.message_id] = [];
-    const existing = grouped[r.message_id].find((x) => x.emoji === r.emoji);
-    if (existing) {
-      if (!existing.userIds.includes(r.user_id)) {
-        existing.userIds.push(r.user_id);
-        existing.count++;
-      }
-    } else {
-      grouped[r.message_id].push({
-        emoji: r.emoji,
-        count: 1,
-        userIds: [r.user_id],
-      });
-    }
-  }
-  return grouped;
 }
 
 export function DirectChatBox({
@@ -64,13 +53,14 @@ export function DirectChatBox({
   const [error, setError] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<{ id: string; content: string; senderName: string } | null>(null);
   const [editingMessage, setEditingMessage] = useState<{ id: string; content: string } | null>(null);
-  const [reactions, setReactions] = useState<Record<string, { emoji: string; count: number; userIds: string[] }[]>>({});
+  const [reactions, setReactions] = useState<GroupedReactions>({});
   const [activePicker, setActivePicker] = useState<{ messageId: string; x: number; y: number } | null>(null);
   const [pickerMounted, setPickerMounted] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageIdSetRef = useRef<Set<string>>(new Set(initialMessages.map((message) => message.id)));
 
   useEffect(() => {
     setPickerMounted(true);
@@ -95,58 +85,105 @@ export function DirectChatBox({
     setActivePicker({ messageId, x: pickerLeft, y: pickerTop });
   }, []);
 
-  const refetchReactions = useCallback(() => {
-    const msgIds = messages.map((m) => m.id);
-    if (msgIds.length === 0) return;
+  const refetchReactions = useCallback((ids?: string[]) => {
+    const msgIds = ids ?? [...messageIdSetRef.current];
+    if (msgIds.length === 0) {
+      setReactions({});
+      return;
+    }
     supabase
       .from("message_reactions")
-      .select("*")
+      .select("message_id,user_id,emoji")
       .eq("message_type", "dm")
       .in("message_id", msgIds)
       .then(({ data }) => {
         if (data) {
-          setReactions(groupReactions(data));
+          setReactions(groupReactions(data as MessageReactionRow[]));
         }
       });
-  }, [messages, supabase]);
+  }, [supabase]);
 
   useEffect(() => {
     refetchReactions();
-  }, [messages.length, refetchReactions]);
+  }, [refetchReactions]);
 
   useEffect(() => {
+    const ids = new Set(messages.map((message) => message.id));
+    messageIdSetRef.current = ids;
+    setReactions((prev) => pruneReactions(prev, ids));
+  }, [messages]);
+
+  useEffect(() => {
+    const isThreadMessage = (row: Pick<DirectMessage, "sender_id" | "recipient_id" | "is_admin_chat">) =>
+      row.is_admin_chat === isAdminChat &&
+      ((row.sender_id === currentUserId && row.recipient_id === otherUser.id) ||
+        (row.sender_id === otherUser.id && row.recipient_id === currentUserId));
+
+    const appendMessage = (row: DirectMessage) => {
+      if (!isThreadMessage(row)) return;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === row.id)) return prev;
+        return [...prev, row].slice(-MAX_LIVE_MESSAGES);
+      });
+    };
+
+    const updateMessage = (row: DirectMessage) => {
+      if (!isThreadMessage(row)) return;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === row.id ? row : m))
+      );
+    };
+
     const channel = supabase
       .channel(`dm-${[currentUserId, otherUser.id].sort().join("-")}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "direct_messages", filter: `recipient_id=eq.${currentUserId}` },
         (payload) => {
-          const row = payload.new as DirectMessage;
-          if (row.sender_id === otherUser.id) {
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === row.id)) return prev;
-              return [...prev, row];
-            });
-          }
+          appendMessage(payload.new as DirectMessage);
         }
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "direct_messages" },
+        { event: "INSERT", schema: "public", table: "direct_messages", filter: `sender_id=eq.${currentUserId}` },
         (payload) => {
-          const row = payload.new as DirectMessage;
-          if (row.sender_id === otherUser.id || row.recipient_id === otherUser.id) {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === row.id ? row : m))
-            );
-          }
+          appendMessage(payload.new as DirectMessage);
         }
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "message_reactions", filter: "message_type=eq.dm" },
-        () => {
-          refetchReactions();
+        { event: "UPDATE", schema: "public", table: "direct_messages", filter: `recipient_id=eq.${currentUserId}` },
+        (payload) => {
+          updateMessage(payload.new as DirectMessage);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "direct_messages", filter: `sender_id=eq.${currentUserId}` },
+        (payload) => {
+          updateMessage(payload.new as DirectMessage);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "message_reactions", filter: "message_type=eq.dm" },
+        (payload) => {
+          const row = payload.new as MessageReactionRow;
+          if (!messageIdSetRef.current.has(row.message_id)) return;
+          setReactions((prev) => addReaction(prev, row));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "message_reactions", filter: "message_type=eq.dm" },
+        (payload) => {
+          const row = payload.old as Partial<MessageReactionRow>;
+          if (!row.message_id || !row.user_id || !row.emoji) {
+            refetchReactions();
+            return;
+          }
+          if (!messageIdSetRef.current.has(row.message_id)) return;
+          setReactions((prev) => removeReaction(prev, row as MessageReactionRow));
         }
       )
       .subscribe();
@@ -154,7 +191,7 @@ export function DirectChatBox({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, otherUser.id, supabase, refetchReactions]);
+  }, [currentUserId, isAdminChat, otherUser.id, supabase, refetchReactions]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -205,7 +242,7 @@ export function DirectChatBox({
       if (content) setText(content);
       showError(t("chat.sendFailed"));
     } else if (data) {
-      setMessages((prev) => [...prev, data as DirectMessage]);
+      setMessages((prev) => [...prev, data as DirectMessage].slice(-MAX_LIVE_MESSAGES));
     }
     setSending(false);
   }
@@ -301,7 +338,7 @@ export function DirectChatBox({
     if (err && err.code !== "23505") { // Ignore unique constraint violation
       showError(t("chat.actionFailed"));
     } else {
-      refetchReactions();
+      setReactions((prev) => addReaction(prev, { message_id: messageId, user_id: currentUserId, emoji }));
     }
   };
 
@@ -317,7 +354,7 @@ export function DirectChatBox({
     if (err) {
       showError(t("chat.actionFailed"));
     } else {
-      refetchReactions();
+      setReactions((prev) => removeReaction(prev, { message_id: messageId, user_id: currentUserId, emoji }));
     }
   };
 

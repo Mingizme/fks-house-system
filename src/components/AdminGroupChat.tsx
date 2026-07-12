@@ -10,6 +10,16 @@ import ChatTimeDivider from "./chat/ChatTimeDivider";
 import ChatInput from "./chat/ChatInput";
 import EmojiPicker from "./chat/EmojiPicker";
 import { shouldShowMessageTimeDivider } from "./chat/timeDividers";
+import {
+  addReaction,
+  groupReactions,
+  pruneReactions,
+  removeReaction,
+  type GroupedReactions,
+  type MessageReactionRow,
+} from "@/lib/chat-reactions";
+
+const MAX_LIVE_MESSAGES = 200;
 
 interface SenderInfo {
   display_name: string;
@@ -24,27 +34,6 @@ interface Props {
   initialMessages: AdminMessage[];
 }
 
-function groupReactions(reactionsList: any[]) {
-  const grouped: Record<string, { emoji: string; count: number; userIds: string[] }[]> = {};
-  for (const r of reactionsList) {
-    if (!grouped[r.message_id]) grouped[r.message_id] = [];
-    const existing = grouped[r.message_id].find((x) => x.emoji === r.emoji);
-    if (existing) {
-      if (!existing.userIds.includes(r.user_id)) {
-        existing.userIds.push(r.user_id);
-        existing.count++;
-      }
-    } else {
-      grouped[r.message_id].push({
-        emoji: r.emoji,
-        count: 1,
-        userIds: [r.user_id],
-      });
-    }
-  }
-  return grouped;
-}
-
 export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
   const supabase = createClient();
   const { t } = useI18n();
@@ -54,13 +43,14 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<{ id: string; content: string; senderName: string } | null>(null);
   const [editingMessage, setEditingMessage] = useState<{ id: string; content: string } | null>(null);
-  const [reactions, setReactions] = useState<Record<string, { emoji: string; count: number; userIds: string[] }[]>>({});
+  const [reactions, setReactions] = useState<GroupedReactions>({});
   const [activePicker, setActivePicker] = useState<{ messageId: string; x: number; y: number } | null>(null);
   const [pickerMounted, setPickerMounted] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageIdSetRef = useRef<Set<string>>(new Set(initialMessages.map((message) => message.id)));
 
   useEffect(() => {
     setPickerMounted(true);
@@ -93,24 +83,33 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     });
   }, [initialMessages]);
 
-  const refetchReactions = useCallback(() => {
-    const msgIds = messages.map((m) => m.id);
-    if (msgIds.length === 0) return;
+  const refetchReactions = useCallback((ids?: string[]) => {
+    const msgIds = ids ?? [...messageIdSetRef.current];
+    if (msgIds.length === 0) {
+      setReactions({});
+      return;
+    }
     supabase
       .from("message_reactions")
-      .select("*")
+      .select("message_id,user_id,emoji")
       .eq("message_type", "admin")
       .in("message_id", msgIds)
       .then(({ data }) => {
         if (data) {
-          setReactions(groupReactions(data));
+          setReactions(groupReactions(data as MessageReactionRow[]));
         }
       });
-  }, [messages, supabase]);
+  }, [supabase]);
 
   useEffect(() => {
     refetchReactions();
-  }, [messages.length, refetchReactions]);
+  }, [refetchReactions]);
+
+  useEffect(() => {
+    const ids = new Set(messages.map((message) => message.id));
+    messageIdSetRef.current = ids;
+    setReactions((prev) => pruneReactions(prev, ids));
+  }, [messages]);
 
   useEffect(() => {
     const channel = supabase
@@ -120,7 +119,6 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
         { event: "INSERT", schema: "public", table: "admin_messages" },
         async (payload) => {
           const row = payload.new as AdminMessage;
-          if (messages.some((m) => m.id === row.id)) return;
 
           let sender = profileCache.current.get(row.sender_id);
           if (!sender) {
@@ -135,7 +133,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
           }
           setMessages((prev) => {
             if (prev.some((m) => m.id === row.id)) return prev;
-            return [...prev, { ...row, sender }];
+            return [...prev, { ...row, sender }].slice(-MAX_LIVE_MESSAGES);
           });
         }
       )
@@ -156,9 +154,24 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "message_reactions", filter: "message_type=eq.admin" },
-        () => {
-          refetchReactions();
+        { event: "INSERT", schema: "public", table: "message_reactions", filter: "message_type=eq.admin" },
+        (payload) => {
+          const row = payload.new as MessageReactionRow;
+          if (!messageIdSetRef.current.has(row.message_id)) return;
+          setReactions((prev) => addReaction(prev, row));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "message_reactions", filter: "message_type=eq.admin" },
+        (payload) => {
+          const row = payload.old as Partial<MessageReactionRow>;
+          if (!row.message_id || !row.user_id || !row.emoji) {
+            refetchReactions();
+            return;
+          }
+          if (!messageIdSetRef.current.has(row.message_id)) return;
+          setReactions((prev) => removeReaction(prev, row as MessageReactionRow));
         }
       )
       .subscribe();
@@ -166,7 +179,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, refetchReactions, messages]);
+  }, [supabase, refetchReactions]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -214,7 +227,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
       const sender = profileCache.current.get(currentUserId);
       setMessages((prev) => {
         if (prev.some((m) => m.id === data.id)) return prev;
-        return [...prev, { ...(data as AdminMessage), sender }];
+        return [...prev, { ...(data as AdminMessage), sender }].slice(-MAX_LIVE_MESSAGES);
       });
     }
     setSending(false);
@@ -311,7 +324,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     if (err && err.code !== "23505") {
       showError(t("chat.actionFailed"));
     } else {
-      refetchReactions();
+      setReactions((prev) => addReaction(prev, { message_id: messageId, user_id: currentUserId, emoji }));
     }
   };
 
@@ -327,7 +340,7 @@ export function AdminGroupChat({ currentUserId, initialMessages }: Props) {
     if (err) {
       showError(t("chat.actionFailed"));
     } else {
-      refetchReactions();
+      setReactions((prev) => removeReaction(prev, { message_id: messageId, user_id: currentUserId, emoji }));
     }
   };
 

@@ -21,7 +21,7 @@ export default async function AdminChatPage() {
     supabase
       .from("admin_messages")
       .select("id, sender_id, content, created_at, edited_at, deleted_at, reply_to_id, media_url, media_type, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role)")
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(200),
     supabase
       .from("profiles")
@@ -43,7 +43,7 @@ export default async function AdminChatPage() {
 
       <AdminChatWorkspace
         currentUserId={user.id}
-        initialMessages={(messages as any) ?? []}
+        initialMessages={(((messages as any[]) ?? []).slice().reverse() as any)}
         admins={(admins as any) ?? []}
         departments={(departments as any) ?? []}
       />
