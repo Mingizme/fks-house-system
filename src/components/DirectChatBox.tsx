@@ -496,6 +496,25 @@ export function DirectChatBox({
     return (
       <MobileChatShell
         title={otherUser.display_name}
+        titleContent={
+          <Link
+            href={`${profileBasePath}/${otherUser.id}`}
+            className="flex min-w-0 items-center gap-2 rounded-lg pr-1 text-ink-text hover:text-command"
+            aria-label={t("member.viewProfile")}
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink-border bg-ink-surface2 text-lg">
+              {otherUser.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                otherUser.avatar_emoji ?? "\u{1F642}"
+              )}
+            </span>
+            <span className="block min-w-0 flex-1 truncate text-sm font-semibold leading-tight">
+              {otherUser.display_name}
+            </span>
+          </Link>
+        }
         backHref={backHref}
         drawer={
           <div className="p-4 space-y-4">

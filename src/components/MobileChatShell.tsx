@@ -7,6 +7,7 @@ import { useI18n } from "@/components/I18nProvider";
 interface Props {
   title: string;
   subtitle?: string;
+  titleContent?: ReactNode;
   /** Nếu có → nút trái là mũi tên quay lại và vuốt phải điều hướng tới đây */
   backHref?: string;
   /** Nội dung góc phải header (vd badge điểm) */
@@ -28,6 +29,7 @@ const SWIPE_THRESHOLD = 60;
 export function MobileChatShell({
   title,
   subtitle,
+  titleContent,
   backHref,
   rightInfo,
   drawer,
@@ -91,8 +93,12 @@ export function MobileChatShell({
           {backHref ? "←" : "☰"}
         </button>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold leading-tight">{title}</p>
-          {subtitle && <p className="truncate text-xs text-ink-muted">{subtitle}</p>}
+          {titleContent ?? (
+            <>
+              <p className="truncate font-semibold leading-tight">{title}</p>
+              {subtitle && <p className="truncate text-xs text-ink-muted">{subtitle}</p>}
+            </>
+          )}
         </div>
         {rightInfo && <div className="shrink-0 text-right">{rightInfo}</div>}
         {drawer && (
