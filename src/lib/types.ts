@@ -39,6 +39,7 @@ export interface HousePoints extends House {
 export interface SystemSettings {
   id: number;
   leaderboard_visibility: LeaderboardVisibility;
+  role_title_editing_locked?: boolean;
   updated_at: string;
 }
 
@@ -215,7 +216,7 @@ export const ADMIN_RANK_LABELS: Record<AdminRank, string> = {
 
 /**
  * Tiêu đề chức danh hiển thị của một admin, dựa trên rank + department.
- * - global_director: luôn là "Global Director" (cấp tối cao toàn hệ thống)
+ * - global_director: dùng director_title của department nếu có, fallback "Global Director"
  * - director: dùng department.director_title (đổi tên được, vd "Commanding Chief")
  * - member: dùng department.member_title
  */
@@ -223,7 +224,7 @@ export function departmentTitle(
   rank: AdminRank | null,
   dept: Pick<Department, "director_title" | "member_title"> | null
 ): string {
-  if (rank === "global_director") return ADMIN_RANK_LABELS.global_director;
+  if (rank === "global_director") return dept?.director_title || ADMIN_RANK_LABELS.global_director;
   if (!dept) return rank ? ADMIN_RANK_LABELS[rank] : "";
   if (rank === "director") return dept.director_title;
   if (rank === "member") return dept.member_title;

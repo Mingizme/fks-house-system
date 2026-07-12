@@ -244,9 +244,33 @@ begin
 end;
 $$;
 
+-- Đổi tên department, không còn đổi role title tại Permission Settings.
+create or replace function rename_department_name(dept_id uuid, new_name text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  normalized_name text := nullif(trim(new_name), '');
+begin
+  if not is_global_director() then
+    raise exception 'Only a Global Director can rename departments.';
+  end if;
+
+  if normalized_name is null then
+    raise exception 'Department name cannot be empty.';
+  end if;
+
+  update departments
+    set name = normalized_name
+    where id = dept_id;
+end;
+$$;
+
 grant execute on function admin_set_role(uuid, text, admin_rank) to authenticated;
 grant execute on function admin_demote_to_player(uuid) to authenticated;
 grant execute on function rename_department(uuid, text, text, text) to authenticated;
+grant execute on function rename_department_name(uuid, text) to authenticated;
 grant execute on function can_manage_admin(uuid) to authenticated;
 
 -- =========================================================

@@ -80,6 +80,11 @@ export function canRenameDepartments(actor: ActorContext): boolean {
   return isGlobalDirector(actor);
 }
 
+/** Có được phép đổi title role của chính mình không (Director trở lên). */
+export function canEditOwnRoleTitle(actor: ActorContext): boolean {
+  return isGlobalDirector(actor) || isDirector(actor);
+}
+
 /** Có được phép mute/unmute/ban target không (cùng luật can_manage). */
 export function canMute(actor: ActorContext, target: TargetContext): boolean {
   if (actor.id === target.id) return false;

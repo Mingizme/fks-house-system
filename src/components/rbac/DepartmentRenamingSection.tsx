@@ -8,13 +8,13 @@ import type { Department } from "@/lib/types";
 
 interface Props {
   departments: Department[];
-  /** Admin có quyền đổi tên không (chỉ Global Director) */
+  /** Admin có quyền đổi tên department không (chỉ Global Director) */
   canRename: boolean;
 }
 
 /**
- * Phần quản lý Departments & Dynamic Role Renaming.
- * Chỉ Global Director (canRename=true) mới chỉnh sửa được.
+ * Phần quản lý tên Departments.
+ * Role titles được chỉnh riêng trong RoleTitleSettingsSection.
  */
 export function DepartmentRenamingSection({ departments, canRename }: Props) {
   const supabase = createClient();
@@ -54,26 +54,19 @@ function DepartmentRow({
 }) {
   const { t } = useI18n();
   const [name, setName] = useState(department.name);
-  const [directorTitle, setDirectorTitle] = useState(department.director_title);
-  const [memberTitle, setMemberTitle] = useState(department.member_title);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const dirty =
-    name.trim() !== department.name ||
-    directorTitle.trim() !== department.director_title ||
-    memberTitle.trim() !== department.member_title;
+  const dirty = name.trim() !== department.name;
 
   async function save() {
     setSaving(true);
     setMsg(null);
     setErr(null);
-    const { error: rpcError } = await supabase.rpc("rename_department", {
+    const { error: rpcError } = await supabase.rpc("rename_department_name", {
       dept_id: department.id,
       new_name: name.trim(),
-      new_director_title: directorTitle.trim(),
-      new_member_title: memberTitle.trim(),
     });
     setSaving(false);
     if (rpcError) {
@@ -87,30 +80,12 @@ function DepartmentRow({
 
   return (
     <div className="rounded-lg border border-ink-border bg-ink-surface2 p-3 space-y-2 lg:p-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-3">
+      <div className="grid grid-cols-1 gap-2 lg:gap-3">
         <label className="block">
           <span className="text-[10px] font-mono text-ink-muted uppercase">{t("permissions.deptName")}</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            disabled={!canRename || saving}
-            className="w-full mt-1 rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-sm outline-none focus:border-command disabled:opacity-50"
-          />
-        </label>
-        <label className="block">
-          <span className="text-[10px] font-mono text-ink-muted uppercase">{t("permissions.directorTitle")}</span>
-          <input
-            value={directorTitle}
-            onChange={(e) => setDirectorTitle(e.target.value)}
-            disabled={!canRename || saving}
-            className="w-full mt-1 rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-sm outline-none focus:border-command disabled:opacity-50"
-          />
-        </label>
-        <label className="block">
-          <span className="text-[10px] font-mono text-ink-muted uppercase">{t("permissions.memberTitle")}</span>
-          <input
-            value={memberTitle}
-            onChange={(e) => setMemberTitle(e.target.value)}
             disabled={!canRename || saving}
             className="w-full mt-1 rounded-md bg-ink-surface border border-ink-border px-2 py-1.5 text-sm outline-none focus:border-command disabled:opacity-50"
           />

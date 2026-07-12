@@ -665,11 +665,15 @@ alter type leaderboard_visibility add value if not exists 'admin_only';
 create table if not exists system_settings (
   id int primary key default 1,
   leaderboard_visibility leaderboard_visibility not null default 'public',
+  role_title_editing_locked boolean not null default false,
   updated_at timestamptz default now(),
   constraint only_one_row check (id = 1)
 );
 
-insert into system_settings (id, leaderboard_visibility) values (1, 'public')
+alter table system_settings
+  add column if not exists role_title_editing_locked boolean not null default false;
+
+insert into system_settings (id, leaderboard_visibility, role_title_editing_locked) values (1, 'public', false)
   on conflict (id) do nothing;
 
 alter table system_settings enable row level security;
@@ -696,6 +700,74 @@ end;
 $$;
 
 grant execute on function admin_set_leaderboard_visibility(leaderboard_visibility) to authenticated;
+
+-- Global Director có thể khóa/mở chức năng director tự đổi title role.
+create or replace function admin_set_role_title_editing_locked(locked boolean)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if not is_global_director() then
+    raise exception 'Only a Global Director can change role title editing lock.';
+  end if;
+
+  update system_settings
+    set role_title_editing_locked = locked,
+        updated_at = now()
+    where id = 1;
+end;
+$$;
+
+-- Director trở lên chỉ được đổi title role của chính department mình.
+create or replace function admin_rename_own_role_title(new_title text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  me record;
+  normalized_title text := nullif(trim(new_title), '');
+  title_editing_locked boolean;
+begin
+  if normalized_title is null then
+    raise exception 'Role title cannot be empty.';
+  end if;
+
+  if length(normalized_title) > 60 then
+    raise exception 'Role title must be 60 characters or fewer.';
+  end if;
+
+  select role_title_editing_locked into title_editing_locked
+    from system_settings
+    where id = 1;
+
+  if coalesce(title_editing_locked, false) then
+    raise exception 'Role title editing is locked.';
+  end if;
+
+  select user_type, admin_rank, department_id into me
+    from profiles
+    where id = auth.uid();
+
+  if me.user_type is distinct from 'admin'
+     or me.admin_rank is null
+     or me.admin_rank not in ('director', 'global_director') then
+    raise exception 'Only Directors and Global Directors can rename their role title.';
+  end if;
+
+  if me.department_id is null then
+    raise exception 'Your admin account is not assigned to a department.';
+  end if;
+
+  update departments
+    set director_title = normalized_title
+    where id = me.department_id;
+end;
+$$;
+
+grant execute on function admin_set_role_title_editing_locked(boolean) to authenticated;
+grant execute on function admin_rename_own_role_title(text) to authenticated;
 
 -- =========================================================
 -- PHẦN 5 — HELPER: KIỂM TRA PLAYER CÓ ĐƯỢC XEM LEADERBOARD ?

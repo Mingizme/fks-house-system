@@ -2,10 +2,12 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getServerTranslator } from "@/lib/i18n-server";
 import { DepartmentRenamingSection } from "@/components/rbac/DepartmentRenamingSection";
+import { RoleTitleSettingsSection } from "@/components/rbac/RoleTitleSettingsSection";
 import { ScoreVisibilitySection } from "@/components/rbac/ScoreVisibilitySection";
 import { LeaderboardVisibilitySection } from "@/components/rbac/LeaderboardVisibilitySection";
 import {
   isGlobalDirector,
+  canEditOwnRoleTitle,
   canAdminBlockMasterScoreToggle,
   canSetLeaderboardVisibility,
 } from "@/lib/permissions";
@@ -51,6 +53,7 @@ export default async function PermissionSettingsPage() {
   };
 
   const canRename = isGlobalDirector(actor);
+  const canEditRoleTitle = canEditOwnRoleTitle(actor);
   const canBlockMasterToggle = canAdminBlockMasterScoreToggle(actor);
   const canSetLeaderboard = canSetLeaderboardVisibility(actor);
 
@@ -60,7 +63,11 @@ export default async function PermissionSettingsPage() {
       .select("id, key, name, director_title, member_title, sort_order, created_at")
       .order("sort_order"),
     supabase.from("houses").select("*").order("name"),
-    supabase.from("system_settings").select("id, leaderboard_visibility, updated_at").eq("id", 1).maybeSingle(),
+    supabase
+      .from("system_settings")
+      .select("id, leaderboard_visibility, role_title_editing_locked, updated_at")
+      .eq("id", 1)
+      .maybeSingle(),
     supabase
       .from("house_master_score_blocks")
       .select(
@@ -77,6 +84,8 @@ export default async function PermissionSettingsPage() {
   }));
 
   const currentVisibility: LeaderboardVisibility = (settings?.leaderboard_visibility as LeaderboardVisibility) ?? "public";
+  const currentDepartment = departments?.find((department) => department.id === me.department_id) ?? null;
+  const roleTitleEditingLocked = settings?.role_title_editing_locked ?? false;
 
   return (
     <main className="p-8 lg:p-10 2xl:p-12 w-full max-w-[1800px] mx-auto space-y-8 animate-fadeRise">
@@ -87,6 +96,14 @@ export default async function PermissionSettingsPage() {
       </header>
 
       <DepartmentRenamingSection departments={(departments as any) ?? []} canRename={canRename} />
+
+      <RoleTitleSettingsSection
+        adminRank={me.admin_rank}
+        department={(currentDepartment as any) ?? null}
+        canEdit={canEditRoleTitle}
+        canToggleLock={canRename}
+        locked={roleTitleEditingLocked}
+      />
 
       <ScoreVisibilitySection
         houses={(houses as any) ?? []}
