@@ -140,9 +140,9 @@ export function AIChatClient({ audience }: { audience: Audience }) {
   }
 
   return (
-    <main className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col p-4 sm:p-6 lg:min-h-screen lg:p-8 2xl:p-10">
-      <section className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden rounded-xl2 border border-ink-border bg-ink-surface/80 shadow-crest">
-        <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-ink-border px-4 py-4 sm:px-6">
+    <main className="flex h-[calc(100dvh-3.5rem)] min-h-0 w-full flex-col overflow-hidden p-0 sm:p-4 lg:h-[100dvh] lg:p-8 2xl:p-10">
+      <section className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col overflow-hidden bg-ink-surface/80 shadow-crest sm:rounded-xl2 sm:border sm:border-ink-border">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-ink-border px-4 py-3 sm:px-6 sm:py-4">
           <div className="min-w-0">
             <p className="text-xs font-mono uppercase tracking-[0.14em] text-ink-muted">FKS AI</p>
             <h1 className="font-display text-2xl font-bold text-ink-text sm:text-3xl">AI Chat</h1>
@@ -159,7 +159,7 @@ export function AIChatClient({ audience }: { audience: Audience }) {
           </span>
         </header>
 
-        <div className="border-b border-ink-border px-4 py-3 sm:px-6">
+        <div className="shrink-0 border-b border-ink-border px-4 py-3 sm:px-6">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {suggestions.map((prompt) => (
               <button
@@ -175,7 +175,12 @@ export function AIChatClient({ audience }: { audience: Audience }) {
           </div>
         </div>
 
-        <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
+        <div
+          ref={scrollRef}
+          className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-5 sm:px-6"
+          role="log"
+          aria-live="polite"
+        >
           {messages.map((message) => (
             <div
               key={message.id}
@@ -204,12 +209,15 @@ export function AIChatClient({ audience }: { audience: Audience }) {
         </div>
 
         {error && (
-          <p className="border-t border-danger/30 bg-danger/10 px-4 py-2 text-sm text-danger sm:px-6">
+          <p className="shrink-0 border-t border-danger/30 bg-danger/10 px-4 py-2 text-sm text-danger sm:px-6">
             {error}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="shrink-0 border-t border-ink-border p-3 sm:p-4">
+        <form
+          onSubmit={handleSubmit}
+          className="shrink-0 border-t border-ink-border px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 sm:p-4"
+        >
           <div className="flex items-end gap-2 rounded-xl2 border border-ink-border bg-ink-surface2 p-2 focus-within:border-command/50">
             <textarea
               ref={textareaRef}
