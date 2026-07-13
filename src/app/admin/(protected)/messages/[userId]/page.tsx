@@ -29,7 +29,7 @@ export default async function AdminMessageThreadPage({ params }: { params: { use
       `and(sender_id.eq.${user.id},recipient_id.eq.${params.userId}),and(sender_id.eq.${params.userId},recipient_id.eq.${user.id})`
     )
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(30);
 
   const { data: blockRow } = await supabase
     .from("blocks")

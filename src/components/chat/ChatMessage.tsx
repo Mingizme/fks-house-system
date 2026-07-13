@@ -31,10 +31,12 @@ interface ChatMessageProps {
   showSender?: boolean;
   canModerate?: boolean;
   mediaUrl?: string | null;
+  mediaThumbnailUrl?: string | null;
   mediaType?: 'image' | 'video' | null;
   highlighted?: boolean;
   showTimestamp?: boolean;
   markdownSettings?: ChatMarkdownSettings | null;
+  deliveryStatus?: "sending" | "offline" | "sent" | "read" | "failed";
   onReply: (messageId: string) => void;
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
@@ -42,6 +44,7 @@ interface ChatMessageProps {
   onRemoveReact: (messageId: string, emoji: string) => void;
   onOpenFullPicker: (messageId: string, buttonRect: DOMRect) => void;
   onJumpToMessage?: (messageId: string) => void;
+  onRetrySend?: (messageId: string) => void;
 }
 
 export default function ChatMessage({
@@ -62,10 +65,12 @@ export default function ChatMessage({
   showSender,
   canModerate,
   mediaUrl,
+  mediaThumbnailUrl,
   mediaType,
   highlighted,
   showTimestamp = true,
   markdownSettings,
+  deliveryStatus,
   onReply,
   onEdit,
   onDelete,
@@ -73,6 +78,7 @@ export default function ChatMessage({
   onRemoveReact,
   onOpenFullPicker,
   onJumpToMessage,
+  onRetrySend,
 }: ChatMessageProps) {
   const { t } = useI18n();
   const [hovered, setHovered] = useState(false);
@@ -180,6 +186,19 @@ export default function ChatMessage({
 
   const isMine = senderId === currentUserId;
   const isDeleted = !!deletedAt;
+  const previewMediaUrl = mediaThumbnailUrl || mediaUrl;
+  const statusLabel =
+    deliveryStatus === "sending"
+      ? t("chat.sending")
+      : deliveryStatus === "offline"
+      ? t("chat.offlineQueued")
+      : deliveryStatus === "failed"
+      ? t("chat.failed")
+      : deliveryStatus === "read"
+      ? t("chat.read")
+      : deliveryStatus === "sent"
+      ? t("chat.sent")
+      : null;
 
   // Close quick react on click outside
   useEffect(() => {
@@ -414,19 +433,29 @@ export default function ChatMessage({
             className={`order-1 min-w-0 max-w-full select-none rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap transition-shadow duration-300 lg:px-5 lg:py-3 lg:text-base lg:leading-7 sm:select-text ${
               highlighted ? "ring-2 ring-command/70 ring-offset-2 ring-offset-ink-surface" : ""
             } ${
+              deliveryStatus === "sending" || deliveryStatus === "offline" ? "opacity-70" : ""
+            } ${
+              deliveryStatus === "failed" ? "ring-2 ring-danger/70" : ""
+            } ${
               isMine
                 ? "bg-command text-white rounded-br-md"
                 : "bg-ink-surface2 text-ink-text rounded-bl-md"
             }`}
             style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
           >
-            {mediaUrl && mediaType === "image" && (
+            {previewMediaUrl && mediaUrl && mediaType === "image" && (
               <button
                 type="button"
                 onClick={() => setLightboxOpen(true)}
                 className="mb-2 block max-w-[75vw] sm:max-w-sm lg:max-w-md cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
               >
-                <img src={mediaUrl} alt={t("chat.attachmentAlt")} className="w-full h-auto object-cover max-h-60 lg:max-h-80" />
+                <img
+                  src={previewMediaUrl}
+                  alt={t("chat.attachmentAlt")}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-auto object-cover max-h-60 lg:max-h-80"
+                />
               </button>
             )}
             {mediaUrl && mediaType === "video" && (
@@ -435,7 +464,7 @@ export default function ChatMessage({
                 onClick={() => setLightboxOpen(true)}
                 className="relative mb-2 block max-w-[75vw] sm:max-w-sm lg:max-w-md cursor-zoom-in overflow-hidden rounded-lg border border-white/10 bg-black/20"
               >
-                <video src={mediaUrl} muted playsInline className="w-full h-auto max-h-60 lg:max-h-80 pointer-events-none" />
+                <video src={mediaUrl} muted playsInline preload="metadata" className="w-full h-auto max-h-60 lg:max-h-80 pointer-events-none" />
                 <span className="absolute inset-0 flex items-center justify-center">
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-2xl text-white">▶</span>
                 </span>
@@ -448,8 +477,32 @@ export default function ChatMessage({
                 {editedAt && <span>{t("chat.edited")}</span>}
               </span>
             )}
+            {isMine && statusLabel && (
+              <span
+                className={`ml-2 inline-flex items-center gap-1 align-bottom text-[10px] lg:text-xs ${
+                  deliveryStatus === "failed" ? "text-danger" : "opacity-60"
+                }`}
+                title={statusLabel}
+              >
+                {deliveryStatus === "sending" && <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-current" />}
+                {deliveryStatus === "offline" && <span>...</span>}
+                {deliveryStatus === "failed" && <span>!</span>}
+                {deliveryStatus === "sent" && <span>✓</span>}
+                {deliveryStatus === "read" && <span>✓✓</span>}
+              </span>
+            )}
           </div>
         </div>
+
+        {deliveryStatus === "failed" && onRetrySend && (
+          <button
+            type="button"
+            onClick={() => onRetrySend(id)}
+            className="mt-1 px-2 text-xs font-medium text-danger underline-offset-2 hover:underline lg:text-sm"
+          >
+            {t("chat.retry")}
+          </button>
+        )}
 
         {/* Reactions */}
         {reactions.length > 0 && (

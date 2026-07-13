@@ -179,6 +179,7 @@ export interface DirectMessage {
   deleted_at: string | null;
   reply_to_id: string | null;
   media_url: string | null;
+  media_thumbnail_url: string | null;
   media_type: 'image' | 'video' | null;
   formatting_settings: ChatMarkdownSettings | null;
 }
@@ -193,6 +194,7 @@ export interface HouseMessage {
   deleted_at: string | null;
   reply_to_id: string | null;
   media_url: string | null;
+  media_thumbnail_url: string | null;
   media_type: 'image' | 'video' | null;
   formatting_settings: ChatMarkdownSettings | null;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role" | "house_role">;
@@ -207,6 +209,7 @@ export interface AdminMessage {
   deleted_at: string | null;
   reply_to_id: string | null;
   media_url: string | null;
+  media_thumbnail_url: string | null;
   media_type: 'image' | 'video' | null;
   formatting_settings: ChatMarkdownSettings | null;
   sender?: Pick<Profile, "display_name" | "avatar_emoji" | "avatar_url" | "user_type" | "admin_role">;

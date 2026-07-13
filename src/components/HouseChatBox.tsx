@@ -19,6 +19,7 @@ import {
   type MessageReactionRow,
 } from "@/lib/chat-reactions";
 import { resolveChatMarkdownSettings, type ChatMarkdownSettings } from "@/lib/chat-markdown-settings";
+import { sanitizeChatContent } from "@/lib/chat-sanitize";
 
 const MAX_LIVE_MESSAGES = 150;
 
@@ -59,7 +60,6 @@ export function HouseChatBox({
   const supabase = createClient();
   const { t } = useI18n();
   const [messages, setMessages] = useState<HouseMessage[]>(initialMessages);
-  const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<{ id: string; content: string; senderName: string } | null>(null);
@@ -212,10 +212,6 @@ export function HouseChatBox({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [text]);
-
   function showError(msg: string) {
     setError(msg);
     setTimeout(() => setError(null), 3000);
@@ -230,8 +226,13 @@ export function HouseChatBox({
     return message.content ? `${mediaLabel}: ${message.content}` : mediaLabel;
   }
 
-  async function send(mediaUrl?: string | null, mediaType?: "image" | "video" | null) {
-    const content = text.trim();
+  async function send(
+    rawContent: string,
+    mediaUrl?: string | null,
+    mediaType?: "image" | "video" | null,
+    mediaThumbnailUrl?: string | null
+  ) {
+    const content = sanitizeChatContent(rawContent);
     if (!content && !mediaUrl) return;
     if (sending) return;
     if (viewerMuted) {
@@ -239,7 +240,6 @@ export function HouseChatBox({
       return;
     }
     setSending(true);
-    setText("");
     const replyToId = replyingTo?.id || null;
     setReplyingTo(null);
 
@@ -251,12 +251,12 @@ export function HouseChatBox({
         content, 
         reply_to_id: replyToId,
         media_url: mediaUrl || null,
+        media_thumbnail_url: mediaThumbnailUrl || null,
         media_type: mediaType || null,
         formatting_settings: composerFormattingSettings,
       });
 
     if (insertError) {
-      if (content) setText(content);
       showError(t("chat.sendFailed"));
     }
     setSending(false);
@@ -271,20 +271,17 @@ export function HouseChatBox({
 
   const handleStartEdit = (messageId: string, content: string) => {
     setEditingMessage({ id: messageId, content });
-    setText(content);
   };
 
   const handleCancelEdit = () => {
     setEditingMessage(null);
-    setText("");
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingMessage || !text.trim()) return;
-    const content = text.trim();
+  const handleSaveEdit = async (rawContent: string) => {
+    const content = sanitizeChatContent(rawContent);
+    if (!editingMessage || !content) return;
     const msgId = editingMessage.id;
     setEditingMessage(null);
-    setText("");
 
     const { error: err } = await supabase
       .from("house_messages")
@@ -415,6 +412,7 @@ export function HouseChatBox({
                 showTimestamp={false}
                 canModerate={canModerate && !mine}
                 mediaUrl={m.media_url}
+                mediaThumbnailUrl={m.media_thumbnail_url}
                 mediaType={m.media_type}
                 highlighted={highlightedMessageId === m.id}
                 markdownSettings={m.formatting_settings}
@@ -441,8 +439,6 @@ export function HouseChatBox({
       {muteBanner}
 
       <ChatInput
-        value={text}
-        onChange={setText}
         onSend={send}
         placeholder={viewerMuted ? t("chat.mutedCannotSend") : t("messages.housePlaceholder")}
         sendLabel={t("common.send")}

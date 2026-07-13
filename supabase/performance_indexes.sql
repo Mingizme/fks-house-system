@@ -10,6 +10,9 @@ create index if not exists idx_direct_messages_recipient_recent
 create index if not exists idx_direct_messages_pair_recent
   on direct_messages(is_admin_chat, sender_id, recipient_id, created_at desc);
 
+create index if not exists idx_direct_messages_recipient_pair_recent
+  on direct_messages(is_admin_chat, recipient_id, sender_id, created_at desc);
+
 create index if not exists idx_admin_messages_recent
   on admin_messages(created_at desc);
 

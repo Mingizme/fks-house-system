@@ -4,11 +4,17 @@ import { useState, useRef, useCallback, KeyboardEvent, useEffect, useMemo } from
 import EmojiPicker from "./EmojiPicker";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/I18nProvider";
+import { getChatImageThumbnailUrl } from "@/lib/chat-media";
 
 interface ChatInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  onSend: (mediaUrl?: string | null, mediaType?: "image" | "video" | null) => void;
+  value?: string;
+  onChange?: (value: string) => void;
+  onSend: (
+    content: string,
+    mediaUrl?: string | null,
+    mediaType?: "image" | "video" | null,
+    mediaThumbnailUrl?: string | null
+  ) => void | Promise<void>;
   disabled?: boolean;
   placeholder?: string;
   sendLabel?: string;
@@ -16,7 +22,8 @@ interface ChatInputProps {
   onCancelReply?: () => void;
   editingMessage?: { id: string; content: string } | null;
   onCancelEdit?: () => void;
-  onSaveEdit?: () => void;
+  onSaveEdit?: (content: string) => void | Promise<void>;
+  onTypingChange?: (typing: boolean) => void;
   maxWords?: number;
 }
 
@@ -50,10 +57,13 @@ export default function ChatInput({
   editingMessage,
   onCancelEdit,
   onSaveEdit,
+  onTypingChange,
   maxWords,
 }: ChatInputProps) {
   const supabase = createClient();
   const { t } = useI18n();
+  const isControlled = value !== undefined;
+  const [internalValue, setInternalValue] = useState(value ?? "");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<{ url: string; type: "image" | "video" } | null>(null);
@@ -64,9 +74,13 @@ export default function ChatInput({
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const typingIdleRef = useRef<NodeJS.Timeout | null>(null);
+  const typingStateRef = useRef(false);
+  const textValue = isControlled ? value ?? "" : internalValue;
   const effectivePlaceholder = placeholder ?? t("messages.placeholder");
   const activeWordLimit = typeof maxWords === "number" && maxWords > 0 ? maxWords : null;
-  const wordCount = useMemo(() => countWords(value), [value]);
+  const wordCount = useMemo(() => countWords(textValue), [textValue]);
   const showWordCounter =
     activeWordLimit !== null && (wordCount >= Math.floor(activeWordLimit * 0.8) || wordLimitNotice);
   const activeError =
@@ -75,6 +89,61 @@ export default function ChatInput({
       ? t("chat.wordLimitReached", { limit: activeWordLimit })
       : null);
   const isEditing = !!editingMessage;
+
+  const emitTyping = useCallback(
+    (typing: boolean) => {
+      if (!onTypingChange || typingStateRef.current === typing) return;
+      typingStateRef.current = typing;
+      onTypingChange(typing);
+    },
+    [onTypingChange]
+  );
+
+  const clearTypingTimers = useCallback(() => {
+    if (typingDebounceRef.current) {
+      clearTimeout(typingDebounceRef.current);
+      typingDebounceRef.current = null;
+    }
+    if (typingIdleRef.current) {
+      clearTimeout(typingIdleRef.current);
+      typingIdleRef.current = null;
+    }
+  }, []);
+
+  const scheduleTyping = useCallback(
+    (nextValue: string) => {
+      if (!onTypingChange || isEditing) return;
+
+      if (!nextValue.trim()) {
+        clearTypingTimers();
+        emitTyping(false);
+        return;
+      }
+
+      if (!typingStateRef.current && !typingDebounceRef.current) {
+        typingDebounceRef.current = setTimeout(() => {
+          typingDebounceRef.current = null;
+          emitTyping(true);
+        }, 400);
+      }
+
+      if (typingIdleRef.current) {
+        clearTimeout(typingIdleRef.current);
+      }
+      typingIdleRef.current = setTimeout(() => emitTyping(false), 1400);
+    },
+    [clearTypingTimers, emitTyping, isEditing, onTypingChange]
+  );
+
+  const setTextValue = useCallback(
+    (nextValue: string) => {
+      if (!isControlled) {
+        setInternalValue(nextValue);
+      }
+      onChange?.(nextValue);
+    },
+    [isControlled, onChange]
+  );
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -91,6 +160,27 @@ export default function ChatInput({
   }, [activeWordLimit, wordCount]);
 
   useEffect(() => {
+    if (isControlled) {
+      setInternalValue(value ?? "");
+    }
+  }, [isControlled, value]);
+
+  useEffect(() => {
+    if (!editingMessage) return;
+    setTextValue(editingMessage.content);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }, [editingMessage?.id, setTextValue]);
+
+  useEffect(() => {
+    return () => {
+      clearTypingTimers();
+      if (typingStateRef.current) {
+        onTypingChange?.(false);
+      }
+    };
+  }, [clearTypingTimers, onTypingChange]);
+
+  useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
 
@@ -102,33 +192,35 @@ export default function ChatInput({
     if (el.scrollHeight > MAX_TEXTAREA_HEIGHT) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [value, replyingTo, isEditing, mediaPreview, activeError]);
+  }, [textValue, replyingTo, isEditing, mediaPreview, activeError]);
 
   const applyTextChange = useCallback(
     (nextValue: string) => {
       if (activeWordLimit === null) {
-        onChange(nextValue);
+        setTextValue(nextValue);
+        scheduleTyping(nextValue);
         return nextValue;
       }
 
       const result = limitToWords(nextValue, activeWordLimit);
-      onChange(result.value);
+      setTextValue(result.value);
       setWordLimitNotice(result.limited);
+      scheduleTyping(result.value);
       return result.value;
     },
-    [activeWordLimit, onChange]
+    [activeWordLimit, scheduleTyping, setTextValue]
   );
 
   const handleEmojiSelect = useCallback(
     (emoji: string) => {
       if (!inputRef.current) {
-        applyTextChange(value + emoji);
+        applyTextChange(textValue + emoji);
         return;
       }
 
-      const start = inputRef.current.selectionStart ?? value.length;
-      const end = inputRef.current.selectionEnd ?? value.length;
-      const newValue = value.slice(0, start) + emoji + value.slice(end);
+      const start = inputRef.current.selectionStart ?? textValue.length;
+      const end = inputRef.current.selectionEnd ?? textValue.length;
+      const newValue = textValue.slice(0, start) + emoji + textValue.slice(end);
       const appliedValue = applyTextChange(newValue);
 
       // Restore cursor position after emoji insertion
@@ -140,7 +232,7 @@ export default function ChatInput({
         }
       });
     },
-    [value, applyTextChange]
+    [textValue, applyTextChange]
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,11 +266,21 @@ export default function ChatInput({
     }
   };
 
+  const clearDraft = useCallback(() => {
+    setTextValue("");
+    clearTypingTimers();
+    emitTyping(false);
+  }, [clearTypingTimers, emitTyping, setTextValue]);
+
   const handleUploadAndSend = async () => {
     if (uploading || disabled) return;
 
+    const content = textValue.trim();
     let mediaUrl: string | null = null;
     let mediaType: "image" | "video" | null = null;
+    let mediaThumbnailUrl: string | null = null;
+
+    if (!content && !selectedFile) return;
 
     if (selectedFile && currentUserId) {
       setUploading(true);
@@ -201,6 +303,7 @@ export default function ChatInput({
 
         mediaUrl = data.publicUrl;
         mediaType = selectedFile.type.startsWith("video/") ? "video" : "image";
+        mediaThumbnailUrl = mediaType === "image" ? getChatImageThumbnailUrl(mediaUrl) : null;
       } catch (err: any) {
         console.error("Upload error:", err);
         setErrorMsg(t("chat.uploadFailed"));
@@ -209,7 +312,8 @@ export default function ChatInput({
       }
     }
 
-    onSend(mediaUrl, mediaType);
+    await onSend(content, mediaUrl, mediaType, mediaThumbnailUrl);
+    clearDraft();
     setSelectedFile(null);
     setMediaPreview(null);
     setUploading(false);
@@ -222,7 +326,11 @@ export default function ChatInput({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (editingMessage && onSaveEdit) {
-        onSaveEdit();
+        const content = textValue.trim();
+        if (content) {
+          onSaveEdit(content);
+          clearDraft();
+        }
       } else {
         handleUploadAndSend();
       }
@@ -231,7 +339,11 @@ export default function ChatInput({
 
   const handleSendClick = () => {
     if (editingMessage && onSaveEdit) {
-      onSaveEdit();
+      const content = textValue.trim();
+      if (content) {
+        onSaveEdit(content);
+        clearDraft();
+      }
     } else {
       handleUploadAndSend();
     }
@@ -292,7 +404,10 @@ export default function ChatInput({
           </div>
           <button
             type="button"
-            onClick={onCancelEdit}
+            onClick={() => {
+              onCancelEdit?.();
+              clearDraft();
+            }}
             className="ml-2 p-1 rounded hover:bg-ink-border transition-colors text-ink-muted hover:text-ink-text cursor-pointer lg:p-1.5"
             title={t("chat.cancelEdit")}
           >
@@ -410,7 +525,7 @@ export default function ChatInput({
         {/* Text input grows until max height, then scrolls like Discord. */}
         <textarea
           ref={inputRef}
-          value={value}
+          value={textValue}
           onChange={(e) => applyTextChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={uploading ? t("chat.uploadingFile") : effectivePlaceholder}
@@ -456,7 +571,7 @@ export default function ChatInput({
         <button
           type="button"
           onClick={handleSendClick}
-          disabled={disabled || uploading || (!value.trim() && !selectedFile)}
+          disabled={disabled || uploading || (!textValue.trim() && !selectedFile)}
           aria-label={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
           title={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-command transition-colors hover:bg-command/10 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed lg:h-11 lg:w-11"

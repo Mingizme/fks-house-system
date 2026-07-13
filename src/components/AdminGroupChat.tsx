@@ -19,6 +19,7 @@ import {
   type MessageReactionRow,
 } from "@/lib/chat-reactions";
 import { resolveChatMarkdownSettings, type ChatMarkdownSettings } from "@/lib/chat-markdown-settings";
+import { sanitizeChatContent } from "@/lib/chat-sanitize";
 
 const MAX_LIVE_MESSAGES = 200;
 
@@ -40,7 +41,6 @@ export function AdminGroupChat({ currentUserId, initialMessages, composerMarkdow
   const supabase = createClient();
   const { t } = useI18n();
   const [messages, setMessages] = useState<AdminMessage[]>(initialMessages);
-  const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<{ id: string; content: string; senderName: string } | null>(null);
@@ -208,12 +208,16 @@ export function AdminGroupChat({ currentUserId, initialMessages, composerMarkdow
     return message.content ? `${mediaLabel}: ${message.content}` : mediaLabel;
   }
 
-  async function send(mediaUrl?: string | null, mediaType?: "image" | "video" | null) {
-    const content = text.trim();
+  async function send(
+    rawContent: string,
+    mediaUrl?: string | null,
+    mediaType?: "image" | "video" | null,
+    mediaThumbnailUrl?: string | null
+  ) {
+    const content = sanitizeChatContent(rawContent);
     if (!content && !mediaUrl) return;
     if (sending) return;
     setSending(true);
-    setText("");
     const replyToId = replyingTo?.id || null;
     setReplyingTo(null);
 
@@ -224,6 +228,7 @@ export function AdminGroupChat({ currentUserId, initialMessages, composerMarkdow
         content, 
         reply_to_id: replyToId,
         media_url: mediaUrl || null,
+        media_thumbnail_url: mediaThumbnailUrl || null,
         media_type: mediaType || null,
         formatting_settings: composerFormattingSettings,
       })
@@ -231,7 +236,6 @@ export function AdminGroupChat({ currentUserId, initialMessages, composerMarkdow
       .single();
 
     if (insertError) {
-      if (content) setText(content);
       showError(t("chat.sendFailed"));
     } else if (data) {
       const sender = profileCache.current.get(currentUserId);
@@ -252,20 +256,17 @@ export function AdminGroupChat({ currentUserId, initialMessages, composerMarkdow
 
   const handleStartEdit = (messageId: string, content: string) => {
     setEditingMessage({ id: messageId, content });
-    setText(content);
   };
 
   const handleCancelEdit = () => {
     setEditingMessage(null);
-    setText("");
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingMessage || !text.trim()) return;
-    const content = text.trim();
+  const handleSaveEdit = async (rawContent: string) => {
+    const content = sanitizeChatContent(rawContent);
+    if (!editingMessage || !content) return;
     const msgId = editingMessage.id;
     setEditingMessage(null);
-    setText("");
 
     const { error: err } = await supabase
       .from("admin_messages")
@@ -398,6 +399,7 @@ export function AdminGroupChat({ currentUserId, initialMessages, composerMarkdow
                 showSender={!isMine}
                 showTimestamp={false}
                 mediaUrl={m.media_url}
+                mediaThumbnailUrl={m.media_thumbnail_url}
                 mediaType={m.media_type}
                 highlighted={highlightedMessageId === m.id}
                 markdownSettings={m.formatting_settings}
@@ -416,8 +418,6 @@ export function AdminGroupChat({ currentUserId, initialMessages, composerMarkdow
       </div>
 
       <ChatInput
-        value={text}
-        onChange={setText}
         onSend={send}
         placeholder={t("messages.placeholder")}
         sendLabel={t("common.send")}
