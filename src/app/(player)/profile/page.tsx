@@ -17,7 +17,8 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const profileColumns = "id, email, username, display_name, avatar_emoji, avatar_url, bio, display_name_changed_at, chat_markdown_settings";
+  const profileColumns =
+    "id, email, username, display_name, avatar_emoji, avatar_url, bio, display_name_changed_at, chat_markdown_settings, user_type, admin_rank, department_id, role_title_override, department:departments(id, key, name, director_title, deputy_director_title, member_title, director_title_editing_enabled, deputy_director_title_editing_enabled, member_title_editing_enabled, sort_order, created_at)";
   const legacyProfileColumns = "id, email, username, display_name, avatar_emoji, avatar_url, bio, display_name_changed_at";
 
   const { data: profile, error: profileError } = await supabase

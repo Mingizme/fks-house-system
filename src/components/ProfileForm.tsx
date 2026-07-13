@@ -11,6 +11,7 @@ import {
   type ChatMarkdownToggleKey,
   type ResolvedChatMarkdownSettings,
 } from "@/lib/chat-markdown-settings";
+import { departmentTitle, type AdminRank, type Department, type DepartmentAdminRank, type UserType } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
 type SettingsProfile = {
@@ -23,6 +24,11 @@ type SettingsProfile = {
   bio: string | null;
   display_name_changed_at: string | null;
   chat_markdown_settings?: unknown;
+  user_type?: UserType | null;
+  admin_rank?: AdminRank | null;
+  department_id?: string | null;
+  role_title_override?: string | null;
+  department?: Department | null;
 };
 
 const DISPLAY_NAME_COOLDOWN_DAYS = 30;
@@ -61,6 +67,16 @@ const CHAT_MARKDOWN_LABEL_KEYS: Record<ChatMarkdownToggleKey, TranslationKey> = 
   codeBlocks: "settings.markdown.codeBlocks",
 };
 
+function isDepartmentAdminRank(rank: AdminRank | null | undefined): rank is DepartmentAdminRank {
+  return rank === "director" || rank === "deputy_director" || rank === "member";
+}
+
+function titleEditingEnabled(department: Department, rank: DepartmentAdminRank): boolean {
+  if (rank === "director") return !!department.director_title_editing_enabled;
+  if (rank === "deputy_director") return !!department.deputy_director_title_editing_enabled;
+  return !!department.member_title_editing_enabled;
+}
+
 export function ProfileForm({
   profile,
   emojiOptions,
@@ -82,6 +98,8 @@ export function ProfileForm({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [savingChatSettings, setSavingChatSettings] = useState(false);
+  const [roleTitle, setRoleTitle] = useState(profile.role_title_override ?? "");
+  const [savingRoleTitle, setSavingRoleTitle] = useState(false);
   const [chatMarkdownSettings, setChatMarkdownSettings] = useState<ResolvedChatMarkdownSettings>(() =>
     resolveChatMarkdownSettings(profile.chat_markdown_settings)
   );
@@ -95,6 +113,17 @@ export function ProfileForm({
 
   const canChangeDisplayName = !nextDisplayNameChange || Date.now() >= nextDisplayNameChange.getTime();
   const displayNameChanged = displayName.trim() !== profile.display_name;
+  const adminRank = profile.admin_rank ?? null;
+  const department = profile.department ?? null;
+  const isAdminProfile = profile.user_type === "admin";
+  const isDepartmentRole = isDepartmentAdminRank(adminRank);
+  const canEditOwnRoleTitle =
+    isAdminProfile &&
+    (adminRank === "global_director" ||
+      (isDepartmentRole && !!department && titleEditingEnabled(department, adminRank)));
+  const showOwnRoleTitle = isAdminProfile && (adminRank === "global_director" || (isDepartmentRole && !!department));
+  const defaultRoleTitle = showOwnRoleTitle ? departmentTitle(adminRank, department) : "";
+  const roleTitleChanged = roleTitle.trim() !== (profile.role_title_override ?? "").trim();
 
   async function uploadAvatar(file: File) {
     setError(null);
@@ -194,6 +223,27 @@ export function ProfileForm({
 
     setMessage(t("profile.passwordEmailSent"));
     setSendingPasswordEmail(false);
+  }
+
+  async function saveRoleTitle() {
+    setSavingRoleTitle(true);
+    setMessage(null);
+    setError(null);
+
+    const { error: updateError } = await supabase.rpc("admin_set_profile_role_title", {
+      target_id: profile.id,
+      new_title: roleTitle.trim() || null,
+    });
+
+    if (updateError) {
+      setError(updateError.message);
+      setSavingRoleTitle(false);
+      return;
+    }
+
+    setMessage(t("common.saved"));
+    setSavingRoleTitle(false);
+    router.refresh();
   }
 
   function setChatMarkdownSetting(key: ChatMarkdownToggleKey, value: boolean) {
@@ -301,6 +351,37 @@ export function ProfileForm({
                   {bio.length}/200
                 </p>
               </div>
+
+              {showOwnRoleTitle && (
+                <div>
+                  <label className="text-xs font-mono text-ink-muted block mb-1.5 lg:text-sm lg:mb-2">{t("permissions.roleTitleCurrent")}</label>
+                  <input
+                    value={roleTitle}
+                    onChange={(e) => setRoleTitle(e.target.value)}
+                    disabled={!canEditOwnRoleTitle || savingRoleTitle}
+                    maxLength={60}
+                    placeholder={defaultRoleTitle}
+                    className="w-full rounded-lg bg-ink-surface2 border border-ink-border px-4 py-2.5 outline-none focus:border-command transition-colors disabled:opacity-60 lg:px-5 lg:py-4 lg:text-lg"
+                  />
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs text-ink-faint lg:text-sm">
+                      {canEditOwnRoleTitle
+                        ? t("permissions.profileRoleTitleHint")
+                        : t("permissions.roleTitleEditingLocked")}
+                    </p>
+                    {canEditOwnRoleTitle && (
+                      <button
+                        type="button"
+                        onClick={saveRoleTitle}
+                        disabled={savingRoleTitle || !roleTitleChanged}
+                        className="rounded-lg border border-command/50 text-command hover:bg-command/10 disabled:opacity-50 transition-colors font-semibold px-4 py-2 text-xs lg:px-5 lg:py-2.5 lg:text-sm"
+                      >
+                        {savingRoleTitle ? t("common.saving") : t("common.saveChanges")}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="text-xs font-mono text-ink-muted block mb-2 lg:text-sm lg:mb-3">{t("profile.avatarImageLabel")}</label>
