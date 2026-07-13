@@ -743,6 +743,12 @@ alter table departments add column if not exists director_title_editing_enabled 
 alter table departments add column if not exists deputy_director_title_editing_enabled boolean not null default false;
 alter table departments add column if not exists member_title_editing_enabled boolean not null default false;
 
+alter type admin_role add value if not exists 'financial';
+
+insert into departments (key, name, director_title, deputy_director_title, member_title, sort_order) values
+  ('financial', 'Financial Department', 'Director of Financial Department', 'Deputy Director of Financial Department', 'Financial Admin', 8)
+on conflict (key) do nothing;
+
 update departments
   set name = 'Executive Protection Bureau',
       director_title = case when director_title = 'Director of Ex' then 'Director of EPB' else director_title end,
@@ -766,6 +772,7 @@ update departments
     when 'staff' then 'Deputy Director of Staff'
     when 'media' then 'Deputy Director of Media'
     when 'ex' then 'Deputy Director of EPB'
+    when 'financial' then 'Deputy Director of Financial Department'
     else 'Deputy Director of Department'
   end
   where deputy_director_title is null or trim(deputy_director_title) = '';

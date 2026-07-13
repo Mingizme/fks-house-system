@@ -11,8 +11,10 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type admin_role as enum ('director', 'admin', 'judge', 'security', 'linguistic');
+  create type admin_role as enum ('director', 'admin', 'financial', 'judge', 'security', 'linguistic');
 exception when duplicate_object then null; end $$;
+
+alter type admin_role add value if not exists 'financial';
 
 -- ---------- HOUSES ----------
 create table if not exists houses (

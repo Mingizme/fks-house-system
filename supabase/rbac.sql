@@ -12,7 +12,7 @@
 -- ---------- BẢNG DEPARTMENTS ----------
 create table if not exists departments (
   id uuid primary key default uuid_generate_v4(),
-  key text not null unique,          -- định danh cố định: security | linguistic | admin | staff | media | judge | ex
+  key text not null unique,          -- định danh cố định: security | linguistic | admin | staff | media | judge | ex | financial
   name text not null,                -- tên hiển thị (Global Director đổi được)
   director_title text not null,      -- vd 'Director of Security' -> có thể đổi 'Commanding Chief'
   deputy_director_title text not null,
@@ -29,7 +29,7 @@ alter table departments add column if not exists director_title_editing_enabled 
 alter table departments add column if not exists deputy_director_title_editing_enabled boolean not null default false;
 alter table departments add column if not exists member_title_editing_enabled boolean not null default false;
 
--- Seed 7 bộ phận ngang hàng mặc định
+-- Seed 8 bộ phận ngang hàng mặc định
 insert into departments (key, name, director_title, deputy_director_title, member_title, sort_order) values
   ('executive', 'Executive',  'Global Director',          'Deputy Global Director',     'Executive',            0),
   ('admin',     'Admin',      'Director of Admin',        'Deputy Director of Admin',   'Admin Officer',        1),
@@ -38,7 +38,8 @@ insert into departments (key, name, director_title, deputy_director_title, membe
   ('judge',     'Judge',      'Director of Judges',       'Deputy Director of Judges',  'Judge',                4),
   ('staff',     'Staff',      'Director of Staff',        'Deputy Director of Staff',   'Staff Member',         5),
   ('media',     'Media',      'Director of Media',        'Deputy Director of Media',   'Media Officer',        6),
-  ('ex',        'Executive Protection Bureau', 'Director of EPB', 'Deputy Director of EPB', 'EPB Officer', 7)
+  ('ex',        'Executive Protection Bureau', 'Director of EPB', 'Deputy Director of EPB', 'EPB Officer', 7),
+  ('financial', 'Financial Department', 'Director of Financial Department', 'Deputy Director of Financial Department', 'Financial Admin', 8)
 on conflict (key) do nothing;
 
 update departments
@@ -64,6 +65,7 @@ update departments
     when 'staff' then 'Deputy Director of Staff'
     when 'media' then 'Deputy Director of Media'
     when 'ex' then 'Deputy Director of EPB'
+    when 'financial' then 'Deputy Director of Financial Department'
     else 'Deputy Director of Department'
   end
   where deputy_director_title is null or trim(deputy_director_title) = '';
@@ -84,6 +86,8 @@ alter table profiles add column if not exists role_title_override text;
 
 create index if not exists idx_profiles_department on profiles(department_id);
 
+alter type admin_role add value if not exists 'financial';
+
 -- Mỗi department chỉ có tối đa 1 global_director / 1 director
 -- (Global Director là cấp tối cao toàn hệ thống, thường thuộc department 'executive')
 create unique index if not exists idx_one_director_per_department
@@ -98,12 +102,14 @@ declare
   dep_security uuid;
   dep_linguistic uuid;
   dep_judge uuid;
+  dep_financial uuid;
 begin
   select id into dep_executive  from departments where key = 'executive';
   select id into dep_admin      from departments where key = 'admin';
   select id into dep_security   from departments where key = 'security';
   select id into dep_linguistic from departments where key = 'linguistic';
   select id into dep_judge      from departments where key = 'judge';
+  select id into dep_financial  from departments where key = 'financial';
 
   -- director cũ -> Global Director thuộc Executive
   update profiles set admin_rank = 'global_director', department_id = dep_executive
@@ -120,6 +126,8 @@ begin
     where user_type = 'admin' and admin_rank is null and admin_role = 'linguistic';
   update profiles set admin_rank = 'member', department_id = dep_judge
     where user_type = 'admin' and admin_rank is null and admin_role = 'judge';
+  update profiles set admin_rank = 'member', department_id = dep_financial
+    where user_type = 'admin' and admin_rank is null and admin_role::text = 'financial';
 
   -- fallback: bất kỳ admin nào còn sót -> member của Admin
   update profiles set admin_rank = 'member', department_id = dep_admin

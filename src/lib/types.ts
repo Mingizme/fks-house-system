@@ -1,7 +1,7 @@
 import type { ChatMarkdownSettings } from "@/lib/chat-markdown-settings";
 
 export type UserType = "player" | "admin";
-export type AdminRole = "director" | "admin" | "judge" | "security" | "linguistic";
+export type AdminRole = "director" | "admin" | "financial" | "judge" | "security" | "linguistic";
 export type AdminRank = "global_director" | "director" | "deputy_director" | "member";
 export type DepartmentAdminRank = Exclude<AdminRank, "global_director">;
 export type HouseRole = "master" | "vice";
@@ -228,6 +228,7 @@ export interface MessageReaction {
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
   director: "Director",
   admin: "Admin",
+  financial: "Financial",
   judge: "Judge",
   security: "Security",
   linguistic: "Linguistic",

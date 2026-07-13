@@ -12,6 +12,8 @@
 -- │ executive     │ global_director  │  ← Cấp tối cao toàn quyền
 -- │ admin         │ director         │
 -- │ admin         │ member           │
+-- │ financial     │ director         │
+-- │ financial     │ member           │
 -- │ security      │ director         │
 -- │ security      │ member           │
 -- │ linguistic    │ director         │
