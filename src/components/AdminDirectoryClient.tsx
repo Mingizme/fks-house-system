@@ -15,6 +15,8 @@ import type { AdminDirectoryEntry, Department, DepartmentAdminRank } from "@/lib
 
 const DEPARTMENT_SELECT_COLUMNS =
   "id, key, name, director_title, deputy_director_title, member_title, director_title_editing_enabled, deputy_director_title_editing_enabled, member_title_editing_enabled, sort_order, created_at";
+const PROFILE_DEPARTMENT_SELECT_COLUMNS =
+  "department:departments(id, key, name, director_title, deputy_director_title, member_title, director_title_editing_enabled, deputy_director_title_editing_enabled, member_title_editing_enabled, sort_order, created_at)";
 
 function isDepartmentAdminRank(rank: AdminDirectoryEntry["admin_rank"]): rank is DepartmentAdminRank {
   return rank === "director" || rank === "deputy_director" || rank === "member";
@@ -32,12 +34,20 @@ function canEditProfileRoleTitle(
   targetDepartment: Department | null
 ): boolean {
   if (!actor || actor.userType !== "admin" || target.user_type !== "admin") return false;
+
+  if (target.admin_rank === "global_director") {
+    return actor.adminRank === "global_director";
+  }
+
+  if (!isDepartmentAdminRank(target.admin_rank) || !targetDepartment) return false;
+  if (!titleEditingEnabled(targetDepartment, target.admin_rank)) return false;
+
   if (actor.adminRank === "global_director") return true;
-  if (!isDepartmentAdminRank(target.admin_rank) || !targetDepartment || !actor.departmentId) return false;
+  if (!actor.departmentId) return false;
   if (actor.departmentId !== (target.department_id ?? targetDepartment.id)) return false;
 
   if (actor.id === target.id && actor.adminRank === target.admin_rank) {
-    return titleEditingEnabled(targetDepartment, target.admin_rank);
+    return true;
   }
 
   if (actor.adminRank === "director") {
@@ -192,9 +202,9 @@ export function AdminDirectoryClient({
 
   async function refetchDirectory() {
     const baseSelectColumns =
-      "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, role_title_override, department:departments(id, key, name, director_title, deputy_director_title, member_title, sort_order, created_at), house_id, house_role, created_at";
+      `id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, role_title_override, ${PROFILE_DEPARTMENT_SELECT_COLUMNS}, house_id, house_role, created_at`;
     const moderationSelectColumns =
-      "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, role_title_override, department:departments(id, key, name, director_title, deputy_director_title, member_title, sort_order, created_at), house_id, house_role, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip, created_at";
+      `id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, role_title_override, ${PROFILE_DEPARTMENT_SELECT_COLUMNS}, house_id, house_role, muted_until, mute_reason, chat_banned_at, chat_ban_reason, account_banned_at, account_ban_reason, last_seen_ip, created_at`;
     const selectColumns = viewerActor ? moderationSelectColumns : baseSelectColumns;
 
     const [{ data: adminRows }, { data: playerRows }] = await Promise.all([

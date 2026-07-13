@@ -24,7 +24,7 @@ export default async function AdminDirectoryPage() {
     supabase
       .from("profiles")
       .select(
-        "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, role_title_override, department:departments(id, key, name, director_title, deputy_director_title, member_title, sort_order, created_at), house_id, house_role, created_at"
+        "id, display_name, username, avatar_emoji, avatar_url, bio, user_type, admin_role, admin_rank, department_id, role_title_override, department:departments(id, key, name, director_title, deputy_director_title, member_title, director_title_editing_enabled, deputy_director_title_editing_enabled, member_title_editing_enabled, sort_order, created_at), house_id, house_role, created_at"
       )
       .eq("user_type", "admin")
       .order("display_name"),

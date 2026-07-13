@@ -951,7 +951,7 @@ as $$
 declare
   me record;
   target record;
-  self_edit_enabled boolean := false;
+  title_editing_enabled boolean := false;
 begin
   select user_type, admin_rank::text as admin_rank, department_id into me
     from profiles
@@ -969,6 +969,20 @@ begin
     return false;
   end if;
 
+  if target.admin_rank in ('director', 'deputy_director', 'member') then
+    select case target.admin_rank
+      when 'director' then director_title_editing_enabled
+      when 'deputy_director' then deputy_director_title_editing_enabled
+      else member_title_editing_enabled
+    end into title_editing_enabled
+    from departments
+    where id = target.department_id;
+
+    if not coalesce(title_editing_enabled, false) then
+      return false;
+    end if;
+  end if;
+
   if me.admin_rank = 'global_director' then
     return true;
   end if;
@@ -982,15 +996,7 @@ begin
   end if;
 
   if auth.uid() = target_id and me.admin_rank = target.admin_rank then
-    select case target.admin_rank
-      when 'director' then director_title_editing_enabled
-      when 'deputy_director' then deputy_director_title_editing_enabled
-      else member_title_editing_enabled
-    end into self_edit_enabled
-    from departments
-    where id = target.department_id;
-
-    return coalesce(self_edit_enabled, false);
+    return true;
   end if;
 
   if me.admin_rank = 'director' then
@@ -1034,14 +1040,23 @@ set search_path = public
 as $$
 begin
   if new.role_title_override is distinct from old.role_title_override then
-    if not admin_can_edit_profile_role_title(new.id) then
-      raise exception 'You do not have permission to rename this profile role title.';
-    end if;
-
     new.role_title_override := nullif(trim(new.role_title_override), '');
 
     if new.role_title_override is not null and length(new.role_title_override) > 60 then
       raise exception 'Role title must be 60 characters or fewer.';
+    end if;
+
+    if new.role_title_override is null
+       and (
+         new.user_type is distinct from old.user_type
+         or new.admin_rank is distinct from old.admin_rank
+         or new.department_id is distinct from old.department_id
+       ) then
+      return new;
+    end if;
+
+    if not admin_can_edit_profile_role_title(new.id) then
+      raise exception 'You do not have permission to rename this profile role title.';
     end if;
   end if;
 
