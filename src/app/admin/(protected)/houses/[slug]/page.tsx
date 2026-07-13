@@ -5,7 +5,7 @@ import { HouseChatLayout } from "@/components/HouseChatLayout";
 import { AddPointsForm } from "@/components/AddPointsForm";
 import { HouseLeadershipSelect } from "@/components/HouseLeadershipSelect";
 import { getServerTranslator } from "@/lib/i18n-server";
-import { getChatMarkdownSettingsForUser } from "@/lib/chat-markdown-settings";
+import { resolveChatMarkdownSettings } from "@/lib/chat-markdown-settings";
 import type { HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -82,15 +82,15 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const house = await getHouseBySlug(supabase, params.slug);
+  const [house, { data: me }] = await Promise.all([
+    getHouseBySlug(supabase, params.slug),
+    supabase
+      .from("profiles")
+      .select("id, user_type, admin_rank, department_id, chat_markdown_settings")
+      .eq("id", user.id)
+      .single(),
+  ]);
   if (!house) notFound();
-
-  // Lấy actor để quyết định UI mute
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("id, user_type, admin_rank, department_id")
-    .eq("id", user.id)
-    .single();
   if (!me || me.user_type !== "admin") redirect("/admin");
 
   const [
@@ -106,14 +106,14 @@ export default async function AdminHousePage({ params }: { params: { slug: strin
       .select("*, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
       .eq("house_id", house.id)
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(30),
     getActiveIpBans(supabase),
   ]);
 
   const profileBasePath = "/admin/profile";
   const messagesBasePath = "/admin/messages";
   const totalPoints = pointsRow?.total_points ?? 0;
-  const chatMarkdownSettings = await getChatMarkdownSettingsForUser(supabase, user.id);
+  const chatMarkdownSettings = resolveChatMarkdownSettings(me.chat_markdown_settings);
 
   return (
     <main className="w-full p-6 lg:p-8">

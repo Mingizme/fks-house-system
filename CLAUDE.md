@@ -90,7 +90,7 @@ Web quản lý hệ thống thi đua **4 House** (Arctic Wolves 🐺 · Inferno 
 - `supabase/*.sql` — migrations idempotent, **chạy theo thứ tự** (xem README §1): `schema.sql` → `schema_update.sql` → `house_master.sql` → `chat_features.sql` → `chat_attachments.sql` → `make_admin.sql`/`make_admin_v2.sql` → `rbac.sql` → `rbac_ext.sql`. Khi đổi model: cập nhật cả SQL migration MỚI (không sửa file cũ đã chạy) và `src/lib/types.ts`.
 
 ## Mô hình phân quyền (RBAC) — logic cốt lõi
-- **Department** ngang hàng: Security · Linguistic · Admin · Staff · Media · Judge · Executive Protection Detail (Ex). Admin ở các department khác nhau **không quản trị lẫn nhau**.
+- **Department** ngang hàng: Security · Linguistic · Admin · Staff · Media · Judge · Executive Protection Bureau (EPB). Admin ở các department khác nhau **không quản trị lẫn nhau**.
 - **admin_rank**: `member` (quản lý Player) < `deputy_director` (quản lý Player + member cùng department) < `director` (quản lý Player + deputy/member cùng department) < `global_director` (thuộc dept Executive, toàn quyền; có **Dynamic Role Renaming** đổi tên chức danh, phong Player→Admin, đổi role bất kỳ).
 - `departmentTitle(rank, dept, override)` trong `types.ts` quyết định chức danh hiển thị (global → "Global Director"; director/deputy/member → title theo department, ưu tiên `role_title_override` từng profile nếu có).
 - **House leadership**: một Player chỉ giữ **duy nhất 1 chức** (`master` HOẶC `vice`) — enforce bằng unique index + RPC `set_house_leader` (tự gỡ người cũ).

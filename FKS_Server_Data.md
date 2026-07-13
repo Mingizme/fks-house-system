@@ -16,7 +16,7 @@
   - **Security Department** — chứa các role: Lieutenant, Secretary of Security, Chief Deputy, Certified Instructor...
   - **Financial Department** — chứa Financial Admin.
   - **Linguistics Department (LD)** — chứa Director of LD, Deputy Director of LD, Linguistic Interpreter, Justice Department Interpreter.
-  - **Executive Protection Bureau (EPB)** — chứa Executive Protection Detail, Security in Training (Lt. Col, Marshall...).
+  - **Executive Protection Bureau (EPB)** — chứa role Executive Protection Bureau, Security in Training (Lt. Col, Marshall...).
   - **FKS | Players** — nhóm thành viên chơi game thường (đánh số # để phân biệt), có các "faction/team" phụ như Ironclad Rhino, Inferno Phoenix, Arctic Wolves, Noble Lion...
 - **Admin chung**: role "Admin" (không thuộc riêng department nào) — cấp quản trị viên tổng.
 - **Badge "---STAFF---"**: đánh dấu chung là nhân viên/staff của server.
@@ -145,18 +145,18 @@
 **19. Ex, Lt. Col | FKS | Santo**
 - Username: __santa07____
 - Sinh nhật: 29/11/2007
-- Role/Chức vụ: Lt. Col (Lieutenant Colonel), Executive Protection Detail, Security in Training
+- Role/Chức vụ: Lt. Col (Lieutenant Colonel), Executive Protection Bureau, Security in Training
 - Department: Executive Protection Bureau
-- Badges: -{Executive Protection Bureau}-, Executive Protection Detail, Security in Training, ---STAFF---, Verified
+- Badges: -{Executive Protection Bureau}-, Executive Protection Bureau, Security in Training, ---STAFF---, Verified
 - Ngôn ngữ: US English, IN Tamil
 - Ghi chú: "Ex" trong tên có thể nghĩa là "Executive"
 
 **20. Ex. Marshall | FKS | RamsesD25**
 - Username: ramses25d
 - Pronoun: He
-- Role/Chức vụ: Marshall, Executive Protection Detail, Security in Training
+- Role/Chức vụ: Marshall, Executive Protection Bureau, Security in Training
 - Department: Executive Protection Bureau
-- Badges: -{Executive Protection Bureau}-, Executive Protection Detail, Security in Training, ---STAFF---, Birthday
+- Badges: -{Executive Protection Bureau}-, Executive Protection Bureau, Security in Training, ---STAFF---, Birthday
 - Ngôn ngữ: US English, PH Philippines (Tagalog)
 - Office Key: Officers, Administrations, Linguistics, Finance Office Key (full access)
 - Ghi chú: bio "Tech support and an Otaku"

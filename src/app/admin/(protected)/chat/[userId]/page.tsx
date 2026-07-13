@@ -14,30 +14,30 @@ export default async function AdminChatThreadPage({ params }: { params: { userId
   if (!user) redirect("/admin/login");
   if (params.userId === user.id) redirect("/admin/chat");
 
-  const { data: otherUser } = await supabase
-    .from("profiles")
-    .select("id, display_name, avatar_emoji, avatar_url, user_type")
-    .eq("id", params.userId)
-    .single();
+  const [{ data: otherUser }, { data: messages }, { data: blockRow }, chatMarkdownSettings] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, display_name, avatar_emoji, avatar_url, user_type")
+      .eq("id", params.userId)
+      .single(),
+    supabase
+      .from("direct_messages")
+      .select("*")
+      .eq("is_admin_chat", true)
+      .or(
+        `and(sender_id.eq.${user.id},recipient_id.eq.${params.userId}),and(sender_id.eq.${params.userId},recipient_id.eq.${user.id})`
+      )
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("blocks")
+      .select("id")
+      .eq("blocker_id", user.id)
+      .eq("blocked_id", params.userId)
+      .maybeSingle(),
+    getChatMarkdownSettingsForUser(supabase, user.id),
+  ]);
   if (!otherUser || otherUser.user_type !== "admin") notFound();
-
-  const { data: messages } = await supabase
-    .from("direct_messages")
-    .select("*")
-    .eq("is_admin_chat", true)
-    .or(
-      `and(sender_id.eq.${user.id},recipient_id.eq.${params.userId}),and(sender_id.eq.${params.userId},recipient_id.eq.${user.id})`
-    )
-    .order("created_at", { ascending: false })
-    .limit(30);
-
-  const { data: blockRow } = await supabase
-    .from("blocks")
-    .select("id")
-    .eq("blocker_id", user.id)
-    .eq("blocked_id", params.userId)
-    .maybeSingle();
-  const chatMarkdownSettings = await getChatMarkdownSettingsForUser(supabase, user.id);
 
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col p-6 lg:p-10">

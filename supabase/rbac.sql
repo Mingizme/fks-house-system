@@ -38,8 +38,21 @@ insert into departments (key, name, director_title, deputy_director_title, membe
   ('judge',     'Judge',      'Director of Judges',       'Deputy Director of Judges',  'Judge',                4),
   ('staff',     'Staff',      'Director of Staff',        'Deputy Director of Staff',   'Staff Member',         5),
   ('media',     'Media',      'Director of Media',        'Deputy Director of Media',   'Media Officer',        6),
-  ('ex',        'Executive Protection Detail', 'Director of Ex', 'Deputy Director of Ex', 'Ex Officer',    7)
+  ('ex',        'Executive Protection Bureau', 'Director of EPB', 'Deputy Director of EPB', 'EPB Officer', 7)
 on conflict (key) do nothing;
+
+update departments
+  set name = 'Executive Protection Bureau',
+      director_title = case when director_title = 'Director of Ex' then 'Director of EPB' else director_title end,
+      deputy_director_title = case when deputy_director_title = 'Deputy Director of Ex' then 'Deputy Director of EPB' else deputy_director_title end,
+      member_title = case when member_title = 'Ex Officer' then 'EPB Officer' else member_title end
+  where key = 'ex'
+    and (
+      name = 'Executive Protection Detail'
+      or director_title = 'Director of Ex'
+      or deputy_director_title = 'Deputy Director of Ex'
+      or member_title = 'Ex Officer'
+    );
 
 update departments
   set deputy_director_title = case key
@@ -50,7 +63,7 @@ update departments
     when 'judge' then 'Deputy Director of Judges'
     when 'staff' then 'Deputy Director of Staff'
     when 'media' then 'Deputy Director of Media'
-    when 'ex' then 'Deputy Director of Ex'
+    when 'ex' then 'Deputy Director of EPB'
     else 'Deputy Director of Department'
   end
   where deputy_director_title is null or trim(deputy_director_title) = '';

@@ -4,7 +4,7 @@ import { HouseCrest } from "@/components/HouseCrest";
 import { HouseChatLayout } from "@/components/HouseChatLayout";
 import { HouseScoreVisibilityToggle } from "@/components/HouseScoreVisibilityToggle";
 import { getServerTranslator } from "@/lib/i18n-server";
-import { getChatMarkdownSettingsForUser } from "@/lib/chat-markdown-settings";
+import { resolveChatMarkdownSettings } from "@/lib/chat-markdown-settings";
 import type { HouseMasterToggle, HouseScoreAudience, HouseScoreVisibility, HouseSlug } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -23,18 +23,19 @@ export default async function HousePage({ params }: { params: { slug: string } }
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: house } = await supabase
-    .from("houses")
-    .select("id, name, slug, color, icon, description, score_visibility, score_audience, master_can_toggle_score")
-    .eq("slug", params.slug)
-    .single();
+  const [{ data: house }, { data: profile }] = await Promise.all([
+    supabase
+      .from("houses")
+      .select("id, name, slug, color, icon, description, score_visibility, score_audience, master_can_toggle_score")
+      .eq("slug", params.slug)
+      .single(),
+    supabase
+      .from("profiles")
+      .select("house_id, user_type, house_role, chat_markdown_settings")
+      .eq("id", user.id)
+      .single(),
+  ]);
   if (!house) notFound();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("house_id, user_type, house_role")
-    .eq("id", user.id)
-    .single();
 
   const isMember = profile?.house_id === house.id;
   const isAdmin = profile?.user_type === "admin";
@@ -51,7 +52,6 @@ export default async function HousePage({ params }: { params: { slug: string } }
     { data: messages },
     { data: masterBlockRow },
     { data: canViewHouseScore, error: canViewHouseScoreError },
-    { data: viewerMute },
   ] = await Promise.all([
     supabase.from("house_points").select("total_points").eq("house_id", house.id).single(),
     supabase
@@ -64,12 +64,11 @@ export default async function HousePage({ params }: { params: { slug: string } }
       .select("*, sender:profiles(display_name, avatar_emoji, avatar_url, user_type, admin_role, house_role)")
       .eq("house_id", house.id)
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(30),
     isMember && profile?.house_role === "master"
       ? supabase.from("house_master_score_blocks").select("id").eq("master_id", user.id).maybeSingle()
       : Promise.resolve({ data: null } as any),
     supabase.rpc("can_view_house_score", { house_uuid: house.id, viewer_id: user.id }),
-    supabase.rpc("get_mute_status", { user_id: user.id }),
   ]);
 
   const isMasterBlocked = !!masterBlockRow?.id;
@@ -85,10 +84,7 @@ export default async function HousePage({ params }: { params: { slug: string } }
     scoreAudience === "masters_only" &&
     masterCanToggleScore !== "blocked" &&
     !isMasterBlocked;
-  const chatMarkdownSettings = await getChatMarkdownSettingsForUser(supabase, user.id);
-
-  // Có bị mute không? (viewer là member)
-  void viewerMute;
+  const chatMarkdownSettings = resolveChatMarkdownSettings(profile?.chat_markdown_settings);
 
   return (
     <main className="w-full p-6 lg:p-8">

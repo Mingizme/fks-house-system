@@ -744,6 +744,19 @@ alter table departments add column if not exists deputy_director_title_editing_e
 alter table departments add column if not exists member_title_editing_enabled boolean not null default false;
 
 update departments
+  set name = 'Executive Protection Bureau',
+      director_title = case when director_title = 'Director of Ex' then 'Director of EPB' else director_title end,
+      deputy_director_title = case when deputy_director_title = 'Deputy Director of Ex' then 'Deputy Director of EPB' else deputy_director_title end,
+      member_title = case when member_title = 'Ex Officer' then 'EPB Officer' else member_title end
+  where key = 'ex'
+    and (
+      name = 'Executive Protection Detail'
+      or director_title = 'Director of Ex'
+      or deputy_director_title = 'Deputy Director of Ex'
+      or member_title = 'Ex Officer'
+    );
+
+update departments
   set deputy_director_title = case key
     when 'executive' then 'Deputy Global Director'
     when 'admin' then 'Deputy Director of Admin'
@@ -752,7 +765,7 @@ update departments
     when 'judge' then 'Deputy Director of Judges'
     when 'staff' then 'Deputy Director of Staff'
     when 'media' then 'Deputy Director of Media'
-    when 'ex' then 'Deputy Director of Ex'
+    when 'ex' then 'Deputy Director of EPB'
     else 'Deputy Director of Department'
   end
   where deputy_director_title is null or trim(deputy_director_title) = '';
