@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import ChatMarkdown from "@/components/chat/ChatMarkdown";
+import { useI18n } from "@/components/I18nProvider";
 import { cn } from "@/lib/utils";
 
 type Audience = "player" | "admin";
@@ -26,7 +27,14 @@ const adminPrompts = [
   "Summarize all FKS departments.",
 ];
 
+const MESSAGE_CHARACTER_LIMIT = 1000;
+
+function countCharacters(value: string) {
+  return Array.from(value).length;
+}
+
 export function AIChatClient({ audience }: { audience: Audience }) {
+  const { t } = useI18n();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -44,6 +52,16 @@ export function AIChatClient({ audience }: { audience: Audience }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const suggestions = audience === "admin" ? adminPrompts : playerPrompts;
+  const characterCount = useMemo(() => countCharacters(input), [input]);
+  const exceededCharacterCount = Math.max(0, characterCount - MESSAGE_CHARACTER_LIMIT);
+  const hasCharacterLimitError = exceededCharacterCount > 0;
+  const characterLimitError = hasCharacterLimitError
+    ? t("chat.characterLimitExceeded", {
+        limit: MESSAGE_CHARACTER_LIMIT,
+        over: exceededCharacterCount,
+      })
+    : null;
+  const activeError = characterLimitError ?? error;
 
   const apiMessages = useMemo(
     () =>
@@ -60,6 +78,7 @@ export function AIChatClient({ audience }: { audience: Audience }) {
   async function sendMessage(content: string) {
     const trimmed = content.trim();
     if (!trimmed || loading) return;
+    if (countCharacters(content) > MESSAGE_CHARACTER_LIMIT) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -210,9 +229,9 @@ export function AIChatClient({ audience }: { audience: Audience }) {
           )}
         </div>
 
-        {error && (
+        {activeError && (
           <p className="shrink-0 border-t border-danger/30 bg-danger/10 px-4 py-2 text-sm text-danger sm:px-6">
-            {error}
+            {activeError}
           </p>
         )}
 
@@ -232,13 +251,22 @@ export function AIChatClient({ audience }: { audience: Audience }) {
                 }
               }}
               rows={1}
-              maxLength={4000}
+              aria-invalid={hasCharacterLimitError}
               placeholder="Ask FKS AI..."
               className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2 text-sm leading-6 text-ink-text outline-none placeholder:text-ink-faint lg:text-base"
             />
+            {hasCharacterLimitError && (
+              <span
+                className="pb-2 text-xs font-mono font-semibold text-danger"
+                aria-live="polite"
+                title={characterLimitError ?? undefined}
+              >
+                +{exceededCharacterCount}
+              </span>
+            )}
             <button
               type="submit"
-              disabled={!input.trim() || loading}
+              disabled={!input.trim() || loading || hasCharacterLimitError}
               className="flex h-11 shrink-0 items-center justify-center rounded-xl bg-command px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-24"
             >
               Send

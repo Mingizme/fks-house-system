@@ -218,6 +218,7 @@ const baseDictionaries = {
     "chat.deleteFailed": "Không thể xóa tin nhắn. Vui lòng thử lại.",
     "chat.actionFailed": "Thao tác thất bại. Vui lòng thử lại.",
     "chat.wordLimitReached": "Đã đạt giới hạn {limit} từ.",
+    "chat.characterLimitExceeded": "Tin nhắn vượt quá giới hạn {limit} ký tự. Vui lòng xóa bớt {over} ký tự.",
     "chat.loadingOlder": "Đang tải tin nhắn cũ...",
     "chat.noMoreMessages": "Không còn tin nhắn cũ hơn.",
     "chat.loadOlderFailed": "Không thể tải tin nhắn cũ. Vui lòng thử lại.",
@@ -641,6 +642,7 @@ const baseDictionaries = {
     "chat.deleteFailed": "Could not delete message. Please try again.",
     "chat.actionFailed": "Action failed. Please try again.",
     "chat.wordLimitReached": "Reached the {limit}-word limit.",
+    "chat.characterLimitExceeded": "Message is over the {limit}-character limit. Remove {over} characters to send.",
     "chat.loadingOlder": "Loading older messages...",
     "chat.noMoreMessages": "No older messages.",
     "chat.loadOlderFailed": "Could not load older messages. Please try again.",
@@ -1062,6 +1064,7 @@ const baseDictionaries = {
     "chat.deleteFailed": "メッセージを削除できませんでした。もう一度お試しください。",
     "chat.actionFailed": "操作に失敗しました。もう一度お試しください。",
     "chat.wordLimitReached": "{limit}語の上限に達しました。",
+    "chat.characterLimitExceeded": "メッセージが{limit}文字の上限を超えています。送信するには{over}文字削除してください。",
 
     "profile.kicker": "設定",
     "profile.title": "あなたのプロフィール",
@@ -1425,6 +1428,7 @@ const baseDictionaries = {
     "chat.deleteFailed": "ลบข้อความไม่ได้ โปรดลองอีกครั้ง",
     "chat.actionFailed": "การดำเนินการล้มเหลว โปรดลองอีกครั้ง",
     "chat.wordLimitReached": "ถึงขีดจำกัด {limit} คำแล้ว",
+    "chat.characterLimitExceeded": "ข้อความเกินขีดจำกัด {limit} ตัวอักษร ลบอีก {over} ตัวอักษรเพื่อส่ง",
 
     "profile.kicker": "ตั้งค่า",
     "profile.title": "โปรไฟล์ของคุณ",
@@ -1788,6 +1792,7 @@ const baseDictionaries = {
     "chat.deleteFailed": "செய்தியை நீக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
     "chat.actionFailed": "செயல் தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.",
     "chat.wordLimitReached": "{limit} சொல் வரம்பை எட்டிவிட்டது.",
+    "chat.characterLimitExceeded": "செய்தி {limit} எழுத்து வரம்பை மீறியுள்ளது. அனுப்ப {over} எழுத்துகளை நீக்கவும்.",
 
     "profile.kicker": "அமைப்புகள்",
     "profile.title": "உங்கள் சுயவிவரம்",
@@ -2151,6 +2156,7 @@ const baseDictionaries = {
     "chat.deleteFailed": "메시지를 삭제할 수 없습니다. 다시 시도해 주세요.",
     "chat.actionFailed": "작업에 실패했습니다. 다시 시도해 주세요.",
     "chat.wordLimitReached": "{limit}단어 제한에 도달했습니다.",
+    "chat.characterLimitExceeded": "{limit}자 제한을 초과했습니다. 보내려면 {over}자를 삭제하세요.",
 
     "profile.kicker": "설정",
     "profile.title": "내 프로필",
@@ -2436,6 +2442,7 @@ export const dictionaries = {
     "chat.accountBannedMessage": "Akun anda telah diblokir.",
     "chat.mutedMessage": "Anda sedang di-mute",
     "chat.mutedCannotSend": "Anda tidak dapat mengirim pesan saat di-mute.",
+    "chat.characterLimitExceeded": "Pesan melebihi batas {limit} karakter. Hapus {over} karakter untuk mengirim.",
     "chat.mutedRemaining": "tersisa {duration}",
     "chat.muteReason": "Alasan",
     "chat.muteReasonPlaceholder": "Alasan mute (opsional)",

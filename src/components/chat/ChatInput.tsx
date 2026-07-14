@@ -25,12 +25,18 @@ interface ChatInputProps {
   onSaveEdit?: (content: string) => void | Promise<void>;
   onTypingChange?: (typing: boolean) => void;
   maxWords?: number;
+  maxCharacters?: number;
 }
 
 const MAX_TEXTAREA_HEIGHT = 160;
+const DEFAULT_MESSAGE_CHARACTER_LIMIT = 1000;
 
 function countWords(value: string) {
   return value.trim().match(/\S+/g)?.length ?? 0;
+}
+
+function countCharacters(value: string) {
+  return Array.from(value).length;
 }
 
 function limitToWords(value: string, limit: number) {
@@ -59,6 +65,7 @@ export default function ChatInput({
   onSaveEdit,
   onTypingChange,
   maxWords,
+  maxCharacters = DEFAULT_MESSAGE_CHARACTER_LIMIT,
 }: ChatInputProps) {
   const supabase = createClient();
   const { t } = useI18n();
@@ -80,14 +87,29 @@ export default function ChatInput({
   const textValue = isControlled ? value ?? "" : internalValue;
   const effectivePlaceholder = placeholder ?? t("messages.placeholder");
   const activeWordLimit = typeof maxWords === "number" && maxWords > 0 ? maxWords : null;
+  const activeCharacterLimit =
+    typeof maxCharacters === "number" && maxCharacters > 0 ? maxCharacters : null;
   const wordCount = useMemo(() => countWords(textValue), [textValue]);
+  const characterCount = useMemo(() => countCharacters(textValue), [textValue]);
+  const exceededCharacterCount =
+    activeCharacterLimit === null ? 0 : Math.max(0, characterCount - activeCharacterLimit);
+  const hasCharacterLimitError = exceededCharacterCount > 0;
   const showWordCounter =
     activeWordLimit !== null && (wordCount >= Math.floor(activeWordLimit * 0.8) || wordLimitNotice);
+  const characterLimitError =
+    hasCharacterLimitError && activeCharacterLimit !== null
+      ? t("chat.characterLimitExceeded", {
+          limit: activeCharacterLimit,
+          over: exceededCharacterCount,
+        })
+      : null;
   const activeError =
     errorMsg ??
+    characterLimitError ??
     (wordLimitNotice && activeWordLimit !== null
       ? t("chat.wordLimitReached", { limit: activeWordLimit })
       : null);
+  const canDismissActiveError = !!errorMsg || wordLimitNotice;
   const isEditing = !!editingMessage;
 
   const emitTyping = useCallback(
@@ -274,6 +296,7 @@ export default function ChatInput({
 
   const handleUploadAndSend = async () => {
     if (uploading || disabled) return;
+    if (hasCharacterLimitError) return;
 
     const content = textValue.trim();
     let mediaUrl: string | null = null;
@@ -327,7 +350,7 @@ export default function ChatInput({
       e.preventDefault();
       if (editingMessage && onSaveEdit) {
         const content = textValue.trim();
-        if (content) {
+        if (content && !hasCharacterLimitError) {
           onSaveEdit(content);
           clearDraft();
         }
@@ -340,7 +363,7 @@ export default function ChatInput({
   const handleSendClick = () => {
     if (editingMessage && onSaveEdit) {
       const content = textValue.trim();
-      if (content) {
+      if (content && !hasCharacterLimitError) {
         onSaveEdit(content);
         clearDraft();
       }
@@ -482,16 +505,18 @@ export default function ChatInput({
       {activeError && (
         <div className="bg-danger/10 border border-b-0 border-danger/20 rounded-t-xl px-3 py-1.5 flex items-center justify-between text-xs text-danger lg:px-4 lg:py-2 lg:text-sm">
           <span className="min-w-0 truncate">{activeError}</span>
-          <button
-            type="button"
-            onClick={() => {
-              setErrorMsg(null);
-              setWordLimitNotice(false);
-            }}
-            className="hover:opacity-80"
-          >
-            x
-          </button>
+          {canDismissActiveError && (
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMsg(null);
+                setWordLimitNotice(false);
+              }}
+              className="hover:opacity-80"
+            >
+              x
+            </button>
+          )}
         </div>
       )}
 
@@ -531,8 +556,19 @@ export default function ChatInput({
           placeholder={uploading ? t("chat.uploadingFile") : effectivePlaceholder}
           disabled={disabled || uploading}
           rows={1}
+          aria-invalid={hasCharacterLimitError}
           className="min-h-[24px] max-h-[160px] min-w-0 flex-1 resize-none overflow-y-hidden bg-transparent border-0 text-sm leading-6 outline-none placeholder:text-ink-muted focus:ring-0 focus:outline-none disabled:opacity-50 lg:min-h-[32px] lg:text-base lg:leading-8"
         />
+
+        {hasCharacterLimitError && (
+          <span
+            className="pb-0.5 text-[10px] font-mono font-semibold text-danger shrink-0 lg:text-xs"
+            aria-live="polite"
+            title={characterLimitError ?? undefined}
+          >
+            +{exceededCharacterCount}
+          </span>
+        )}
 
         {showWordCounter && activeWordLimit !== null && (
           <span
@@ -571,7 +607,7 @@ export default function ChatInput({
         <button
           type="button"
           onClick={handleSendClick}
-          disabled={disabled || uploading || (!textValue.trim() && !selectedFile)}
+          disabled={disabled || uploading || hasCharacterLimitError || (!textValue.trim() && !selectedFile)}
           aria-label={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
           title={isEditing ? t("chat.save") : sendLabel ?? t("common.send")}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-command transition-colors hover:bg-command/10 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed lg:h-11 lg:w-11"
