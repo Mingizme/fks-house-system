@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getServerTranslator } from "@/lib/i18n-server";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { HouseCrest } from "@/components/HouseCrest";
 import Link from "next/link";
 
 export default async function HomePage() {
@@ -30,7 +31,7 @@ export default async function HomePage() {
         <div className="absolute bottom-0 left-1/3 w-96 h-96 rounded-full bg-house-phoenix/20 animate-floatSlow" style={{ animationDelay: "3s" }} />
       </div>
 
-      <div className="relative z-10 text-center max-w-2xl animate-fadeRise">
+      <div className="relative z-10 w-full min-w-0 max-w-2xl text-center animate-fadeRise">
         <LanguageSwitcher className="w-40 mx-auto mb-6" />
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-ink-border bg-ink-surface/60 text-xs text-ink-muted font-mono mb-8 shadow-crest">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulseSoft shadow-[0_0_10px_2px_rgba(52,211,153,0.6)]" /> {t("home.status")}
@@ -38,38 +39,38 @@ export default async function HomePage() {
         <h1 className="font-display font-extrabold text-5xl sm:text-6xl tracking-tight mb-4 leading-[1.05]">
           FUNDING <span className="text-gradient">KINGDOM</span>
         </h1>
-        <p className="text-ink-muted text-lg mb-10 leading-relaxed">
+        <p className="mb-10 break-words text-lg leading-relaxed text-ink-muted">
           {t("home.tagline")}
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
+        <div className="mb-16 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
           <Link
             href="/login"
-            className="px-7 py-3 rounded-xl bg-command font-semibold shadow-crest"
+            className="w-full rounded-xl bg-command px-7 py-3 font-semibold shadow-crest sm:w-auto"
           >
             {t("home.playerLogin")}
           </Link>
           <Link
             href="/signup"
-            className="px-7 py-3 rounded-xl btn-ghost font-semibold"
+            className="w-full rounded-xl px-7 py-3 font-semibold btn-ghost sm:w-auto"
           >
             {t("home.playerSignup")}
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { name: "Arctic Wolves", icon: "🐺", color: "wolves" },
-            { name: "Inferno Phoenix", icon: "🔥", color: "phoenix" },
-            { name: "Noble Lions", icon: "🦁", color: "lions" },
-            { name: "Ironclad Rhinos", icon: "🦏", color: "rhinos" },
+            { name: "Arctic Wolves", color: "wolves" },
+            { name: "Inferno Phoenix", color: "phoenix" },
+            { name: "Noble Lions", color: "lions" },
+            { name: "Ironclad Rhinos", color: "rhinos" },
           ].map((h) => (
             <div
               key={h.name}
-              className="gradient-border rounded-xl2 glass-card py-5 px-2 flex flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-1"
+              className="gradient-border glass-card flex min-w-0 flex-col items-center gap-1.5 rounded-xl2 px-2 py-5 transition-transform duration-200 hover:-translate-y-1"
             >
-              <span className="text-2xl drop-shadow-lg">{h.icon}</span>
-              <span className="text-xs text-ink-muted font-mono">{h.name}</span>
+              <HouseCrest color={h.color} />
+              <span className="break-words text-[11px] leading-tight text-ink-muted font-mono sm:text-xs">{h.name}</span>
             </div>
           ))}
         </div>

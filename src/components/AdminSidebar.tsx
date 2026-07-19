@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLE_LABELS, AdminRole } from "@/lib/types";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { HouseCrest } from "@/components/HouseCrest";
 import { useI18n } from "@/components/I18nProvider";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -25,10 +26,10 @@ const NAV = [
 ] satisfies Array<{ href: string; labelKey: TranslationKey; icon: string; exact?: boolean }>;
 
 const HOUSES = [
-  { slug: "arctic-wolves", name: "Arctic Wolves", icon: "🐺" },
-  { slug: "inferno-phoenix", name: "Inferno Phoenix", icon: "🔥" },
-  { slug: "noble-lions", name: "Noble Lions", icon: "🦁" },
-  { slug: "ironclad-rhinos", name: "Ironclad Rhinos", icon: "🦏" },
+  { slug: "arctic-wolves", name: "Arctic Wolves", color: "wolves" },
+  { slug: "inferno-phoenix", name: "Inferno Phoenix", color: "phoenix" },
+  { slug: "noble-lions", name: "Noble Lions", color: "lions" },
+  { slug: "ironclad-rhinos", name: "Ironclad Rhinos", color: "rhinos" },
 ];
 
 export function AdminSidebar({
@@ -118,7 +119,7 @@ export function AdminSidebar({
               active ? "bg-command/15 text-command font-semibold shadow-[inset_0_0_0_1px_rgba(139,92,246,0.25)]" : "text-ink-muted hover:text-ink-text hover:bg-ink-surface2 hover:translate-x-0.5"
             )}
           >
-            <span className={iconClass}>{h.icon}</span>
+            <HouseCrest color={h.color} size="sm" />
             {h.name}
           </Link>
         );

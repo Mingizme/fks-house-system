@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { HouseEmblem } from "@/components/HouseEmblem";
 
 const RING_COLOR: Record<string, string> = {
   wolves: "#4FA8E0",
@@ -21,16 +22,17 @@ export function HouseCrest({
   spin = false,
 }: {
   color: string;
-  icon: string;
+  icon?: string;
   size?: "sm" | "md" | "lg";
   spin?: boolean;
 }) {
-  const dims = size === "sm" ? "w-9 h-9 text-base" : size === "lg" ? "w-20 h-20 text-4xl" : "w-12 h-12 text-xl";
+  const dims = size === "sm" ? "w-9 h-9" : size === "lg" ? "w-20 h-20" : "w-12 h-12";
   const ringPad = size === "sm" ? "p-[2px]" : size === "lg" ? "p-1" : "p-[3px]";
 
   return (
     <div
-      className={cn("rounded-full crest-ring", ringPad, dims, spin && "animate-ring")}
+      aria-hidden="true"
+      className={cn("house-crest rounded-full crest-ring", `house-crest--${size}`, ringPad, dims, spin && "animate-ring")}
       style={{ ["--ring-color" as string]: RING_COLOR[color] ?? "#6C7BFF" }}
     >
       <div
@@ -39,7 +41,7 @@ export function HouseCrest({
           BG_CLASS[color] ?? "bg-command/15 text-command"
         )}
       >
-        {icon}
+        <HouseEmblem color={color} fallbackIcon={icon} className="h-full w-full" />
       </div>
     </div>
   );

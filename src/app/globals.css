@@ -124,6 +124,168 @@ a:active {
   background: conic-gradient(from 0deg, var(--ring-color, #8B5CF6), transparent 70%);
 }
 
+.house-crest {
+  contain: layout paint;
+  flex: none;
+}
+
+.house-emblem {
+  display: block;
+  overflow: visible;
+}
+
+.house-emblem__motion,
+.house-emblem__wing,
+.house-emblem__accent,
+.house-emblem__flare {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.house-emblem--wolves {
+  --emblem-accent: #A7E5FF;
+}
+
+.house-emblem--phoenix {
+  --emblem-accent: #FFD166;
+}
+
+.house-emblem--lions {
+  --emblem-accent: #FFF0A8;
+}
+
+.house-emblem--rhinos {
+  --emblem-accent: #D9F2FF;
+}
+
+.house-emblem__motion {
+  animation: house-emblem-breathe 3.8s ease-in-out infinite;
+}
+
+.house-emblem__fill {
+  fill: currentColor;
+  opacity: 0.22;
+}
+
+.house-emblem__stroke {
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.house-emblem__flare {
+  stroke: var(--emblem-accent, currentColor);
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  opacity: 0.72;
+  animation: house-emblem-shimmer 2.8s ease-in-out infinite;
+}
+
+.house-emblem__accent {
+  fill: var(--emblem-accent, currentColor);
+  opacity: 0.92;
+  animation: house-emblem-shimmer 2.8s ease-in-out infinite;
+}
+
+.house-emblem--phoenix .house-emblem__motion {
+  animation-name: house-phoenix-rise;
+  animation-duration: 3.4s;
+}
+
+.house-emblem--phoenix .house-emblem__wing--left {
+  transform-origin: right center;
+  animation: house-phoenix-wing-left 2.7s ease-in-out infinite;
+}
+
+.house-emblem--phoenix .house-emblem__wing--right {
+  transform-origin: left center;
+  animation: house-phoenix-wing-right 2.7s ease-in-out infinite;
+}
+
+.house-emblem--wolves .house-emblem__motion {
+  animation-name: house-wolf-howl;
+  animation-duration: 4.2s;
+}
+
+.house-emblem--lions .house-emblem__motion {
+  animation-name: house-lion-pride;
+  animation-duration: 4s;
+}
+
+.house-emblem--rhinos .house-emblem__motion {
+  animation-name: house-rhino-brace;
+  animation-duration: 4.4s;
+}
+
+/* Dense lists keep their crests still until the user interacts with them. */
+.house-crest--sm .house-emblem__motion,
+.house-crest--sm .house-emblem__wing,
+.house-crest--sm .house-emblem__accent,
+.house-crest--sm .house-emblem__flare {
+  animation-play-state: paused;
+}
+
+@media (hover: hover) {
+  a:hover .house-crest--sm .house-emblem__motion,
+  a:hover .house-crest--sm .house-emblem__wing,
+  a:hover .house-crest--sm .house-emblem__accent,
+  a:hover .house-crest--sm .house-emblem__flare,
+  .house-crest--sm:hover .house-emblem__motion,
+  .house-crest--sm:hover .house-emblem__wing,
+  .house-crest--sm:hover .house-emblem__accent,
+  .house-crest--sm:hover .house-emblem__flare {
+    animation-play-state: running;
+  }
+}
+
+a:focus-visible .house-crest--sm .house-emblem__motion,
+a:focus-visible .house-crest--sm .house-emblem__wing,
+a:focus-visible .house-crest--sm .house-emblem__accent,
+a:focus-visible .house-crest--sm .house-emblem__flare {
+  animation-play-state: running;
+}
+
+@keyframes house-emblem-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+
+@keyframes house-phoenix-rise {
+  0%, 100% { transform: translateY(1px) scale(0.985); }
+  50% { transform: translateY(-2px) scale(1.035); }
+}
+
+@keyframes house-phoenix-wing-left {
+  0%, 100% { transform: rotate(1deg) translateY(0); }
+  50% { transform: rotate(-5deg) translateY(-1px); }
+}
+
+@keyframes house-phoenix-wing-right {
+  0%, 100% { transform: rotate(-1deg) translateY(0); }
+  50% { transform: rotate(5deg) translateY(-1px); }
+}
+
+@keyframes house-wolf-howl {
+  0%, 100% { transform: translateY(1px) rotate(-1deg); }
+  50% { transform: translateY(-1px) rotate(1deg); }
+}
+
+@keyframes house-lion-pride {
+  0%, 100% { transform: scale(0.985); }
+  50% { transform: scale(1.045); }
+}
+
+@keyframes house-rhino-brace {
+  0%, 100% { transform: translateX(0) scale(1); }
+  50% { transform: translateX(1px) scale(1.025); }
+}
+
+@keyframes house-emblem-shimmer {
+  0%, 100% { opacity: 0.48; }
+  50% { opacity: 1; }
+}
+
 .bg-grain {
   background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0);
   background-size: 22px 22px;
