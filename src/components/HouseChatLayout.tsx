@@ -111,7 +111,7 @@ export function HouseChatLayout({
 
   // Desktop
   return (
-    <div className="flex flex-col gap-4">
+    <div className="chat-performance-surface flex flex-col gap-4">
       {adminControls}
       <div className="flex flex-col gap-4 xl:flex-row">
         <div className="h-[70svh] min-h-[420px] min-w-0 flex-1 xl:h-[calc(100vh-220px)] xl:min-h-[620px]">

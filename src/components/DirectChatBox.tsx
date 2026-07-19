@@ -7,7 +7,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -21,6 +20,7 @@ import ChatMessage from "./chat/ChatMessage";
 import ChatTimeDivider from "./chat/ChatTimeDivider";
 import ChatInput from "./chat/ChatInput";
 import EmojiPicker from "./chat/EmojiPicker";
+import MeasuredChatRow from "./chat/MeasuredChatRow";
 import { shouldShowMessageTimeDivider } from "./chat/timeDividers";
 import {
   addReaction,
@@ -38,6 +38,7 @@ const SCROLL_EDGE_PX = 260;
 const VIRTUAL_OVERSCAN_PX = 700;
 const ESTIMATED_MESSAGE_HEIGHT = 112;
 const ESTIMATED_DIVIDER_HEIGHT = 36;
+const EMPTY_REACTIONS: GroupedReactions[string] = [];
 
 type DeliveryStatus = "sending" | "offline" | "sent" | "read" | "failed";
 
@@ -80,33 +81,6 @@ function createLocalId() {
   }
 
   return `local-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function MeasuredRow({
-  rowKey,
-  onMeasure,
-  children,
-}: {
-  rowKey: string;
-  onMeasure: (rowKey: string, height: number) => void;
-  children: ReactNode;
-}) {
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useLayoutEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const measure = () => onMeasure(rowKey, element.getBoundingClientRect().height);
-    measure();
-
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(measure);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [children, onMeasure, rowKey]);
-
-  return <div ref={ref}>{children}</div>;
 }
 
 export function DirectChatBox({
@@ -1017,7 +991,7 @@ export function DirectChatBox({
   const renderMessageRow = useCallback(
     (message: DirectMessageView) => {
       const mine = message.sender_id === currentUserId;
-      const msgReactions = reactions[message.id] || [];
+      const msgReactions = reactions[message.id] ?? EMPTY_REACTIONS;
       const replyMsg = message.reply_to_id ? messageById.get(message.reply_to_id) : null;
       const replyContent = replyMsg ? formatReplyContent(replyMsg) : "";
 
@@ -1107,7 +1081,7 @@ export function DirectChatBox({
       <div
         ref={scrollAreaRef}
         onScroll={handleScroll}
-        className="relative flex-1 overflow-y-auto overflow-x-hidden p-3 pb-6 sm:p-4 sm:pb-10 lg:p-6 lg:pb-12"
+        className="chat-scroll-region relative flex-1 overflow-y-auto overflow-x-hidden p-3 pb-6 sm:p-4 sm:pb-10 lg:p-6 lg:pb-12"
         role="log"
         aria-live="polite"
       >
@@ -1125,9 +1099,9 @@ export function DirectChatBox({
 
         <div className="space-y-3 lg:space-y-4">
           {virtualLayout.visible.map(({ row }) => (
-            <MeasuredRow key={row.key} rowKey={row.key} onMeasure={handleMeasureRow}>
+            <MeasuredChatRow key={row.key} rowKey={row.key} onMeasure={handleMeasureRow}>
               {row.type === "divider" ? <ChatTimeDivider timestamp={row.timestamp} /> : renderMessageRow(row.message)}
-            </MeasuredRow>
+            </MeasuredChatRow>
           ))}
         </div>
 
@@ -1251,13 +1225,15 @@ export function DirectChatBox({
           </div>
         }
       >
-        <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">{messageList}</div>
+        <div className="chat-performance-surface flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">
+          {messageList}
+        </div>
       </MobileChatShell>
     );
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">
+    <div className="chat-performance-surface flex h-full min-h-0 flex-col overflow-hidden bg-ink-surface">
       <div className="flex items-center justify-between gap-3 border-b border-ink-border bg-ink-surface px-3 py-3 sm:p-4 lg:gap-4 lg:px-6 lg:py-4">
         <div className="flex items-center gap-3 min-w-0 lg:gap-4">
           <Link

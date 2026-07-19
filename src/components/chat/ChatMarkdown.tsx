@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import {
   resolveChatMarkdownSettings,
   type ChatMarkdownSettings,
@@ -27,11 +27,13 @@ type ListNode = {
   children: ListNode[];
 };
 
-export default function ChatMarkdown({ content, settings }: ChatMarkdownProps) {
+function ChatMarkdown({ content, settings }: ChatMarkdownProps) {
   const resolvedSettings = resolveChatMarkdownSettings(settings);
 
   return <>{renderBlocks(content, resolvedSettings, "chat-md")}</>;
 }
+
+export default memo(ChatMarkdown);
 
 function renderBlocks(
   content: string,

@@ -349,6 +349,25 @@ select:focus {
   box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 24px 60px -30px rgba(0, 0, 0, 0.85);
 }
 
+/* Chat keeps large, frequently scrolling surfaces opaque to avoid costly GPU blur repaints. */
+.chat-performance-surface,
+.chat-performance-surface.glass-card,
+.chat-performance-surface .glass-card,
+.chat-performance-surface .bg-ink-surface {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.chat-scroll-region {
+  contain: layout style paint;
+  overscroll-behavior: contain;
+}
+
+body.mobile-chat-shell-open {
+  background-image: none;
+  background-attachment: scroll;
+}
+
 body.mobile-chat-shell-open .mobile-app-topbar {
   display: none;
 }

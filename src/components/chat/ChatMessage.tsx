@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, type MouseEvent as ReactMouseEvent } from "react";
+import { memo, useState, useRef, useEffect, useCallback, type MouseEvent as ReactMouseEvent } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -10,8 +10,6 @@ import MediaLightbox from "@/components/chat/MediaLightbox";
 import EmojiPicker from "@/components/chat/EmojiPicker";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
-
-let cancelActiveHover: (() => void) | null = null;
 
 interface ChatMessageProps {
   id: string;
@@ -47,7 +45,7 @@ interface ChatMessageProps {
   onRetrySend?: (messageId: string) => void;
 }
 
-export default function ChatMessage({
+function ChatMessage({
   id,
   content,
   senderId,
@@ -81,45 +79,12 @@ export default function ChatMessage({
   onRetrySend,
 }: ChatMessageProps) {
   const { t } = useI18n();
-  const [hovered, setHovered] = useState(false);
   const [showQuickReact, setShowQuickReact] = useState(false);
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [showSheetEmojiPicker, setShowSheetEmojiPicker] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const quickReactRef = useRef<HTMLDivElement>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const closeHover = useCallback(() => {
-    setHovered(false);
-    setShowQuickReact(false);
-    if (cancelActiveHover === closeHover) {
-      cancelActiveHover = null;
-    }
-  }, []);
-
-  const handleMouseEnter = () => {
-    if (cancelActiveHover && cancelActiveHover !== closeHover) {
-      cancelActiveHover();
-    }
-
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-
-    setHovered(true);
-    cancelActiveHover = closeHover;
-  };
-
-  const handleMouseLeave = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    hoverTimeoutRef.current = setTimeout(() => {
-      closeHover();
-    }, 150);
-  };
 
   const clearLongPressTimer = useCallback(() => {
     if (longPressTimeoutRef.current) {
@@ -135,10 +100,9 @@ export default function ChatMessage({
 
   const openActionSheet = useCallback(() => {
     setShowQuickReact(false);
-    closeHover();
     setShowSheetEmojiPicker(false);
     setActionSheetOpen(true);
-  }, [closeHover]);
+  }, []);
 
   const clearTextSelection = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -165,15 +129,9 @@ export default function ChatMessage({
 
   useEffect(() => {
     return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
       clearLongPressTimer();
-      if (cancelActiveHover === closeHover) {
-        cancelActiveHover = null;
-      }
     };
-  }, [clearLongPressTimer, closeHover]);
+  }, [clearLongPressTimer]);
 
   useEffect(() => {
     if (!actionSheetOpen) return;
@@ -284,8 +242,6 @@ export default function ChatMessage({
     >
       <div
         className={`relative min-w-0 max-w-[88%] sm:max-w-[70%] lg:max-w-[68%] ${isMine ? "items-end" : "items-start"} flex flex-col px-3 py-2 -mx-3 -my-2 rounded-lg`}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         {/* Sender name */}
         {showSender && !isMine && senderName && (
@@ -345,8 +301,8 @@ export default function ChatMessage({
         >
           {/* Action bar */}
           <div
-            className={`hidden items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest backdrop-blur animate-in fade-in duration-100 lg:gap-1 lg:p-1 sm:absolute sm:top-0 sm:z-[99] ${
-              hovered || showQuickReact ? "sm:flex" : "sm:hidden"
+            className={`hidden items-center gap-0.5 rounded-md border border-ink-border bg-ink-surface2/95 p-0.5 shadow-crest lg:gap-1 lg:p-1 sm:absolute sm:top-0 sm:z-[99] sm:group-hover:flex ${
+              showQuickReact ? "sm:flex" : ""
             } ${
               isMine
                 ? "self-end sm:left-0 sm:-ml-2 sm:-translate-x-full"
@@ -629,3 +585,54 @@ export default function ChatMessage({
     </div>
   );
 }
+
+function areReplyPropsEqual(
+  previous: ChatMessageProps["replyTo"],
+  next: ChatMessageProps["replyTo"]
+) {
+  if (previous === next) return true;
+  if (!previous || !next) return false;
+  return (
+    previous.id === next.id &&
+    previous.content === next.content &&
+    previous.senderName === next.senderName
+  );
+}
+
+function areChatMessagePropsEqual(previous: ChatMessageProps, next: ChatMessageProps) {
+  return (
+    previous.id === next.id &&
+    previous.content === next.content &&
+    previous.senderId === next.senderId &&
+    previous.senderName === next.senderName &&
+    previous.senderEmoji === next.senderEmoji &&
+    previous.senderAvatarUrl === next.senderAvatarUrl &&
+    previous.senderRole === next.senderRole &&
+    previous.currentUserId === next.currentUserId &&
+    previous.timestamp === next.timestamp &&
+    previous.editedAt === next.editedAt &&
+    previous.deletedAt === next.deletedAt &&
+    areReplyPropsEqual(previous.replyTo, next.replyTo) &&
+    previous.reactions === next.reactions &&
+    previous.profileBasePath === next.profileBasePath &&
+    previous.showSender === next.showSender &&
+    previous.canModerate === next.canModerate &&
+    previous.mediaUrl === next.mediaUrl &&
+    previous.mediaThumbnailUrl === next.mediaThumbnailUrl &&
+    previous.mediaType === next.mediaType &&
+    previous.highlighted === next.highlighted &&
+    previous.showTimestamp === next.showTimestamp &&
+    previous.markdownSettings === next.markdownSettings &&
+    previous.deliveryStatus === next.deliveryStatus &&
+    previous.onReply === next.onReply &&
+    previous.onEdit === next.onEdit &&
+    previous.onDelete === next.onDelete &&
+    previous.onReact === next.onReact &&
+    previous.onRemoveReact === next.onRemoveReact &&
+    previous.onOpenFullPicker === next.onOpenFullPicker &&
+    previous.onJumpToMessage === next.onJumpToMessage &&
+    previous.onRetrySend === next.onRetrySend
+  );
+}
+
+export default memo(ChatMessage, areChatMessagePropsEqual);
